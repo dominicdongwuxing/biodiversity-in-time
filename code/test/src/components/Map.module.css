@@ -1,0 +1,9 @@
+.map {
+    composes: show-border from "../index.module.css";
+}
+
+/* @media all and (min-width: 600px) {
+    .map {
+        background-color: red;
+    }
+} */
