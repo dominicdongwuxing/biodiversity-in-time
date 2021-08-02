@@ -1,3 +1,4 @@
+.idea/*
 code/test/node_modules/
 code/.ipynb_checkpoints/
 code/__pycache__/
