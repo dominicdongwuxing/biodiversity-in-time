@@ -1,5 +1,6 @@
 code/test/node_modules/
 code/.ipynb_checkpoints/
+code/__pycache__/
 dataset/
 Gaudenz_code/
 literature/
