@@ -26,3 +26,12 @@ with open(os.path.join(PROCESSED_WIKIDIR,"new_tree_flat.pkl"), "wb") as tree_fil
 tree_from_biota = build_tree_from_root("Q2382443", tree, data)
 with open(os.path.join(PROCESSED_WIKIDIR, "tree.json"), 'w') as fp:
     json.dump(tree_from_biota, fp)
+
+# save the dangling trees (those with children but parent taxon is NaN)
+for missing_parent in [i for i in list(data[data["parent_taxon"].isna()].index) if len(tree[i])]:
+    # if the parent is not biota, the root for all life
+    if missing_parent != "Q2382443":
+        dangling_tree = build_tree_from_root(missing_parent, tree, data)
+        file_name = os.path.join(PROCESSED_WIKIDIR, "dangling_trees",missing_parent + ".json")
+        with open(file_name, 'w') as fp:
+            json.dump(dangling_tree, fp, indent=4)
