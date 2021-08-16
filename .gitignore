@@ -3,6 +3,7 @@ code/test/node_modules/
 code/.ipynb_checkpoints/
 code/__pycache__/
 code/app/dist/
+code/app/node_modules/
 dataset/
 Gaudenz_code/
 literature/
