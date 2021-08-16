@@ -1,0 +1,25 @@
+type Query {
+    info: String!
+    getFossilsByMya(
+        mya: Float,
+    ): [Fossil]
+    getTree (name: String): Tree
+}
+
+type Fossil {
+    id: ID!
+    wikiRef: String!
+    name: String!
+    rank: String!
+    minma: Float!
+    maxma: Float!
+    lng: Float!
+    lat: Float!
+}
+
+type Tree {
+    name: String!
+    rank: String!
+    id: ID!
+    children: [Tree!]
+}
