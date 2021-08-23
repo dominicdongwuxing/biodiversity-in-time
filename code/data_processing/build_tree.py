@@ -19,7 +19,7 @@ data.to_csv(PROCESSED_WIKIDIR + "/full_data.csv")
 
 # build a flat tree from dataset, which is a dictionary with parents as keys and their children as values
 tree = build_tree(data)
-with open(os.path.join(PROCESSED_WIKIDIR,"new_tree_flat.pkl"), "wb") as tree_file:
+with open(os.path.join(PROCESSED_WIKIDIR,"tree_flat.pkl"), "wb") as tree_file:
     pickle.dump(tree, tree_file)
 
 # build a tree rooted from biota, which is a dicitonary of dictionaries

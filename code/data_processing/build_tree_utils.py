@@ -7,7 +7,7 @@ import math
 import collections
 import json
 
-DATADIR = "../dataset"
+DATADIR = "../../dataset"
 WIKIDIR = DATADIR + "/wikidata"
 PARSED_WIKIDIR = WIKIDIR + "/parsed"
 PROCESSED_WIKIDIR = WIKIDIR + "/processed"

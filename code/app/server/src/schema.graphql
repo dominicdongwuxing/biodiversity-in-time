@@ -3,7 +3,8 @@ type Query {
     getFossilsByMya(
         mya: Float,
     ): [Fossil]
-    getTree (name: String): Tree
+    getWikisById (id: [String]): [Wiki]
+    getWikisByName (name: [String]): [Wiki] 
 }
 
 type Fossil {
@@ -17,9 +18,10 @@ type Fossil {
     lat: Float!
 }
 
-type Tree {
+type Wiki {
     name: String!
     rank: String!
     id: ID!
-    children: [Tree!]
+    pathFromRootById: String!
+    pathFromRootByName: String!
 }
