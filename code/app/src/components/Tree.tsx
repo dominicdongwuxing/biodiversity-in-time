@@ -119,11 +119,14 @@ const data = [
 ]
 
 export default function Tree() {
+  const constructedTree = {"name":"hi","id":1}
   return (
     <div className={styles.tree}>
       <h1>This is tree.</h1>
-      <div>{JSON.stringify(myTree)}</div>
-      <div><BarChart data={data} /></div>
+      <div>{JSON.stringify(constructedTree)}</div>
+      
     </div>
   );
 }
+
+// <div><BarChart data={data} /></div>
