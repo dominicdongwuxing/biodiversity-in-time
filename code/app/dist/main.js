@@ -87826,79 +87826,6 @@ function Footer() {
 
 /***/ }),
 
-/***/ "./src/components/Fossil.tsx":
-/*!***********************************!*\
-  !*** ./src/components/Fossil.tsx ***!
-  \***********************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-
-const Fossil = (props) => {
-    const { fossil } = props;
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null,
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null,
-            "Name: ",
-            fossil.name,
-            "; from ",
-            fossil.minma,
-            " mya to ",
-            fossil.maxma,
-            " mya. lat: ",
-            fossil.lat,
-            " lng: ",
-            fossil.lng)));
-};
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Fossil);
-
-
-/***/ }),
-
-/***/ "./src/components/Fossils.tsx":
-/*!************************************!*\
-  !*** ./src/components/Fossils.tsx ***!
-  \************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var _Fossil__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Fossil */ "./src/components/Fossil.tsx");
-/* harmony import */ var _apollo_client__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @apollo/client */ "./node_modules/graphql-tag/lib/index.js");
-/* harmony import */ var _apollo_client__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @apollo/client */ "./node_modules/@apollo/client/react/hooks/useQuery.js");
-
-
-
-const FEED_QUERY = _apollo_client__WEBPACK_IMPORTED_MODULE_2__.gql `
-    {
-        getFossilsByMya (mya: 750) {
-            id
-            name
-            maxma
-            minma
-            lat
-            lng
-        }
-    }
-`;
-const Fossils = () => {
-    const { data } = (0,_apollo_client__WEBPACK_IMPORTED_MODULE_3__.useQuery)(FEED_QUERY);
-    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, data ?
-        data.getFossilsByMya.map((fossil) => react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Fossil__WEBPACK_IMPORTED_MODULE_1__.default, { key: fossil.id, fossil: fossil })) : null));
-};
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Fossils);
-
-
-/***/ }),
-
 /***/ "./src/components/Header.tsx":
 /*!***********************************!*\
   !*** ./src/components/Header.tsx ***!
@@ -87959,15 +87886,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var _Map_module_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Map.module.css */ "./src/components/Map.module.css");
-/* harmony import */ var _Fossils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Fossils */ "./src/components/Fossils.tsx");
+/* harmony import */ var _getData__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./getData */ "./src/components/getData.tsx");
 
 
 
 function Map() {
-    console.log("tree loaded");
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: _Map_module_css__WEBPACK_IMPORTED_MODULE_1__.default.map },
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("h1", null, "This is map."),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_Fossils__WEBPACK_IMPORTED_MODULE_2__.default, null)));
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_getData__WEBPACK_IMPORTED_MODULE_2__.FossilArrayAtMya, null)));
 }
 
 
@@ -88010,7 +87936,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
 /* harmony import */ var _Tree_module_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Tree.module.css */ "./src/components/Tree.module.css");
 /* harmony import */ var _hooks_useD3__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../hooks/useD3 */ "./src/hooks/useD3.tsx");
-/* harmony import */ var d3__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! d3 */ "./node_modules/d3/src/index.js");
+/* harmony import */ var _getData__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./getData */ "./src/components/getData.tsx");
+/* harmony import */ var d3__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! d3 */ "./node_modules/d3/src/index.js");
+
 
 
 
@@ -88020,21 +87948,21 @@ function BarChart({ data }) {
         const height = 500;
         const width = 500;
         const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-        const x = d3__WEBPACK_IMPORTED_MODULE_3__.scaleBand()
+        const x = d3__WEBPACK_IMPORTED_MODULE_4__.scaleBand()
             .domain(data.map((d) => d.year))
             .rangeRound([margin.left, width - margin.right])
             .padding(0.1);
-        const y1 = d3__WEBPACK_IMPORTED_MODULE_3__.scaleLinear()
-            .domain([0, d3__WEBPACK_IMPORTED_MODULE_3__.max(data, (d) => d.sales)])
+        const y1 = d3__WEBPACK_IMPORTED_MODULE_4__.scaleLinear()
+            .domain([0, d3__WEBPACK_IMPORTED_MODULE_4__.max(data, (d) => d.sales)])
             .rangeRound([height - margin.bottom, margin.top]);
-        const xAxis = (g) => g.attr("transform", `translate(0,${height - margin.bottom})`).call(d3__WEBPACK_IMPORTED_MODULE_3__.axisBottom(x)
-            .tickValues(d3__WEBPACK_IMPORTED_MODULE_3__.ticks(...d3__WEBPACK_IMPORTED_MODULE_3__.extent(x.domain()), width / 40)
+        const xAxis = (g) => g.attr("transform", `translate(0,${height - margin.bottom})`).call(d3__WEBPACK_IMPORTED_MODULE_4__.axisBottom(x)
+            .tickValues(d3__WEBPACK_IMPORTED_MODULE_4__.ticks(...d3__WEBPACK_IMPORTED_MODULE_4__.extent(x.domain()), width / 40)
             .filter((v) => x(v) !== undefined))
             .tickSizeOuter(0));
         const y1Axis = (g) => g
             .attr("transform", `translate(${margin.left},0)`)
             .style("color", "steelblue")
-            .call(d3__WEBPACK_IMPORTED_MODULE_3__.axisLeft(y1).ticks(null, "s"))
+            .call(d3__WEBPACK_IMPORTED_MODULE_4__.axisLeft(y1).ticks(null, "s"))
             .call((g) => g.select(".domain").remove())
             .call((g) => g
             .append("text")
@@ -88103,9 +88031,125 @@ function Tree() {
     const constructedTree = { "name": "hi", "id": 1 };
     return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", { className: _Tree_module_css__WEBPACK_IMPORTED_MODULE_1__.default.tree },
         react__WEBPACK_IMPORTED_MODULE_0__.createElement("h1", null, "This is tree."),
-        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, JSON.stringify(constructedTree))));
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, JSON.stringify(constructedTree)),
+        react__WEBPACK_IMPORTED_MODULE_0__.createElement(_getData__WEBPACK_IMPORTED_MODULE_3__.TreeByMya, null)));
 }
 // <div><BarChart data={data} /></div>
+
+
+/***/ }),
+
+/***/ "./src/components/getData.tsx":
+/*!************************************!*\
+  !*** ./src/components/getData.tsx ***!
+  \************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "TreeByMya": () => (/* binding */ TreeByMya),
+/* harmony export */   "FossilArrayAtMya": () => (/* binding */ FossilArrayAtMya)
+/* harmony export */ });
+/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
+/* harmony import */ var _apollo_client__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @apollo/client */ "./node_modules/graphql-tag/lib/index.js");
+/* harmony import */ var _apollo_client__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @apollo/client */ "./node_modules/@apollo/client/react/hooks/useQuery.js");
+
+
+const FOSSIL_AT_MYA_QUERY = _apollo_client__WEBPACK_IMPORTED_MODULE_1__.gql `
+    query retrieveFossilsAtMya ($mya: Float) {
+        getFossilsAtMya (mya: $mya) {
+            id
+            name
+            wikiRef
+            maxma
+            minma
+            lat
+            lng
+        }
+    }
+`;
+const FOSSIL_UPTO_MYA_QUERY = _apollo_client__WEBPACK_IMPORTED_MODULE_1__.gql `
+    query retrieveFossilsUptoMya ($mya: Float) {
+        getFossilsUptoMya (mya: $mya) {
+            id
+            name
+            wikiRef
+            maxma
+            minma
+            lat
+            lng
+        }
+    }
+`;
+const WIKI_QUERY = _apollo_client__WEBPACK_IMPORTED_MODULE_1__.gql `
+    query retriveFlatTree ($ids: [String]) {
+        getWikisById (ids: $ids) {
+            pathFromRootByName
+        }
+    }
+`;
+const TREE_QUERY = _apollo_client__WEBPACK_IMPORTED_MODULE_1__.gql `
+    query retrieveTreeFromWikisId ($ids: [String]) {
+        getTreeFromWikisId (ids: $ids) {
+            Tree
+        }
+    }
+`;
+// const WIKI_QUERY = gql `
+//     query test ($names: [String]) {
+//         getWikisByName (names: $names) {
+//             id
+//             name
+//             pathFromRootById
+//             pathFromRootByName
+//         }
+//     }
+// `
+const TreeByMya = () => {
+    const mya = 750;
+    const fossilQuery = (0,_apollo_client__WEBPACK_IMPORTED_MODULE_2__.useQuery)(FOSSIL_UPTO_MYA_QUERY, { variables: { mya } }).data;
+    const ids = fossilQuery ? [...new Set(fossilQuery.getFossilsUptoMya.map(fossil => fossil.wikiRef))] : [];
+    // console.log("wiki refs: ", wikiRefs)
+    // const ids = ["Q23419047", "Q55138706", "Q21368814", "Q5174", "Q25441", "Q18960", "Q729"]
+    // const names = ["Animalia","Plantae"]
+    const treeQuery = (0,_apollo_client__WEBPACK_IMPORTED_MODULE_2__.useQuery)(WIKI_QUERY, { variables: { ids } });
+    if (treeQuery.data) {
+        console.log("tree query: ", treeQuery);
+    }
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null,
+        "Tree json: ",
+        treeQuery.data ?
+            "treeQuery.data.getWikisById[0].name" : "loading..."));
+};
+const Fossil = (props) => {
+    const { fossil } = props;
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null,
+        "Name: ",
+        fossil.name,
+        "; WikiRef: ",
+        fossil.wikiRef,
+        " from ",
+        fossil.minma,
+        " mya to ",
+        fossil.maxma,
+        " mya. lat: ",
+        fossil.lat,
+        " lng: ",
+        fossil.lng));
+};
+const FossilArrayAtMya = () => {
+    const mya = 750;
+    const { data } = (0,_apollo_client__WEBPACK_IMPORTED_MODULE_2__.useQuery)(FOSSIL_AT_MYA_QUERY, { variables: { mya }
+    });
+    // if (data) {
+    //     const wikiRefs = [...new Set(data.getFossilsAtMya.map(fossil=>fossil.wikiRef))]
+    //     console.log(wikiRefs)
+    // }
+    return (react__WEBPACK_IMPORTED_MODULE_0__.createElement("div", null, data ?
+        data.getFossilsAtMya.map((fossil) => react__WEBPACK_IMPORTED_MODULE_0__.createElement(Fossil, { key: fossil.id, fossil: fossil })) : null));
+};
+// export default FossilArrayAtMya
 
 
 /***/ }),
@@ -91479,7 +91523,7 @@ if (hasSymbols()) {
 /******/ 	
 /******/ 	/* webpack/runtime/getFullHash */
 /******/ 	(() => {
-/******/ 		__webpack_require__.h = () => ("92073988376ca42d473d")
+/******/ 		__webpack_require__.h = () => ("6ad5a0beb8da0da174ff")
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/global */
