@@ -27,17 +27,21 @@ mongoose
 
       const mya = 100
 
-      // get all data needed
-      const fossilRecords = await Fossil.find({ maxma: { $gt: mya }, minma: { $lte: mya }})
-      const fossilWikiIds = [...new Set(fossilRecords.map(fossil => fossil.wikiRef))]
-      const fossilWikiRecords = await Wiki.find({ id: {$in: fossilWikiIds} }, "pathFromRootByName")
-      //const pathsById = fossilWikiRecords.map(record => record.pathFromRootById)
-      const pathsByName = fossilWikiRecords.map(record => record.pathFromRootByName)
+      const allWikiRecords = await Wiki.find({},"pathFromRootByName")
+      const pathsByName = allWikiRecords.map(record => record.pathFromRootByName)
+
+      // // get all data needed
+      // const fossilRecords = await Fossil.find({ maxma: { $gt: mya }, minma: { $lte: mya }})
+      // const fossilWikiIds = [...new Set(fossilRecords.map(fossil => fossil.wikiRef))]
+      // const fossilWikiRecords = await Wiki.find({ id: {$in: fossilWikiIds} }, "pathFromRootByName")
+      // //const pathsById = fossilWikiRecords.map(record => record.pathFromRootById)
+      // const pathsByName = fossilWikiRecords.map(record => record.pathFromRootByName)
       // const ancestralWikiIds = [...new Set (pathsById.map(path => {
       //   const splits = path.split(",")
       //   return splits.slice(1,splits.length-1)
       // }).reduce((a,b) => a.concat(b)))]
       // const ancestralWikiRecords = await Wiki.find({ id: {$in: ancestralWikiIds}})
+      
       // const allWikiRecords = [...new Set(fossilWikiRecords.concat(ancestralWikiRecords))]
 
       //console.log("Number of fossil records: " + fossilRecords.length)
@@ -76,6 +80,7 @@ mongoose
                   } else {
                       const newPart = {
                           name: part,
+                          parent: j?path[j-1]:null,
                           //children: j == path.length-1 ? null : [],
                           children: []
                       }
@@ -89,7 +94,12 @@ mongoose
       } 
         
       const tree = arrangeIntoTree(pathsByName)[0]
-      //console.log(tree.children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0].children[0])
+      const jsonData = JSON.stringify(tree);
+      fs.writeFile("constructedTree.json", jsonData, function(err) {
+            if (err) {
+                console.log(err);
+            }
+        });
 
 
       // const testTime = async (mya) => {

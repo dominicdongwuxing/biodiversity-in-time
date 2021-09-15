@@ -5,7 +5,8 @@ module.exports = {
   entry: ['./src/index.tsx'],
   output: {
     path: path.resolve(__dirname, 'dist/'),
-    publicPath:"/"
+    publicPath:"/",
+    assetModuleFilename: 'images/[name][ext]'
   },
   devtool: 'source-map',
   module: {

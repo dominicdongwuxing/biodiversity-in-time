@@ -21,6 +21,11 @@ const getWikisByName = async (parent, args, context, info) => {
     return result
 }
 
+const getAllWikis = async (parent, args, context, info) => {
+    const result = await Wiki.find()
+    return result
+}
+
 const getTreeFromWikisId = async(parent, args, context, info) => {
     const fossilWikiRecords = await Wiki.find({ id: {$in: args.ids} }, "pathFromRootByName")
     const pathsByName = fossilWikiRecords.map(record => record.pathFromRootByName)
@@ -74,6 +79,7 @@ module.exports = {
     getFossilsUptoMya,
     getWikisById,
     getWikisByName,
+    getAllWikis,
     getTreeFromWikisId
 }
 

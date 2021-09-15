@@ -5,6 +5,7 @@ import time
 import pickle
 import math
 import collections
+import requests
 import json
 
 DATADIR = "../../dataset"
@@ -146,3 +147,80 @@ def re_query_data(data):
     for idx in extra_data.index:
         data.loc[idx] = extra_data.loc[idx]
     return data
+
+def get_rank_id_name_lookup(ranks):
+    '''
+    input a list of rank ids and query wikidata
+    to return the corresponding rank name in English
+    return: a dictionary, where keys are rank ids
+    and values are corresponding English rank names
+    '''
+    rank_dict = {}
+    for rank in ranks:
+        request_result = requests.get(f"https://www.wikidata.org/wiki/Special:EntityData/{rank}.json").json()
+        rank_dict[rank] = request_result["entities"][rank]["labels"]["en"]["value"]
+    return rank_dict
+
+def get_names_for_taxon_rank(data):
+    '''
+    input data and turn taxon_rank from ids into English names 
+    '''
+    ranks = [rank for rank in data["taxon_rank"].unique().tolist() if not is_nan(rank)]
+    if os.path.isfile(os.path.join(PROCESSED_WIKIDIR,"rank_id_name_lookup.pkl")):
+        with open(os.path.join(PROCESSED_WIKIDIR,"rank_id_name_lookup.pkl"), "rb") as f:
+            rank_id_name_lookup = pickle.load(f)
+    else:
+        rank_id_name_lookup = get_rank_id_name_lookup(ranks)
+        with open(os.path.join(PROCESSED_WIKIDIR,"rank_id_name_lookup.pkl"), "wb") as f:
+            pickle.dump(rank_id_name_lookup, f)
+    rank_list = data["taxon_rank"].tolist()
+    for i in range(len(rank_list)):
+        rank = rank_list[i]
+        if not is_nan(rank):
+            rank_list[i] = rank_id_name_lookup[rank]
+    data["taxon_rank"] = rank_list
+    return data
+    
+###################################################################################################################################
+
+# combine all parsed JSON files into one file (maybe this work has already been done and saved as wikidata_records.csv)
+data = pd.DataFrame()
+for file in os.listdir(PARSED_WIKIDIR):
+    temp_data = pd.read_json(os.path.join(PARSED_WIKIDIR,file))
+    data = pd.concat([data,temp_data],ignore_index=True)
+
+data = trim_data(data)
+
+# add missing entries to data
+old_data_size = data.shape[0]
+data = re_query_data(data)
+while data.shape[0] != old_data_size:
+    old_data_size = data.shape[0]
+    data = re_query_data(data)
+
+# turn taxon_rank from id into names
+data = get_names_for_taxon_rank(data)
+
+# fill na in taxon_name from "species_name_value"
+data["taxon_name"].fillna(data["species_name_value"],inplace=True)
+
+data.to_csv(PROCESSED_WIKIDIR + "/data.csv")
+
+# build a flat tree from dataset, which is a dictionary with parents as keys and their children as values
+tree = build_tree(data)
+with open(os.path.join(PROCESSED_WIKIDIR,"tree_flat.pkl"), "wb") as tree_file:
+    pickle.dump(tree, tree_file)
+
+# build a tree rooted from biota, which is a dicitonary of dictionaries
+tree_from_biota = build_tree_from_root("Q2382443", tree, data)
+with open(os.path.join(PROCESSED_WIKIDIR, "tree.json"), 'w') as fp:
+    json.dump(tree_from_biota, fp)
+
+# save the dangling trees (those with children but parent taxon is NaN)
+for missing_parent in [i for i in list(data[data["parent_taxon"].isna()].index) if len(tree[i])]:
+    # if the parent is not biota, the root for all life
+    if missing_parent != "Q2382443":
+        dangling_tree = build_tree_from_root(missing_parent, tree, data)
+        file_name = os.path.join(PROCESSED_WIKIDIR, "dangling_trees",missing_parent + ".json")
+        with open(file_name, 'w') as fp:
+            json.dump(dangling_tree, fp, indent=4)

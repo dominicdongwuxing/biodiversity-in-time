@@ -30,6 +30,26 @@ const WikiSchema = new Schema ({
     pathFromRootByName: {
         type: String,
         required: true,
+    },
+    pathFromRootByRank: {
+        type: String,
+        required: true,
+    },
+    maxma: {
+        type: Number,
+        required: true,
+    },
+    minma: {
+        type: Number,
+        required: true,
+    },
+    count: {
+        type: Number,
+        required: true,
+    },
+    children: {
+        type: [String],
+        required: true,
     }
 }) 
 
@@ -81,7 +101,7 @@ const FossilSchema = new Schema ({
 const Fossil = mongoose.model("Fossil", FossilSchema)
 Fossil.collection.createIndex({ minma: 1, maxma: 1 })
 const Wiki = mongoose.model("Wiki",WikiSchema)
-Wiki.collection.createIndex({ id: 1 })
+Wiki.collection.createIndex({ id: 1, minma: 1, maxma: 1 })
 const User = mongoose.model("User",UserSchema)
 module.exports = {
     Fossil,

@@ -24,6 +24,11 @@ mongoose
     .connect(url,{useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
     .then(async () => {
       console.log("MongoDB connected successfully")
+      //Wiki.collection.drop();
+      //Fossil.collection.drop();
+      //console.log("A random fossil is: " + await Fossil.findOne())
+      //console.log("A random wiki is: " + await Wiki.findOne())
+      //console.log("A random user is: " + await User.findOne())
       server
           .listen()
           .then(({ url }) =>

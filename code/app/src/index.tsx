@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "components/App";
-import "index.module.css";
+import "index.css"
 
 // import { BrowserRouter } from 'react-router-dom';
 // import { setContext } from '@apollo/client/link/context';

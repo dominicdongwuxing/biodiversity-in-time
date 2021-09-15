@@ -8,6 +8,7 @@ type Query {
     ): [Fossil]
     getWikisById (ids: [String]): [Wiki]
     getWikisByName (names: [String]): [Wiki] 
+    getAllWikis: [Wiki]
     getTreeFromWikisId (ids: [String]): Tree
 }
 
@@ -28,6 +29,11 @@ type Wiki {
     id: ID!
     pathFromRootById: String!
     pathFromRootByName: String!
+    pathFromRootByRank: String!
+    children: [String]
+    count: Int!
+    maxma: Float!
+    minma: Float!
 }
 
 type Tree {

@@ -1,133 +1,350 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
 import { useD3 } from "../hooks/useD3"
 import { TreeByMya } from "./getData";
+import trueData from "../../constructedTree.json";
 import * as d3 from "d3";
+import filePng from "../images/file.png";
+import folderPng from "../images/folder.png";
+import flare2 from "../../flare-2.json"
 
-function BarChart({ data }) {
-  const ref = useD3(
-    (svg) => {
-      const height = 500;
-      const width = 500;
+const data = {
+  "name": "Computer",
+  "id": "0",
+  "children": [
+      {
+          "name": "Desktop",
+          "id": "1",
+          "children": [
+              { "name": "TA", "id": "1_1" },
+              { "name": "Feedback", "id": "1_2" },
+              { "name": "Marks", "id": "1_3" },
+              { "name": "Lab5", "id": "1_4" },
+              { "name": "Processing", "id": "1_5" },
+              { "name": "Arduino", "id": "1_6" },
+              { "name": "Internet Explorer", "id": "1_7" }
+          ]
+      },
+      {
+          "name": "Documents",
+          "id": "2",
+          "children": [
+              { "name": "Arduino Projects", "id": "2_1" },
+              { "name": "Books", "id": "2_2" },
+              { "name": "Office Templates", "id": "2_3" },
+              { "name": "OneNote Notebooks", "id": "2_4" },
+              { "name": "Python Scripts", "id": "2_5" },
+              { "name": "GitHub", "id": "2_6" },
+              { "name": "UBC", "id": "2_7" }
+          ]
+      },
+      {
+          "name":"Downloads",
+          "id": "3",
+          "children": [
+              { "name": "543_Lab5", "id": "3_1" },
+              { "name": "543_Lab4", "id": "3_2" },
+              { "name": "543_Lab3", "id": "3_3" },
+              { "name": "angular-ui-tree", "id": "3_4" },
+              { "name": "a1.pdf", "id": "3_5" }
+          ]
+      },
+      {
+          "name": "Courses",
+          "id": "4",
+          "children": [
+              { "name": "public_html", "id": "4_1" },
+              { "name": "workplace", "id": "4_2" }
+          ]
+      }
+  ]
+}
+
+// adapted from https://bl.ocks.org/swkasica/6c2b7784ec654b999397b8bc29b84c08
+function RadialTreeKasica ({ data }) {
+  const ref = useRef()
+  useEffect (()=>{
+    function collapse(d) {
+      if (d.children) {
+          d._children = d.children;
+          // d._children.forEach(collapse);
+          d.children = null;
+      } else {
+        d.children = d._children;
+        d._children = null;
+      }
+    }
+      data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
+      var height = 500;
+      var width = 500;
       const margin = { top: 20, right: 30, bottom: 30, left: 40 };
 
-      const x = d3
-        .scaleBand()
-        .domain(data.map((d) => d.year))
-        .rangeRound([margin.left, width - margin.right])
-        .padding(0.1);
+      var svg = d3.select(ref.current),
+      // width = +svg.attr("width"),
+      // height = +svg.attr("height"),
+      radius = 200,
+      g = svg.append("g").attr("transform", "translate(" + (width / 2 + 40) + "," + (height / 2 + 90) + ")");
 
-      const y1 = d3
-        .scaleLinear()
-        .domain([0, d3.max(data, (d) => d.sales)])
-        .rangeRound([height - margin.bottom, margin.top]);
+  // var stratify = d3.stratify()
+  //     .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
 
-      const xAxis = (g) =>
-        g.attr("transform", `translate(0,${height - margin.bottom})`).call(
-          d3
-            .axisBottom(x)
-            .tickValues(
-              d3
-                .ticks(...d3.extent(x.domain()), width / 40)
-                .filter((v) => x(v) !== undefined)
-            )
-            .tickSizeOuter(0)
-        );
+  var tree = d3.tree()
+      .size([2 * Math.PI, radius])
+      .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
 
-      const y1Axis = (g) =>
-        g
-          .attr("transform", `translate(${margin.left},0)`)
-          .style("color", "steelblue")
-          .call(d3.axisLeft(y1).ticks(null, "s"))
-          .call((g) => g.select(".domain").remove())
-          .call((g) =>
-            g
-              .append("text")
-              .attr("x", -margin.left)
-              .attr("y", 10)
-              .attr("fill", "currentColor")
-              .attr("text-anchor", "start")
-              .text(data.y1)
-          );
+    var root = tree(d3.hierarchy(data));
+    // root.children.forEach(collapse);
 
-      svg.select(".x-axis").call(xAxis);
-      svg.select(".y-axis").call(y1Axis);
 
-      svg
-        .select(".plot-area")
-        .attr("fill", "steelblue")
-        .selectAll(".bar")
-        .data(data)
-        .join("rect")
-        .attr("class", "bar")
-        .attr("x", (d) => x(d.year))
-        .attr("width", x.bandwidth())
-        .attr("y", (d) => y1(d.sales))
-        .attr("height", (d) => y1(0) - y1(d.sales));
-    },
-    [data.length]
-  );
+    var link = g.selectAll(".link")
+      .data(root.links())
+      .enter().append("path")
+        .attr("class", "link")
+        .attr("d", d3.linkRadial()
+            .angle(function(d) { return d.x; })
+            .radius(function(d) { return d.y; }));
 
+    var node = g.selectAll(".node")
+      .data(root.descendants())
+      .enter().append("g")
+        .attr("class", function(d) { return "node" + (d.children ? " node--internal" : " node--leaf"); })
+         .attr("transform", function(d) { return "translate(" + radialPoint(d.x, d.y) + ")"; })
+        .on("mouseover", function() {
+          d3.select(this).classed("active", true);
+        }).on("mouseout", function() {
+          d3.select(this).classed("active", false);
+        }). on("click", function (d) {
+          data = d;
+          d3.select(ref.current).remove();
+          var svg = d3.select(ref.current);
+          svg.append("circle").attr("cx",60).attr("cy",60).attr("r",60).attr("fill","red")
+      // width = +svg.attr("width"),
+      // height = +svg.attr("height"),
+      radius = 200,
+      g = svg.append("g").attr("transform", "translate(" + (width / 2 + 40) + "," + (height / 2 + 90) + ")");
+
+  // var stratify = d3.stratify()
+  //     .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
+
+  var tree = d3.tree()
+      .size([2 * Math.PI, radius])
+      .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
+
+    var root = tree(d3.hierarchy(data));
+    // root.children.forEach(collapse);
+
+
+    var link = g.selectAll(".link")
+      .data(root.links())
+      .enter().append("path")
+        .attr("class", "link")
+        .attr("d", d3.linkRadial()
+            .angle(function(d) { return d.x; })
+            .radius(function(d) { return d.y; }));
+
+    var node = g.selectAll(".node")
+      .data(root.descendants())
+      .enter().append("g")
+        .attr("class", function(d) { return "node" + (d.children ? " node--internal" : " node--leaf"); })
+         .attr("transform", function(d) { return "translate(" + radialPoint(d.x, d.y) + ")"; })
+        .on("mouseover", function() {
+          d3.select(this).classed("active", true);
+        }).on("mouseout", function() {
+          d3.select(this).classed("active", false);
+        }). on("click", function (d) {
+          data = d;
+          d3.select(ref.current).remove();
+        });
+      
+      
+      node.append("circle")
+        .attr("r",2.5)
+    // node.append("image")
+    //     .attr("x", -6)
+    //     .attr("y", -6)
+    //     .attr("width", 20)
+    //     .attr("height", 20)
+    //     .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
+    //     .attr("href", function(d) { return d.children ? "images/folder.png" : "images/file.png" });
+
+    node.append("text")
+        .attr("dy", "0.31em")
+        .attr("x", function(d) { return d.x < Math.PI === !d.children ? 6 : -6; })
+        .attr("text-anchor", function(d) { return d.x < Math.PI === !d.children ? "start" : "end"; })
+        .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
+        .text(function(d) {return d.data.name; });
+        });
+      
+      
+      node.append("circle")
+        .attr("r",2.5)
+    // node.append("image")
+    //     .attr("x", -6)
+    //     .attr("y", -6)
+    //     .attr("width", 20)
+    //     .attr("height", 20)
+    //     .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
+    //     .attr("href", function(d) { return d.children ? "images/folder.png" : "images/file.png" });
+
+    node.append("text")
+        .attr("dy", "0.31em")
+        .attr("x", function(d) { return d.x < Math.PI === !d.children ? 6 : -6; })
+        .attr("text-anchor", function(d) { return d.x < Math.PI === !d.children ? "start" : "end"; })
+        .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
+        .text(function(d) {return d.data.name; });
+ 
+
+  function radialPoint(x, y) {
+    return [(y = +y) * Math.cos(x -= Math.PI / 2), y * Math.sin(x)];
+  }
+
+  },[data]);
+  
   return (
     <svg
       ref={ref}
       style={{
-        height: 500,
+        height: 800,
         width: "100%",
         marginRight: "0px",
         marginLeft: "0px",
       }}
     >
-      <g className="plot-area" />
-      <g className="x-axis" />
-      <g className="y-axis" />
+
     </svg>
-  );
+  )
 }
 
-const data = [
-  {year: 1980, efficiency: 24.3, sales: 8949000},
-  {year: 1985, efficiency: 27.6, sales: 10979000},
-  {year: 1990, efficiency: 28, sales: 9303000},
-  {year: 1991, efficiency: 28.4, sales: 8185000},
-  {year: 1992, efficiency: 27.9, sales: 8213000},
-  {year: 1993, efficiency: 28.4, sales: 8518000},
-  {year: 1994, efficiency: 28.3, sales: 8991000},
-  {year: 1995, efficiency: 28.6, sales: 8620000},
-  {year: 1996, efficiency: 28.5, sales: 8479000},
-  {year: 1997, efficiency: 28.7, sales: 8217000},
-  {year: 1998, efficiency: 28.8, sales: 8085000},
-  {year: 1999, efficiency: 28.3, sales: 8638000},
-  {year: 2000, efficiency: 28.5, sales: 8778000},
-  {year: 2001, efficiency: 28.8, sales: 8352000},
-  {year: 2002, efficiency: 29, sales: 8042000},
-  {year: 2003, efficiency: 29.5, sales: 7556000},
-  {year: 2004, efficiency: 29.5, sales: 7483000},
-  {year: 2005, efficiency: 30.3, sales: 7660000},
-  {year: 2006, efficiency: 30.1, sales: 7762000},
-  {year: 2007, efficiency: 31.2, sales: 7562000},
-  {year: 2008, efficiency: 31.5, sales: 6769000},
-  {year: 2009, efficiency: 32.9, sales: 5402000},
-  {year: 2010, efficiency: 33.9, sales: 5636000},
-  {year: 2011, efficiency: 33.1, sales: 6093000},
-  {year: 2012, efficiency: 35.3, sales: 7245000},
-  {year: 2013, efficiency: 36.4, sales: 7586000},
-  {year: 2014, efficiency: 36.5, sales: 7708000},
-  {year: 2015, efficiency: 37.2, sales: 7517000},
-  {year: 2016, efficiency: 37.7, sales: 6873000},
-  {year: 2017, efficiency: 39.4, sales: 6081000},
-]
+
+// Sontrop's implementation: https://bl.ocks.org/FrissAnalytics/974dc299c5bc79cc5fd7ee9fa1b0b366 
+
+// adapted from https://observablehq.com/@d3/radial-tidy-tree?collection=@d3/d3-hierarchy
+function RadialTreeBostock ({ data }) {
+  const ref = useRef()
+  useEffect (() => {
+
+    const width = 954
+      const radius = width / 2
+
+      function autoBox() {
+        document.body.appendChild(this);
+        const {x, y, width, height} = this.getBBox();
+        document.body.removeChild(this);
+        return [x, y, width, height];
+      }
+
+      //data = d3.hierarchy(data)
+      data = d3.hierarchy(data)
+        .sort((a, b) => d3.ascending(a.data.name, b.data.name))
+
+      const tree = d3.tree()
+      .size([2 * Math.PI, radius])
+      .separation((a, b) => (a.parent == b.parent ? 1 : 2) / a.depth)
+    
+      const root = tree(data);
+  
+      //svg = d3.create("svg");
+
+      const svg = d3.select(ref.current)
+
+      svg.append("g")
+          .attr("fill", "none")
+          .attr("stroke", "#555")
+          .attr("stroke-opacity", 0.4)
+          .attr("stroke-width", 1.5)
+        .selectAll("path")
+        .data(root.links())
+        .enter()
+        .append("path")
+        //.join("path")
+          .attr("d", d3.linkRadial()
+              .angle(d => d.x)
+              .radius(d => d.y));
+      
+      svg.append("g")
+        .selectAll("circle")
+        .data(root.descendants())
+        .enter()
+        .append("circle")
+        //.join("circle")
+          .attr("transform", d => `
+            rotate(${d.x * 180 / Math.PI - 90})
+            translate(${d.y},0)
+          `)
+          .attr("fill", d => d.children ? "#555" : "#999")
+          .attr("r", 2.5);
+      
+          svg.append("g")
+          .attr("font-family", "sans-serif")
+          .attr("font-size", 10)
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+        .selectAll("text")
+        .data(root.descendants())
+        .enter()
+        .append("text")
+        //.join("text")
+          .attr("transform", d => `
+            rotate(${d.x * 180 / Math.PI - 90}) 
+            translate(${d.y},0) 
+            rotate(${d.x >= Math.PI ? 180 : 0})
+          `)
+          .attr("dy", "0.31em")
+          .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+          .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
+          .text(d => d.data.name)
+        .clone(true).lower()
+          .attr("stroke", "white");
+      
+          svg.attr("viewBox", autoBox).node();
+  },[data.length])
+
+
+  return (
+    <svg
+      ref={ref}
+      style={{
+        height: 800,
+        width: "100%",
+        marginRight: "0px",
+        marginLeft: "0px",
+      }}
+    >
+
+    </svg>
+  )
+}
+
+function Test () {
+  const ref = useRef()
+  useEffect (() => {
+    const svg = d3.select(ref.current)
+    svg.append("g")
+      .append("rect")
+      .attr("x",20)
+      .attr("y",20)
+      .attr("width",60)
+      .attr("height",30)
+      .attr("fill","green")
+      .attr("transform","translate(0, 60)")
+  },[])
+  return (
+    <svg ref={ref} style={{border: "2px solid gold"}}>
+    </svg>
+  )
+}
 
 export default function Tree() {
-  const constructedTree = {"name":"hi","id":1}
+  const fileImage = filePng
+  const folderImage = folderPng
   return (
     <div className={styles.tree}>
       <h1>This is tree.</h1>
-      <div>{JSON.stringify(constructedTree)}</div>
-      <TreeByMya />
-      
+      <Test />          
     </div>
   );
 }
-
+// <div>{JSON.stringify(constructedTree)}</div>
 // <div><BarChart data={data} /></div>
+// <RadialTree data={data}/>
+// <img src={sampleImage}></img>
