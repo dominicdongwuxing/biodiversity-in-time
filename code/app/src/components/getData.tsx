@@ -41,10 +41,49 @@ const WIKI_QUERY = gql `
     }
 `
 
-const TREE_QUERY = gql `
-    query retrieveTreeFromWikisId ($ids: [String]) {
-        getTreeFromWikisId (ids: $ids) {
+export const TREE_QUERY = gql `
+    query retrieveTreeFromWikisId ($id: String, $maxElement: Int, $depth: Int) {
+        getTreeFromWikisId (id: $id, maxElement: $maxElement, depth: $depth) {
             name
+            id
+            rank
+            count
+            children {
+                name
+                id
+                rank
+                count
+                children {
+                    name
+                    id
+                    rank
+                    count
+                    children {
+                        name
+                        id
+                        rank
+                        count
+                        children {
+                            name
+                            id
+                            rank
+                            count
+                            children {
+                                name
+                                id
+                                rank
+                                count
+                                children {
+                                    name
+                                    id
+                                    rank
+                                    count
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 `
@@ -125,9 +164,6 @@ export const TreeByMya = () => {
 
     }
 
-
-
-
     return (
         // <div>
         //     Tree json: {treeQuery.data?
@@ -139,6 +175,7 @@ export const TreeByMya = () => {
         </div>
     )
 }
+
 
 const Fossil = (props) => {
     const { fossil } = props;

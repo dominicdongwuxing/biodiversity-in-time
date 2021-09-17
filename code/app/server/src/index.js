@@ -27,7 +27,7 @@ mongoose
       //Wiki.collection.drop();
       //Fossil.collection.drop();
       //console.log("A random fossil is: " + await Fossil.findOne())
-      //console.log("A random wiki is: " + await Wiki.findOne())
+      // console.log("A random wiki is: " + await Wiki.findOne())
       //console.log("A random user is: " + await User.findOne())
       server
           .listen()

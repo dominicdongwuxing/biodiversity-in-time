@@ -7,9 +7,10 @@ type Query {
         mya: Float,
     ): [Fossil]
     getWikisById (ids: [String]): [Wiki]
+    getWikiById (id: String): Wiki
     getWikisByName (names: [String]): [Wiki] 
     getAllWikis: [Wiki]
-    getTreeFromWikisId (ids: [String]): Tree
+    getTreeFromWikisId (id: String, maxElement: Int, depth: Int): Tree
 }
 
 type Fossil {
@@ -38,5 +39,8 @@ type Wiki {
 
 type Tree {
     name: String!
+    rank: String!
+    id: ID!
+    count: Int!
     children: [Tree]
 }

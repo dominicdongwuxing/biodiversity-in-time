@@ -1,4 +1,5 @@
 const { Fossil, Wiki } = require("../models")
+// const mongoose = require("mongoose")
 
 const info = () => "This is the info test!"
 const getFossilsAtMya = async (parent, args, context, info) => {
@@ -12,8 +13,13 @@ const getFossilsUptoMya = async (parent, args, context, info) => {
 }
 
 const getWikisById = async (parent, args, context, info) => {
-    const result = await Wiki.find({ id: {$in: args.ids} })
+    const result = await Wiki.find({ id: {$in: args.id} })
     return result
+}
+
+const getWikiById = async (parent, args, context, info) => {
+    const result = await Wiki.find({ id: args.id })
+    return result[0]
 }
 
 const getWikisByName = async (parent, args, context, info) => {
@@ -27,50 +33,52 @@ const getAllWikis = async (parent, args, context, info) => {
 }
 
 const getTreeFromWikisId = async(parent, args, context, info) => {
-    const fossilWikiRecords = await Wiki.find({ id: {$in: args.ids} }, "pathFromRootByName")
-    const pathsByName = fossilWikiRecords.map(record => record.pathFromRootByName)
-    const arrangeIntoTree = (inputPaths) => {
-        // Adapted from https://gist.github.com/stephanbogner/4b590f992ead470658a5ebf09167b03d#file-index-js-L77
-        const findWhere = (array, key, value) => {
-          t = 0; // t is used as a counter
-          while (t < array.length && array[t][key] !== value) { t++; }; // find the index where the id is the as the aValue
-  
-          if (t < array.length) {
-              return array[t]
-          } else {
-              return false;
-          }
-        }
-
-        const paths = inputPaths.map(path => path.split(",").slice(1))
-        let tree = [];
-    
-        for (let i = 0; i < paths.length; i++) {
-            const path = paths[i];
-            let currentLevel = tree;
-            for (let j = 0; j < path.length; j++) {
-                const part = path[j];
-                const existingPath = findWhere(currentLevel, 'name', part);
-    
-                if (existingPath) {
-                    currentLevel = existingPath.children;
-                } else {
-                    const newPart = {
-                        name: part,
-                        //children: j == path.length-1 ? null : [],
-                        children: []
-                    }
-    
-                    currentLevel.push(newPart);
-                    currentLevel = newPart.children;
-                }
+    let depth = args.depth 
+    const sortAndTrimChildren = (children) => {
+        return children.sort((a,b)=>{
+            if (a.count < b.count) {
+                return 1
             }
-        }
-        return tree;
-    } 
-      
-    const tree = arrangeIntoTree(pathsByName)[0]
-    return tree
+            if (a.count > b.count) {
+                return -1
+            }
+            return 0
+        }).slice(0,args.maxElement)
+    }
+    const buildTree = async(root, tree) => {
+        const children = await Wiki.find({id: {$in: root.children}}).then(sortAndTrimChildren)
+
+            for (let child of children) {
+                // console.log(child.pathFromRootById.split(","))
+                if (child.pathFromRootById.split(",").length - child.pathFromRootById.split(",").indexOf(rootId) <= depth) {
+                    let subtree = {id: child.id, name: child.name, rank: child.rank, count: child.count, children: []}
+                    subtree = await buildTree (child, subtree)
+                    tree.children.push(subtree)
+                }
+                
+            }
+        return tree
+    }
+    
+    const root = await Wiki.find({id: args.id}).then(root => root[0])
+    const rootId = root.id
+    const result = await buildTree(root, {id: root.id, name: root.name, rank: root.rank, count: root.count, children: []})
+    
+
+    // let children = await Wiki.find({id: {$in: root.children}}).then(sortAndTrimChildren)
+    // let tree = {id: root.id, name: root.name, rank: root.rank, count: root.count, children: []}
+    // for (let child of children) {
+    //     const grandchildren = await Wiki.find({id: {$in: child.children}}).then(sortAndTrimChildren)
+    //     let subtree = {id: child.id, name: child.name, rank: child.rank, count: child.count, children: []}
+    //     for (let grandchild of grandchildren) {
+    //         const greatgrandchildren = await Wiki.find({id: {$in: grandchild.children}}).then(sortAndTrimChildren)
+    //         let subsubtree = {id: grandchild.id, name: grandchild.name, rank: grandchild.rank, count: grandchild.count, children: []}
+    //         subtree.children.push(subsubtree)
+    //     }
+    //     tree.children.push(subtree)
+    // }
+    
+    return result
 }
 
 module.exports = {
@@ -78,6 +86,7 @@ module.exports = {
     getFossilsAtMya,
     getFossilsUptoMya,
     getWikisById,
+    getWikiById,
     getWikisByName,
     getAllWikis,
     getTreeFromWikisId

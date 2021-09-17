@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
-import { useD3 } from "../hooks/useD3"
-import { TreeByMya } from "./getData";
+import { TreeByMya,TREE_QUERY } from "./getData";
 import trueData from "../../constructedTree.json";
 import * as d3 from "d3";
 import filePng from "../images/file.png";
@@ -59,6 +58,8 @@ const data = {
       }
   ]
 }
+
+
 
 // adapted from https://bl.ocks.org/swkasica/6c2b7784ec654b999397b8bc29b84c08
 function RadialTreeKasica ({ data }) {
