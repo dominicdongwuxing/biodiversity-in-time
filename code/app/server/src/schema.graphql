@@ -10,7 +10,7 @@ type Query {
     getWikiById (id: String): Wiki
     getWikisByName (names: [String]): [Wiki] 
     getAllWikis: [Wiki]
-    getTreeFromWikisId (id: String, maxElement: Int, depth: Int): Tree
+    getTreeFromWikiName (name: String, maxElement: Int, depth: Int): Tree
 }
 
 type Fossil {

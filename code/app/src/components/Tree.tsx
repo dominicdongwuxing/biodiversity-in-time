@@ -1,13 +1,63 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
-import { TreeByMya,TREE_QUERY } from "./getData";
-import trueData from "../../constructedTree.json";
 import * as d3 from "d3";
-import filePng from "../images/file.png";
-import folderPng from "../images/folder.png";
-import flare2 from "../../flare-2.json"
+import { useQuery, gql } from "@apollo/client";
 
-const data = {
+// import { TreeByMya,TREE_QUERY } from "./getData";
+// import filePng from "../images/file.png";
+// import folderPng from "../images/folder.png";
+// import flare2 from "../../flare-2.json"
+// import trueData from "../../constructedTree.json";
+
+const TREE_QUERY = gql `
+    query retrieveTreeFromWikiName ($name: String, $maxElement: Int, $depth: Int) {
+        getTreeFromWikiName (name: $name, maxElement: $maxElement, depth: $depth) {
+            name
+            id
+            rank
+            count
+            children {
+                name
+                id
+                rank
+                count
+                children {
+                    name
+                    id
+                    rank
+                    count
+                    children {
+                        name
+                        id
+                        rank
+                        count
+                        children {
+                            name
+                            id
+                            rank
+                            count
+                            children {
+                                name
+                                id
+                                rank
+                                count
+                                children {
+                                    name
+                                    id
+                                    rank
+                                    count
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+`
+
+
+const exampleData = {
   "name": "Computer",
   "id": "0",
   "children": [
@@ -75,7 +125,7 @@ function RadialTreeKasica ({ data }) {
         d._children = null;
       }
     }
-      data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
+      //data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
       var height = 500;
       var width = 500;
       const margin = { top: 20, right: 30, bottom: 30, left: 40 };
@@ -219,102 +269,7 @@ function RadialTreeKasica ({ data }) {
 
 // Sontrop's implementation: https://bl.ocks.org/FrissAnalytics/974dc299c5bc79cc5fd7ee9fa1b0b366 
 
-// adapted from https://observablehq.com/@d3/radial-tidy-tree?collection=@d3/d3-hierarchy
-function RadialTreeBostock ({ data }) {
-  const ref = useRef()
-  useEffect (() => {
-
-    const width = 954
-      const radius = width / 2
-
-      function autoBox() {
-        document.body.appendChild(this);
-        const {x, y, width, height} = this.getBBox();
-        document.body.removeChild(this);
-        return [x, y, width, height];
-      }
-
-      //data = d3.hierarchy(data)
-      data = d3.hierarchy(data)
-        .sort((a, b) => d3.ascending(a.data.name, b.data.name))
-
-      const tree = d3.tree()
-      .size([2 * Math.PI, radius])
-      .separation((a, b) => (a.parent == b.parent ? 1 : 2) / a.depth)
-    
-      const root = tree(data);
-  
-      //svg = d3.create("svg");
-
-      const svg = d3.select(ref.current)
-
-      svg.append("g")
-          .attr("fill", "none")
-          .attr("stroke", "#555")
-          .attr("stroke-opacity", 0.4)
-          .attr("stroke-width", 1.5)
-        .selectAll("path")
-        .data(root.links())
-        .enter()
-        .append("path")
-        //.join("path")
-          .attr("d", d3.linkRadial()
-              .angle(d => d.x)
-              .radius(d => d.y));
-      
-      svg.append("g")
-        .selectAll("circle")
-        .data(root.descendants())
-        .enter()
-        .append("circle")
-        //.join("circle")
-          .attr("transform", d => `
-            rotate(${d.x * 180 / Math.PI - 90})
-            translate(${d.y},0)
-          `)
-          .attr("fill", d => d.children ? "#555" : "#999")
-          .attr("r", 2.5);
-      
-          svg.append("g")
-          .attr("font-family", "sans-serif")
-          .attr("font-size", 10)
-          .attr("stroke-linejoin", "round")
-          .attr("stroke-width", 3)
-        .selectAll("text")
-        .data(root.descendants())
-        .enter()
-        .append("text")
-        //.join("text")
-          .attr("transform", d => `
-            rotate(${d.x * 180 / Math.PI - 90}) 
-            translate(${d.y},0) 
-            rotate(${d.x >= Math.PI ? 180 : 0})
-          `)
-          .attr("dy", "0.31em")
-          .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
-          .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
-          .text(d => d.data.name)
-        .clone(true).lower()
-          .attr("stroke", "white");
-      
-          svg.attr("viewBox", autoBox).node();
-  },[data.length])
-
-
-  return (
-    <svg
-      ref={ref}
-      style={{
-        height: 800,
-        width: "100%",
-        marginRight: "0px",
-        marginLeft: "0px",
-      }}
-    >
-
-    </svg>
-  )
-}
+// Bostock's implementation: https://observablehq.com/@d3/radial-tidy-tree?collection=@d3/d3-hierarchy
 
 function Test () {
   const ref = useRef()
@@ -336,15 +291,81 @@ function Test () {
 }
 
 export default function Tree() {
-  const fileImage = filePng
-  const folderImage = folderPng
+  // const fileImage = filePng
+  // const folderImage = folderPng
+
+  const [searchNameBuffer, setSearchNameBuffer] = useState("")
+  const [searchName, setSearchName] = useState("Biota")
+  const [searchDepth, setSearchDepth] = useState(3)
+  const [searchMaxElement, setSearchMaxElement] = useState(7)
+  const { data } = useQuery(TREE_QUERY, 
+    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth}
+  });
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    setSearchName(searchNameBuffer)
+  }
+
   return (
     <div className={styles.tree}>
       <h1>This is tree.</h1>
-      <Test />          
+
+      <form onSubmit={handleSubmit}>
+        <label>
+          New root name: 
+          <input value={searchNameBuffer} onChange = {(event) => {setSearchNameBuffer(event.target.value)}}></input>
+        </label>
+        <input type="submit" value="Search Root" />
+      
+
+        <br></br>
+        <label>
+          Max number of elements to show for each level (sorted by number of fossil count in descending order):
+          <select value={searchMaxElement} onChange = {(event) => {setSearchMaxElement(parseInt(event.target.value))}} >
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
+            <option value={6}>6</option>
+            <option value={7}>7</option>
+            <option value={8}>8</option>
+            <option value={9}>9</option>
+            <option value={10}>10</option>
+            <option value={11}>11</option>
+            <option value={12}>12</option>
+            <option value={13}>13</option>
+            <option value={14}>14</option>
+            <option value={15}>15</option>
+            <option value={16}>16</option>
+            <option value={17}>17</option>
+            <option value={18}>18</option>
+            <option value={19}>19</option>
+            <option value={20}>20</option>
+          </select>
+        </label>
+
+        <br></br>
+
+        <label>
+          Number of taxon levels to retrieve from the new root:
+          <select value={searchDepth} onChange = {(event) => {setSearchDepth(parseInt(event.target.value))}} >
+            <option value={1}>1</option>
+            <option value={2}>2</option>
+            <option value={3}>3</option>
+            <option value={4}>4</option>
+            <option value={5}>5</option>
+            <option value={6}>6</option>
+            <option value={7}>7</option>
+          </select>
+        </label>
+
+      </form>
+      {data ? <RadialTreeKasica data={data.getTreeFromWikiName}/>:"Try a new search :)"}      
     </div>
   );
 }
+// 
 // <div>{JSON.stringify(constructedTree)}</div>
 // <div><BarChart data={data} /></div>
 // <RadialTree data={data}/>

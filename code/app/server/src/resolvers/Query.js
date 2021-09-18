@@ -32,7 +32,7 @@ const getAllWikis = async (parent, args, context, info) => {
     return result
 }
 
-const getTreeFromWikisId = async(parent, args, context, info) => {
+const getTreeFromWikiName = async(parent, args, context, info) => {
     let depth = args.depth 
     const sortAndTrimChildren = (children) => {
         return children.sort((a,b)=>{
@@ -60,7 +60,7 @@ const getTreeFromWikisId = async(parent, args, context, info) => {
         return tree
     }
     
-    const root = await Wiki.find({id: args.id}).then(root => root[0])
+    const root = await Wiki.find({name: args.name}).then(root => root[0])
     const rootId = root.id
     const result = await buildTree(root, {id: root.id, name: root.name, rank: root.rank, count: root.count, children: []})
     
@@ -89,6 +89,6 @@ module.exports = {
     getWikiById,
     getWikisByName,
     getAllWikis,
-    getTreeFromWikisId
+    getTreeFromWikiName
 }
 
