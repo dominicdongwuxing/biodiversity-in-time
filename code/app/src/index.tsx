@@ -13,13 +13,28 @@ import {
 } from '@apollo/client';
 // import { AUTH_TOKEN } from './constants';
 
+const cache = new InMemoryCache({
+    typePolicies: {
+      Tree: {
+        fields: {
+          children: {
+            merge(existing, incoming) {
+              // Equivalent to what happens if there is no custom merge function.
+              return incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
 const httpLink = createHttpLink({
     uri: "http://localhost:4000"
 });
 
 const client = new ApolloClient ({
     link: httpLink,
-    cache: new InMemoryCache()
+    cache: cache
 });
 
 ReactDOM.render(

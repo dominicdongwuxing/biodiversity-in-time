@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
 import * as d3 from "d3";
-import { useQuery, gql } from "@apollo/client";
+import { useQuery, gql, InMemoryCache } from "@apollo/client";
 
 // import { TreeByMya,TREE_QUERY } from "./getData";
 // import filePng from "../images/file.png";
@@ -291,6 +291,9 @@ function Test () {
 }
 
 export default function Tree() {
+  // note: I didn't use cache!!!
+
+
   // const fileImage = filePng
   // const folderImage = folderPng
 
@@ -298,13 +301,26 @@ export default function Tree() {
   const [searchName, setSearchName] = useState("Biota")
   const [searchDepth, setSearchDepth] = useState(3)
   const [searchMaxElement, setSearchMaxElement] = useState(7)
+  // useEffect(() => {
+  //   console.log("max element is ", searchMaxElement)
+  //   console.log("depth is ", searchDepth)
+  // })
+
+
+
   const { data } = useQuery(TREE_QUERY, 
-    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth}
+    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth},
+    fetchPolicy: "no-cache"
   });
   const handleSubmit = (event) => {
     event.preventDefault()
     setSearchName(searchNameBuffer)
   }
+
+
+  useEffect(() => {
+    console.log(data)
+  }, [data])
 
   return (
     <div className={styles.tree}>
@@ -321,7 +337,9 @@ export default function Tree() {
         <br></br>
         <label>
           Max number of elements to show for each level (sorted by number of fossil count in descending order):
-          <select value={searchMaxElement} onChange = {(event) => {setSearchMaxElement(parseInt(event.target.value))}} >
+          <select value={searchMaxElement} onChange = {(event) => {
+            setSearchMaxElement(parseInt(event.target.value))
+            }} >
             <option value={1}>1</option>
             <option value={2}>2</option>
             <option value={3}>3</option>
@@ -349,7 +367,9 @@ export default function Tree() {
 
         <label>
           Number of taxon levels to retrieve from the new root:
-          <select value={searchDepth} onChange = {(event) => {setSearchDepth(parseInt(event.target.value))}} >
+          <select value={searchDepth} onChange = {(event) => {
+            setSearchDepth(parseInt(event.target.value))
+            }} >
             <option value={1}>1</option>
             <option value={2}>2</option>
             <option value={3}>3</option>

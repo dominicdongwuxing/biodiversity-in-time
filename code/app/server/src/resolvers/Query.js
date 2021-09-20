@@ -33,6 +33,8 @@ const getAllWikis = async (parent, args, context, info) => {
 }
 
 const getTreeFromWikiName = async(parent, args, context, info) => {
+    const queryInfo = "Run new query; name: " + args.name + " maxElement: " + args.maxElement + " depth: " + args.depth
+    console.log(queryInfo)
     let depth = args.depth 
     const sortAndTrimChildren = (children) => {
         return children.sort((a,b)=>{
