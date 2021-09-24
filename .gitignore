@@ -3,6 +3,7 @@ code/.ipynb_checkpoints/
 code/__pycache__/
 code/data_processing/.ipynb_checkpoints/
 code/data_processing/__pycache__/
+code/data_processing/archive/
 code/app/dist/
 code/app/node_modules/
 dataset/
