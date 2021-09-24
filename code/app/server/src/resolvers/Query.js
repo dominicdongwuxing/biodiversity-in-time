@@ -32,10 +32,10 @@ const getAllWikis = async (parent, args, context, info) => {
     return result
 }
 
-const getTreeFromWikiName = async(parent, args, context, info) => {
-    const queryInfo = "Run new query; name: " + args.name + " maxElement: " + args.maxElement + " depth: " + args.depth
-    console.log(queryInfo)
-    let depth = args.depth 
+const getTreeFromWikiNameOrId = async(parent, args, context, info) => {
+    // const queryInfo = "Run new query; name: " + args.name + " maxElement: " + args.maxElement + " depth: " + args.depth
+    // console.log(queryInfo)
+    
     const sortAndTrimChildren = (children) => {
         return children.sort((a,b)=>{
             if (a.count < b.count) {
@@ -52,7 +52,7 @@ const getTreeFromWikiName = async(parent, args, context, info) => {
 
             for (let child of children) {
                 // console.log(child.pathFromRootById.split(","))
-                if (child.pathFromRootById.split(",").length - child.pathFromRootById.split(",").indexOf(rootId) <= depth) {
+                if (child.pathFromRootById.split(",").length - child.pathFromRootById.split(",").indexOf(rootId) <= args.depth) {
                     let subtree = {id: child.id, name: child.name, rank: child.rank, count: child.count, children: []}
                     subtree = await buildTree (child, subtree)
                     tree.children.push(subtree)
@@ -61,12 +61,18 @@ const getTreeFromWikiName = async(parent, args, context, info) => {
             }
         return tree
     }
-    
-    const root = await Wiki.find({name: args.name}).then(root => root[0])
-    const rootId = root.id
-    const result = await buildTree(root, {id: root.id, name: root.name, rank: root.rank, count: root.count, children: []})
-    
 
+    let root;
+    if (args.id !== "") {
+        root = await Wiki.find({id: args.id}).then(root => root[0])
+    } else {
+        const name = args.name.charAt(0).toUpperCase() + args.name.slice(1)
+        root = await Wiki.find({name: name}).then(root => root[0])
+    }
+
+    const rootId = root.id
+    const result = await buildTree(root, {id: root.id, name: root.name, rank: root.rank, count: root.count, children: [], pathFromRootByName: root.pathFromRootByName, pathFromRootById: root.pathFromRootById})
+    
     // let children = await Wiki.find({id: {$in: root.children}}).then(sortAndTrimChildren)
     // let tree = {id: root.id, name: root.name, rank: root.rank, count: root.count, children: []}
     // for (let child of children) {
@@ -91,6 +97,6 @@ module.exports = {
     getWikiById,
     getWikisByName,
     getAllWikis,
-    getTreeFromWikiName
+    getTreeFromWikiNameOrId
 }
 

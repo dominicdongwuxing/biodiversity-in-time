@@ -10,7 +10,7 @@ type Query {
     getWikiById (id: String): Wiki
     getWikisByName (names: [String]): [Wiki] 
     getAllWikis: [Wiki]
-    getTreeFromWikiName (name: String, maxElement: Int, depth: Int): Tree
+    getTreeFromWikiNameOrId (name: String, maxElement: Int, depth: Int, id: String): Tree
 }
 
 type Fossil {
@@ -42,5 +42,8 @@ type Tree {
     rank: String!
     id: ID!
     count: Int!
+    pathFromRootByName: String
+    pathFromRootById: String
+    pathFromRootByRank: String
     children: [Tree]
 }

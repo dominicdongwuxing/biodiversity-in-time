@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
 import * as d3 from "d3";
 import { useQuery, gql, InMemoryCache } from "@apollo/client";
@@ -10,12 +10,14 @@ import { useQuery, gql, InMemoryCache } from "@apollo/client";
 // import trueData from "../../constructedTree.json";
 
 const TREE_QUERY = gql `
-    query retrieveTreeFromWikiName ($name: String, $maxElement: Int, $depth: Int) {
-        getTreeFromWikiName (name: $name, maxElement: $maxElement, depth: $depth) {
+    query retrieveTreeFromWikiNameOrId ($name: String, $maxElement: Int, $depth: Int, $id: String) {
+        getTreeFromWikiNameOrId (name: $name, maxElement: $maxElement, depth: $depth, id: $id) {
             name
             id
             rank
             count
+            pathFromRootByName
+            pathFromRootById
             children {
                 name
                 id
@@ -112,7 +114,7 @@ const exampleData = {
 
 
 // adapted from https://bl.ocks.org/swkasica/6c2b7784ec654b999397b8bc29b84c08
-function RadialTreeKasica ({ data }) {
+function RadialTreeKasica ({ data, onClick }) {
   const ref = useRef()
   useEffect (()=>{
     function collapse(d) {
@@ -154,6 +156,7 @@ function RadialTreeKasica ({ data }) {
         .attr("d", d3.linkRadial()
             .angle(function(d) { return d.x; })
             .radius(function(d) { return d.y; }));
+    
 
     var node = g.selectAll(".node")
       .data(root.descendants())
@@ -165,65 +168,14 @@ function RadialTreeKasica ({ data }) {
         }).on("mouseout", function() {
           d3.select(this).classed("active", false);
         }). on("click", function (d) {
-          data = d;
-          d3.select(ref.current).remove();
-          var svg = d3.select(ref.current);
-          svg.append("circle").attr("cx",60).attr("cy",60).attr("r",60).attr("fill","red")
-      // width = +svg.attr("width"),
-      // height = +svg.attr("height"),
-      radius = 200,
-      g = svg.append("g").attr("transform", "translate(" + (width / 2 + 40) + "," + (height / 2 + 90) + ")");
-
-  // var stratify = d3.stratify()
-  //     .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
-
-  var tree = d3.tree()
-      .size([2 * Math.PI, radius])
-      .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
-
-    var root = tree(d3.hierarchy(data));
-    // root.children.forEach(collapse);
-
-
-    var link = g.selectAll(".link")
-      .data(root.links())
-      .enter().append("path")
-        .attr("class", "link")
-        .attr("d", d3.linkRadial()
-            .angle(function(d) { return d.x; })
-            .radius(function(d) { return d.y; }));
-
-    var node = g.selectAll(".node")
-      .data(root.descendants())
-      .enter().append("g")
-        .attr("class", function(d) { return "node" + (d.children ? " node--internal" : " node--leaf"); })
-         .attr("transform", function(d) { return "translate(" + radialPoint(d.x, d.y) + ")"; })
-        .on("mouseover", function() {
-          d3.select(this).classed("active", true);
-        }).on("mouseout", function() {
-          d3.select(this).classed("active", false);
-        }). on("click", function (d) {
-          data = d;
-          d3.select(ref.current).remove();
-        });
-      
-      
-      node.append("circle")
-        .attr("r",2.5)
-    // node.append("image")
-    //     .attr("x", -6)
-    //     .attr("y", -6)
-    //     .attr("width", 20)
-    //     .attr("height", 20)
-    //     .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
-    //     .attr("href", function(d) { return d.children ? "images/folder.png" : "images/file.png" });
-
-    node.append("text")
-        .attr("dy", "0.31em")
-        .attr("x", function(d) { return d.x < Math.PI === !d.children ? 6 : -6; })
-        .attr("text-anchor", function(d) { return d.x < Math.PI === !d.children ? "start" : "end"; })
-        .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
-        .text(function(d) {return d.data.name; });
+          // var svg = d3.select(ref.current);
+          // svg.remove("g")
+          // setData(exampleData);
+          //console.log(d.data)
+          //d3.select(ref.current).remove();
+          onClick(d.data.id)
+          
+          
         });
       
       
@@ -290,6 +242,18 @@ function Test () {
   )
 }
 
+const BackToPrevious = ({data, searchDepth, handleBackToPrevious}) => {
+  if (data) {
+    const path = data.pathFromRootByName.split(",").slice(1)
+    if (path.length > searchDepth) {
+      return (
+        <button onClick={handleBackToPrevious}>Back to {path[path.length - searchDepth]} </button>
+      )
+    }
+  } 
+  return null
+}
+
 export default function Tree() {
   // note: I didn't use cache!!!
 
@@ -297,30 +261,60 @@ export default function Tree() {
   // const fileImage = filePng
   // const folderImage = folderPng
 
-  const [searchNameBuffer, setSearchNameBuffer] = useState("")
-  const [searchName, setSearchName] = useState("Biota")
-  const [searchDepth, setSearchDepth] = useState(3)
-  const [searchMaxElement, setSearchMaxElement] = useState(7)
-  // useEffect(() => {
-  //   console.log("max element is ", searchMaxElement)
-  //   console.log("depth is ", searchDepth)
-  // })
-
-
-
-  const { data } = useQuery(TREE_QUERY, 
-    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth},
-    fetchPolicy: "no-cache"
-  });
   const handleSubmit = (event) => {
     event.preventDefault()
     setSearchName(searchNameBuffer)
+    setSearchId("")
   }
 
+  const handleBackToTop = () => {
+    setSearchId("Q2382443")
+  }
 
-  useEffect(() => {
-    console.log(data)
-  }, [data])
+  const handleClick = (id) => {
+    setSearchId(id)
+  }
+
+  const handleBackToPrevious = () => {
+    if (data) {
+      const path = data.getTreeFromWikiNameOrId.pathFromRootById.split(",").slice(1)
+      if (path.length < searchDepth) {
+        setSearchId("Q2382443")
+      } else {
+        setSearchId(path[path.length - searchDepth])
+      }
+      
+    }
+  }
+
+  
+
+  // const usePrevious = (value) => {
+  //   const ref = useRef()
+  //   useEffect(() => {
+  //     if (data) {
+  //       ref.current = value
+  //     }
+  //   })
+  //   return ref.current
+  // }
+  
+  const [searchNameBuffer, setSearchNameBuffer] = useState("")
+  const [searchName, setSearchName] = useState("")
+  const [searchId, setSearchId] = useState("Q2382443")
+  // const prevSearchName = usePrevious(searchName)
+  const [searchDepth, setSearchDepth] = useState(3)
+  const [searchMaxElement, setSearchMaxElement] = useState(7)
+  
+  const { data } = useQuery(TREE_QUERY, 
+    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth, id: searchId},
+    fetchPolicy: "no-cache"
+  });
+
+    
+  // useEffect(() => {
+  //   console.log(data)
+  // }, [data])
 
   return (
     <div className={styles.tree}>
@@ -381,7 +375,12 @@ export default function Tree() {
         </label>
 
       </form>
-      {data ? <RadialTreeKasica data={data.getTreeFromWikiName}/>:"Try a new search :)"}      
+       
+      {data ? <RadialTreeKasica data={data.getTreeFromWikiNameOrId} onClick={handleClick}/>:"Try a new search :)"}
+
+      <button onClick={handleBackToTop} >Back to top</button>
+        
+      {data ? <BackToPrevious data = {data.getTreeFromWikiNameOrId} handleBackToPrevious = {handleBackToPrevious} searchDepth = {searchDepth} /> : null}
     </div>
   );
 }
@@ -390,3 +389,5 @@ export default function Tree() {
 // <div><BarChart data={data} /></div>
 // <RadialTree data={data}/>
 // <img src={sampleImage}></img>
+
+// {(data && data.getTreeFromWikiNameOrId.pathFromRootById.split(",").slice(1).length > searchDepth) ? <button onClick={handleBackToPrevious}>Back to {data.getTreeFromWikiNameOrId.pathFromRootByName.split(",").slice(2,3)} </button>  : "nothing"} 
