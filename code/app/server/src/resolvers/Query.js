@@ -66,7 +66,7 @@ const getTreeFromWikiNameOrId = async(parent, args, context, info) => {
     if (args.id !== "") {
         root = await Wiki.find({id: args.id}).then(root => root[0])
     } else {
-        const name = args.name.charAt(0).toUpperCase() + args.name.slice(1)
+        const name = args.name.trim().charAt(0).toUpperCase() + args.name.trim().slice(1)
         root = await Wiki.find({name: name}).then(root => root[0])
     }
 

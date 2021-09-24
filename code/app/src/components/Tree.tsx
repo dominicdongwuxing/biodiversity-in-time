@@ -207,7 +207,7 @@ function RadialTreeKasica ({ data, onClick }) {
     <svg
       ref={ref}
       style={{
-        height: 800,
+        height: 600,
         width: "100%",
         marginRight: "0px",
         marginLeft: "0px",
@@ -378,7 +378,9 @@ export default function Tree() {
        
       {data ? <RadialTreeKasica data={data.getTreeFromWikiNameOrId} onClick={handleClick}/>:"Try a new search :)"}
 
-      <button onClick={handleBackToTop} >Back to top</button>
+      {(data && data.getTreeFromWikiNameOrId.name !== "Biota")? <button onClick={handleBackToTop} >Back to top</button> : null}
+
+      
         
       {data ? <BackToPrevious data = {data.getTreeFromWikiNameOrId} handleBackToPrevious = {handleBackToPrevious} searchDepth = {searchDepth} /> : null}
     </div>
