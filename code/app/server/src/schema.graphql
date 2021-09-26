@@ -1,16 +1,11 @@
 type Query {
-    info: String!
     getFossilsAtMya(
         mya: Float,
     ): [Fossil]
     getFossilsUptoMya(
         mya: Float,
     ): [Fossil]
-    getWikisById (ids: [String]): [Wiki]
-    getWikiById (id: String): Wiki
-    getWikisByName (names: [String]): [Wiki] 
-    getAllWikis: [Wiki]
-    getTreeFromWikiNameOrId (name: String, maxElement: Int, depth: Int, id: String): Tree
+    getTreeFromWikiNameOrIdWithMya (name: String, maxElement: Int, depth: Int, id: String, minma: Float, maxma: Float): Tree
 }
 
 type Fossil {

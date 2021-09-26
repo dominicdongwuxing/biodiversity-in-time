@@ -10,8 +10,8 @@ import { useQuery, gql, InMemoryCache } from "@apollo/client";
 // import trueData from "../../constructedTree.json";
 
 const TREE_QUERY = gql `
-    query retrieveTreeFromWikiNameOrId ($name: String, $maxElement: Int, $depth: Int, $id: String) {
-        getTreeFromWikiNameOrId (name: $name, maxElement: $maxElement, depth: $depth, id: $id) {
+    query retrieveTreeFromWikiNameOrIdWithMya ($name: String, $maxElement: Int, $depth: Int, $id: String, $minma: Float, $maxma: Float) {
+        getTreeFromWikiNameOrIdWithMya (name: $name, maxElement: $maxElement, depth: $depth, id: $id, minma: $minma, maxma: $maxma) {
             name
             id
             rank
@@ -254,7 +254,7 @@ const BackToPrevious = ({data, searchDepth, handleBackToPrevious}) => {
   return null
 }
 
-export default function Tree() {
+export default function Tree({ props }) {
   // note: I didn't use cache!!!
 
 
@@ -307,7 +307,7 @@ export default function Tree() {
   const [searchMaxElement, setSearchMaxElement] = useState(7)
   
   const { data } = useQuery(TREE_QUERY, 
-    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth, id: searchId},
+    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth, id: searchId, minma: props.mya-props.lowerMya, maxma: props.mya+props.higherMya},
     fetchPolicy: "no-cache"
   });
 
@@ -374,15 +374,17 @@ export default function Tree() {
           </select>
         </label>
 
+
+
       </form>
        
-      {data ? <RadialTreeKasica data={data.getTreeFromWikiNameOrId} onClick={handleClick}/>:"Try a new search :)"}
+      {data ? <RadialTreeKasica data={data.getTreeFromWikiNameOrIdWithMya} onClick={handleClick}/>:"Try a new search :)"}
 
-      {(data && data.getTreeFromWikiNameOrId.name !== "Biota")? <button onClick={handleBackToTop} >Back to top</button> : null}
+      {(data && data.getTreeFromWikiNameOrIdWithMya.name !== "Biota")? <button onClick={handleBackToTop} >Back to top</button> : null}
 
       
         
-      {data ? <BackToPrevious data = {data.getTreeFromWikiNameOrId} handleBackToPrevious = {handleBackToPrevious} searchDepth = {searchDepth} /> : null}
+      {data ? <BackToPrevious data = {data.getTreeFromWikiNameOrIdWithMya} handleBackToPrevious = {handleBackToPrevious} searchDepth = {searchDepth} /> : null}
     </div>
   );
 }

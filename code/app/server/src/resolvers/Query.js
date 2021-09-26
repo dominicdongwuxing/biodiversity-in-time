@@ -1,7 +1,5 @@
 const { Fossil, Wiki } = require("../models")
-// const mongoose = require("mongoose")
 
-const info = () => "This is the info test!"
 const getFossilsAtMya = async (parent, args, context, info) => {
     const result = await Fossil.find({ maxma: { $gt: args.mya }, minma: { $lte: args.mya }})
     return result
@@ -12,27 +10,7 @@ const getFossilsUptoMya = async (parent, args, context, info) => {
     return result
 }
 
-const getWikisById = async (parent, args, context, info) => {
-    const result = await Wiki.find({ id: {$in: args.id} })
-    return result
-}
-
-const getWikiById = async (parent, args, context, info) => {
-    const result = await Wiki.find({ id: args.id })
-    return result[0]
-}
-
-const getWikisByName = async (parent, args, context, info) => {
-    const result = await Wiki.find({ name: {$in: args.names} })
-    return result
-}
-
-const getAllWikis = async (parent, args, context, info) => {
-    const result = await Wiki.find()
-    return result
-}
-
-const getTreeFromWikiNameOrId = async(parent, args, context, info) => {
+const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
     // const queryInfo = "Run new query; name: " + args.name + " maxElement: " + args.maxElement + " depth: " + args.depth
     // console.log(queryInfo)
     
@@ -48,7 +26,7 @@ const getTreeFromWikiNameOrId = async(parent, args, context, info) => {
         }).slice(0,args.maxElement)
     }
     const buildTree = async(root, tree) => {
-        const children = await Wiki.find({id: {$in: root.children}}).then(sortAndTrimChildren)
+        const children = await Wiki.find({id: {$in: root.children}, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(sortAndTrimChildren)
 
             for (let child of children) {
                 // console.log(child.pathFromRootById.split(","))
@@ -64,10 +42,10 @@ const getTreeFromWikiNameOrId = async(parent, args, context, info) => {
 
     let root;
     if (args.id !== "") {
-        root = await Wiki.find({id: args.id}).then(root => root[0])
+        root = await Wiki.find({id: args.id, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(root => root[0])
     } else {
         const name = args.name.trim().charAt(0).toUpperCase() + args.name.trim().slice(1)
-        root = await Wiki.find({name: name}).then(root => root[0])
+        root = await Wiki.find({name: name, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(root => root[0])
     }
 
     const rootId = root.id
@@ -90,13 +68,8 @@ const getTreeFromWikiNameOrId = async(parent, args, context, info) => {
 }
 
 module.exports = {
-    info,
     getFossilsAtMya,
     getFossilsUptoMya,
-    getWikisById,
-    getWikiById,
-    getWikisByName,
-    getAllWikis,
-    getTreeFromWikiNameOrId
+    getTreeFromWikiNameOrIdWithMya
 }
 
