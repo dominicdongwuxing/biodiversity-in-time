@@ -8,29 +8,25 @@ import Footer from "./Footer";
 import styles from "./App.module.css";
 
 export default function App() {
-  const changeMya = (value) => {
-    setMya(value)
+  const changeMyaMain = (value) => {
+    setMyaMain(parseInt(value))
+    setMyaRange([(value - steps < 0) ? 0 : value - steps, (value + steps > 1000) ? 1000 : value + steps])
   }
 
-  const changeLowerMya = (value) => {
-    setLowerMya(value)
+  const changeMyaRange = (valueArr) => {
+    setMyaRange([parseInt(valueArr[0]), parseInt(valueArr[1])])
   }
 
-  const changeHigherMya = (value) => {
-    setHigherMya(value)
-  }
-
-  const [mya, setMya] = useState(500)
-  const [lowerMya, setLowerMya] = useState(500)
-  const [higherMya, setHigherMya] = useState(500)
-
+  const steps = 100
+  const [myaMain, setMyaMain] = useState(500)
+  const [myaRange, setMyaRange] = useState([myaMain - steps,myaMain + steps])
 
   return (
     <div className={styles.app}>
       <Header />
       <Map />
-      <ScrollBar changeMya = {changeMya} changeLowerMya={changeLowerMya} changeHigherMya={changeHigherMya} mya={mya} lowerMya={lowerMya} higherMya={higherMya}/>
-      <Tree props={{mya: mya, lowerMya: lowerMya, higherMya: higherMya}}/>
+      <ScrollBar changeMyaMain = {changeMyaMain} changeMyaRange={changeMyaRange} myaMain={myaMain} myaRange={myaRange} steps={steps}/>
+      <Tree props={{mya: myaMain, myaRange: myaRange}}/>
       <InfoSection />
       <Footer />
     </div>

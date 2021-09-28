@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
 import * as d3 from "d3";
 import { useQuery, gql, InMemoryCache } from "@apollo/client";
@@ -57,59 +57,6 @@ const TREE_QUERY = gql `
         }
     }
 `
-
-
-const exampleData = {
-  "name": "Computer",
-  "id": "0",
-  "children": [
-      {
-          "name": "Desktop",
-          "id": "1",
-          "children": [
-              { "name": "TA", "id": "1_1" },
-              { "name": "Feedback", "id": "1_2" },
-              { "name": "Marks", "id": "1_3" },
-              { "name": "Lab5", "id": "1_4" },
-              { "name": "Processing", "id": "1_5" },
-              { "name": "Arduino", "id": "1_6" },
-              { "name": "Internet Explorer", "id": "1_7" }
-          ]
-      },
-      {
-          "name": "Documents",
-          "id": "2",
-          "children": [
-              { "name": "Arduino Projects", "id": "2_1" },
-              { "name": "Books", "id": "2_2" },
-              { "name": "Office Templates", "id": "2_3" },
-              { "name": "OneNote Notebooks", "id": "2_4" },
-              { "name": "Python Scripts", "id": "2_5" },
-              { "name": "GitHub", "id": "2_6" },
-              { "name": "UBC", "id": "2_7" }
-          ]
-      },
-      {
-          "name":"Downloads",
-          "id": "3",
-          "children": [
-              { "name": "543_Lab5", "id": "3_1" },
-              { "name": "543_Lab4", "id": "3_2" },
-              { "name": "543_Lab3", "id": "3_3" },
-              { "name": "angular-ui-tree", "id": "3_4" },
-              { "name": "a1.pdf", "id": "3_5" }
-          ]
-      },
-      {
-          "name": "Courses",
-          "id": "4",
-          "children": [
-              { "name": "public_html", "id": "4_1" },
-              { "name": "workplace", "id": "4_2" }
-          ]
-      }
-  ]
-}
 
 
 
@@ -307,7 +254,7 @@ export default function Tree({ props }) {
   const [searchMaxElement, setSearchMaxElement] = useState(7)
   
   const { data } = useQuery(TREE_QUERY, 
-    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth, id: searchId, minma: props.mya-props.lowerMya, maxma: props.mya+props.higherMya},
+    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth, id: searchId, minma: props.myaRange[0], maxma: props.myaRange[1]},
     fetchPolicy: "no-cache"
   });
 
