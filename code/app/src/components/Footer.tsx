@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <div>
       <footer className={styles.footer}>
-        <h1>This is footer.</h1>
+        <h1>footer section</h1>
       </footer>
     </div>
   );

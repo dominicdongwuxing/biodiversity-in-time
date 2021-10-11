@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "components/App";
-import "index.css"
+import "index.css";
 
 // import { BrowserRouter } from 'react-router-dom';
 // import { setContext } from '@apollo/client/link/context';
@@ -9,37 +9,37 @@ import {
   ApolloProvider,
   ApolloClient,
   createHttpLink,
-  InMemoryCache
-} from '@apollo/client';
+  InMemoryCache,
+} from "@apollo/client";
 // import { AUTH_TOKEN } from './constants';
 
 const cache = new InMemoryCache({
-    typePolicies: {
-      Tree: {
-        fields: {
-          children: {
-            merge(existing, incoming) {
-              // Equivalent to what happens if there is no custom merge function.
-              return incoming;
-            },
+  typePolicies: {
+    Tree: {
+      fields: {
+        children: {
+          merge(existing, incoming) {
+            // Equivalent to what happens if there is no custom merge function.
+            return incoming;
           },
         },
       },
     },
-  });
-
-const httpLink = createHttpLink({
-    uri: "http://localhost:4000"
+  },
 });
 
-const client = new ApolloClient ({
-    link: httpLink,
-    cache: cache
+const httpLink = createHttpLink({
+  uri: "http://localhost:4000",
+});
+
+const client = new ApolloClient({
+  link: httpLink,
+  cache: cache,
 });
 
 ReactDOM.render(
-    <ApolloProvider client = {client}>
-        <App />
-    </ApolloProvider>,
-    document.getElementById("root")
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>,
+  document.getElementById("root")
 );

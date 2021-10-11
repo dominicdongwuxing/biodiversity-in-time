@@ -1,11 +1,16 @@
 type Query {
-    getFossilsAtMya(
-        mya: Float,
+    getFossilsDuringMya (
+        minma: Float,
+        maxma: Float
     ): [Fossil]
-    getFossilsUptoMya(
-        mya: Float,
-    ): [Fossil]
-    getTreeFromWikiNameOrIdWithMya (name: String, maxElement: Int, depth: Int, id: String, minma: Float, maxma: Float): Tree
+
+    getMapAtMya (
+        mya: Int,
+    ): Map
+
+    getTreeFromWikiNameOrIdWithMya (
+        name: String, maxElement: Int, depth: Int, id: String, minma: Float, maxma: Float
+    ): Tree
 }
 
 type Fossil {
@@ -42,3 +47,33 @@ type Tree {
     pathFromRootByRank: String
     children: [Tree]
 }
+
+type MapGeometryPolygon {
+    type: String
+    coordinates: [[[Float]]] 
+}
+
+type MapGeometryMultiPolygon {
+    type: String
+    coordinates: [[[[Float]]]]
+}
+
+union MapGeometryUnion = MapGeometryPolygon | MapGeometryMultiPolygon
+
+type Map {
+    mya: Int,
+    type: String,
+    features: [MapFeature]
+}
+
+type MapFeature {
+    type: String
+    properties: MapProperty
+    geometry: MapGeometryUnion
+}
+
+type MapProperty {
+    name: String
+}
+
+

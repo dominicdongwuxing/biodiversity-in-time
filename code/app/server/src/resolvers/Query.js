@@ -1,13 +1,22 @@
-const { Fossil, Wiki } = require("../models")
+const { Fossil, Wiki, Map } = require("../models")
 
-const getFossilsAtMya = async (parent, args, context, info) => {
-    const result = await Fossil.find({ maxma: { $gt: args.mya }, minma: { $lte: args.mya }})
+// const getFossilsAtMya = async (parent, args, context, info) => {
+//     const result = await Fossil.find({ maxma: { $gt: args.mya }, minma: { $lte: args.mya }})
+//     return result
+// }
+
+// const getFossilsUptoMya = async (parent, args, context, info) => {
+//     const result = await Fossil.find({ maxma: { $gt: args.mya }})
+//     return result
+// }
+const getFossilsDuringMya = async (parent, args, context, info) => {
+    const result = await Fossil.find({minma: {$lte: args.maxma}, maxma: {$gte: args.minma}})
     return result
 }
 
-const getFossilsUptoMya = async (parent, args, context, info) => {
-    const result = await Fossil.find({ maxma: { $gt: args.mya }})
-    return result
+const getMapAtMya = async (parent, args, context, info) => {
+    const result = await Map.find({mya: args.mya})
+    return result[0]
 }
 
 const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
@@ -68,8 +77,7 @@ const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
 }
 
 module.exports = {
-    getFossilsAtMya,
-    getFossilsUptoMya,
+    getFossilsDuringMya,
+    getMapAtMya,
     getTreeFromWikiNameOrIdWithMya
 }
-

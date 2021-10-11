@@ -75,15 +75,19 @@ module.exports = {
     modules: [path.resolve(__dirname, 'src/'), "node_modules"]
   },
   devServer: {
-    open: "google-chrome",
-    contentBase: [path.join(__dirname, 'dist/')],
+    open: "/",
+    // contentBase: [path.join(__dirname, 'dist/')],
     liveReload: true,
     compress: true,
-    writeToDisk: true,
-    watchContentBase: true,
+    // writeToDisk: true,
+    // watchContentBase: true,
     hot: true,
     port: 8080,
-    publicPath:"/"
+    static: {
+      directory: path.join(__dirname, "dist/"),
+      publicPath: "/"
+    }
+    // publicPath:"/"
 },
   plugins: [
       new HtmlWebpackPlugin ({

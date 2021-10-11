@@ -1,133 +1,168 @@
 import React, { useEffect, useState, useRef } from "react";
 import styles from "./Tree.module.css";
 import * as d3 from "d3";
-import { useQuery, gql, InMemoryCache } from "@apollo/client";
+import { useQuery, gql } from "@apollo/client";
+import {
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  FormHelperText,
+  Container
+} from "@mui/material";
+import { useTreeStyles } from "./TreeStyles";
 
-// import { TreeByMya,TREE_QUERY } from "./getData";
-// import filePng from "../images/file.png";
-// import folderPng from "../images/folder.png";
-// import flare2 from "../../flare-2.json"
-// import trueData from "../../constructedTree.json";
-
-const TREE_QUERY = gql `
-    query retrieveTreeFromWikiNameOrIdWithMya ($name: String, $maxElement: Int, $depth: Int, $id: String, $minma: Float, $maxma: Float) {
-        getTreeFromWikiNameOrIdWithMya (name: $name, maxElement: $maxElement, depth: $depth, id: $id, minma: $minma, maxma: $maxma) {
+const TREE_QUERY = gql`
+  query retrieveTreeFromWikiNameOrIdWithMya(
+    $name: String
+    $maxElement: Int
+    $depth: Int
+    $id: String
+    $minma: Float
+    $maxma: Float
+  ) {
+    getTreeFromWikiNameOrIdWithMya(
+      name: $name
+      maxElement: $maxElement
+      depth: $depth
+      id: $id
+      minma: $minma
+      maxma: $maxma
+    ) {
+      name
+      id
+      rank
+      count
+      pathFromRootByName
+      pathFromRootById
+      children {
+        name
+        id
+        rank
+        count
+        children {
+          name
+          id
+          rank
+          count
+          children {
             name
             id
             rank
             count
-            pathFromRootByName
-            pathFromRootById
             children {
+              name
+              id
+              rank
+              count
+              children {
                 name
                 id
                 rank
                 count
                 children {
-                    name
-                    id
-                    rank
-                    count
-                    children {
-                        name
-                        id
-                        rank
-                        count
-                        children {
-                            name
-                            id
-                            rank
-                            count
-                            children {
-                                name
-                                id
-                                rank
-                                count
-                                children {
-                                    name
-                                    id
-                                    rank
-                                    count
-                                }
-                            }
-                        }
-                    }
+                  name
+                  id
+                  rank
+                  count
                 }
+              }
             }
+          }
         }
+      }
     }
-`
-
-
-
+  }
+`;
 // adapted from https://bl.ocks.org/swkasica/6c2b7784ec654b999397b8bc29b84c08
-function RadialTreeKasica ({ data, onClick }) {
-  const ref = useRef()
-  useEffect (()=>{
+function RadialTreeKasica({ data, onClick }) {
+  const ref = useRef();
+  useEffect(() => {
     function collapse(d) {
       if (d.children) {
-          d._children = d.children;
-          // d._children.forEach(collapse);
-          d.children = null;
+        d._children = d.children;
+        // d._children.forEach(collapse);
+        d.children = null;
       } else {
         d.children = d._children;
         d._children = null;
       }
     }
-      //data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
-      var height = 500;
-      var width = 500;
-      const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+    //data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
+    const height = 500;
+    const width = 500;
+    const margin = { top: 20, right: 30, bottom: 30, left: 40 };
 
-      var svg = d3.select(ref.current),
+    const svg = d3.select(ref.current),
       // width = +svg.attr("width"),
       // height = +svg.attr("height"),
       radius = 200,
-      g = svg.append("g").attr("transform", "translate(" + (width / 2 + 40) + "," + (height / 2 + 90) + ")");
+      g = svg
+        .append("g")
+        .attr(
+          "transform",
+          "translate(" + (width / 2 + 40) + "," + (height / 2 + 90) + ")"
+        );
 
-  // var stratify = d3.stratify()
-  //     .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
+    // var stratify = d3.stratify()
+    //     .parentId(function(d) { return d.id.substring(0, d.id.lastIndexOf(".")); });
 
-  var tree = d3.tree()
+    const tree = d3
+      .tree()
       .size([2 * Math.PI, radius])
-      .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
+      .separation(function (a, b) {
+        return (a.parent == b.parent ? 1 : 2) / a.depth;
+      });
 
-    var root = tree(d3.hierarchy(data));
+    const root = tree(d3.hierarchy(data));
     // root.children.forEach(collapse);
 
-
-    var link = g.selectAll(".link")
+    const link = g
+      .selectAll(".link")
       .data(root.links())
-      .enter().append("path")
-        .attr("class", "link")
-        .attr("d", d3.linkRadial()
-            .angle(function(d) { return d.x; })
-            .radius(function(d) { return d.y; }));
-    
+      .enter()
+      .append("path")
+      .attr("class", "link")
+      .attr(
+        "d",
+        d3
+          .linkRadial()
+          .angle(function (d) {
+            return d.x;
+          })
+          .radius(function (d) {
+            return d.y;
+          })
+      );
 
-    var node = g.selectAll(".node")
+    const node = g
+      .selectAll(".node")
       .data(root.descendants())
-      .enter().append("g")
-        .attr("class", function(d) { return "node" + (d.children ? " node--internal" : " node--leaf"); })
-         .attr("transform", function(d) { return "translate(" + radialPoint(d.x, d.y) + ")"; })
-        .on("mouseover", function() {
-          d3.select(this).classed("active", true);
-        }).on("mouseout", function() {
-          d3.select(this).classed("active", false);
-        }). on("click", function (d) {
-          // var svg = d3.select(ref.current);
-          // svg.remove("g")
-          // setData(exampleData);
-          //console.log(d.data)
-          //d3.select(ref.current).remove();
-          onClick(d.data.id)
-          
-          
-        });
-      
-      
-      node.append("circle")
-        .attr("r",2.5)
+      .enter()
+      .append("g")
+      .attr("class", function (d) {
+        return "node" + (d.children ? " node--internal" : " node--leaf");
+      })
+      .attr("transform", function (d) {
+        return "translate(" + radialPoint(d.x, d.y) + ")";
+      })
+      .on("mouseover", function () {
+        d3.select(this).classed("active", true);
+      })
+      .on("mouseout", function () {
+        d3.select(this).classed("active", false);
+      })
+      .on("click", function (d) {
+        // var svg = d3.select(ref.current);
+        // svg.remove("g")
+        // setData(exampleData);
+        //console.log(d.data)
+        //d3.select(ref.current).remove();
+        onClick(d.data.id);
+      });
+
+    node.append("circle").attr("r", 2.5);
     // node.append("image")
     //     .attr("x", -6)
     //     .attr("y", -6)
@@ -136,20 +171,32 @@ function RadialTreeKasica ({ data, onClick }) {
     //     .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
     //     .attr("href", function(d) { return d.children ? "images/folder.png" : "images/file.png" });
 
-    node.append("text")
-        .attr("dy", "0.31em")
-        .attr("x", function(d) { return d.x < Math.PI === !d.children ? 6 : -6; })
-        .attr("text-anchor", function(d) { return d.x < Math.PI === !d.children ? "start" : "end"; })
-        .attr("transform", function(d) { return "rotate(" + (d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180 / Math.PI + ")"; })
-        .text(function(d) {return d.data.name; });
- 
+    node
+      .append("text")
+      .attr("dy", "0.31em")
+      .attr("x", function (d) {
+        return d.x < Math.PI === !d.children ? 6 : -6;
+      })
+      .attr("text-anchor", function (d) {
+        return d.x < Math.PI === !d.children ? "start" : "end";
+      })
+      .attr("transform", function (d) {
+        return (
+          "rotate(" +
+          ((d.x < Math.PI ? d.x - Math.PI / 2 : d.x + Math.PI / 2) * 180) /
+            Math.PI +
+          ")"
+        );
+      })
+      .text(function (d) {
+        return d.data.name;
+      });
 
-  function radialPoint(x, y) {
-    return [(y = +y) * Math.cos(x -= Math.PI / 2), y * Math.sin(x)];
-  }
+    function radialPoint(x, y) {
+      return [(y = +y) * Math.cos((x -= Math.PI / 2)), y * Math.sin(x)];
+    }
+  }, [data]);
 
-  },[data]);
-  
   return (
     <svg
       ref={ref}
@@ -159,82 +206,89 @@ function RadialTreeKasica ({ data, onClick }) {
         marginRight: "0px",
         marginLeft: "0px",
       }}
-    >
-
-    </svg>
-  )
+    ></svg>
+  );
 }
 
-
-// Sontrop's implementation: https://bl.ocks.org/FrissAnalytics/974dc299c5bc79cc5fd7ee9fa1b0b366 
-
+// Sontrop's implementation: https://bl.ocks.org/FrissAnalytics/974dc299c5bc79cc5fd7ee9fa1b0b366
 // Bostock's implementation: https://observablehq.com/@d3/radial-tidy-tree?collection=@d3/d3-hierarchy
 
-function Test () {
-  const ref = useRef()
-  useEffect (() => {
-    const svg = d3.select(ref.current)
-    svg.append("g")
+function Test() {
+  const ref = useRef();
+  useEffect(() => {
+    const svg = d3.select(ref.current);
+    svg
+      .append("g")
       .append("rect")
-      .attr("x",20)
-      .attr("y",20)
-      .attr("width",60)
-      .attr("height",30)
-      .attr("fill","green")
-      .attr("transform","translate(0, 60)")
-  },[])
-  return (
-    <svg ref={ref} style={{border: "2px solid gold"}}>
-    </svg>
-  )
+      .attr("x", 20)
+      .attr("y", 20)
+      .attr("width", 60)
+      .attr("height", 30)
+      .attr("fill", "green")
+      .attr("transform", "translate(0, 60)");
+  }, []);
+  return <svg ref={ref} style={{ border: "2px solid gold" }}></svg>;
 }
 
-const BackToPrevious = ({data, searchDepth, handleBackToPrevious}) => {
+const BackToPrevious = ({ data, searchDepth, handleBackToPrevious }) => {
   if (data) {
-    const path = data.pathFromRootByName.split(",").slice(1)
+    const path = data.pathFromRootByName.split(",").slice(1);
     if (path.length > searchDepth) {
       return (
-        <button onClick={handleBackToPrevious}>Back to {path[path.length - searchDepth]} </button>
-      )
+        <Button
+          variant="contained"
+          onClick={handleBackToPrevious}
+          color="secondary"
+        >
+          Back to {path[path.length - searchDepth]}
+        </Button>
+      );
     }
-  } 
-  return null
-}
+  }
+  return null;
+};
 
 export default function Tree({ props }) {
   // note: I didn't use cache!!!
 
-
-  // const fileImage = filePng
-  // const folderImage = folderPng
+  const makeOptions = (valueArr) => {
+    const optionArr = [];
+    for (const value of valueArr) {
+      optionArr.push(
+        <MenuItem value={value} key={value}>
+          {value}
+        </MenuItem>
+      );
+    }
+    return optionArr;
+  };
 
   const handleSubmit = (event) => {
-    event.preventDefault()
-    setSearchName(searchNameBuffer)
-    setSearchId("")
-  }
+    event.preventDefault();
+    setSearchName(searchNameBuffer);
+    setSearchId("");
+  };
 
   const handleBackToTop = () => {
-    setSearchId("Q2382443")
-  }
+    setSearchId("Q2382443");
+  };
 
   const handleClick = (id) => {
-    setSearchId(id)
-  }
+    setSearchId(id);
+  };
 
   const handleBackToPrevious = () => {
     if (data) {
-      const path = data.getTreeFromWikiNameOrId.pathFromRootById.split(",").slice(1)
+      const path = data.getTreeFromWikiNameOrIdWithMya.pathFromRootById
+        .split(",")
+        .slice(1);
       if (path.length < searchDepth) {
-        setSearchId("Q2382443")
+        setSearchId("Q2382443");
       } else {
-        setSearchId(path[path.length - searchDepth])
+        setSearchId(path[path.length - searchDepth]);
       }
-      
     }
-  }
-
-  
+  };
 
   // const usePrevious = (value) => {
   //   const ref = useRef()
@@ -245,100 +299,104 @@ export default function Tree({ props }) {
   //   })
   //   return ref.current
   // }
-  
-  const [searchNameBuffer, setSearchNameBuffer] = useState("")
-  const [searchName, setSearchName] = useState("")
-  const [searchId, setSearchId] = useState("Q2382443")
-  // const prevSearchName = usePrevious(searchName)
-  const [searchDepth, setSearchDepth] = useState(3)
-  const [searchMaxElement, setSearchMaxElement] = useState(7)
-  
-  const { data } = useQuery(TREE_QUERY, 
-    {variables: { name: searchName, maxElement: searchMaxElement, depth: searchDepth, id: searchId, minma: props.myaRange[0], maxma: props.myaRange[1]},
-    fetchPolicy: "no-cache"
+
+  const [searchNameBuffer, setSearchNameBuffer] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [searchId, setSearchId] = useState("Q2382443");
+  const [searchDepth, setSearchDepth] = useState(3);
+  const [searchMaxElement, setSearchMaxElement] = useState(7);
+
+  const { data } = useQuery(TREE_QUERY, {
+    variables: {
+      name: searchName,
+      maxElement: searchMaxElement,
+      depth: searchDepth,
+      id: searchId,
+      minma: props.myaRange[0],
+      maxma: props.myaRange[1],
+    },
+    fetchPolicy: "no-cache",
   });
 
-    
   // useEffect(() => {
   //   console.log(data)
   // }, [data])
 
   return (
     <div className={styles.tree}>
-      <h1>This is tree.</h1>
+      <h1>tree section</h1>
 
       <form onSubmit={handleSubmit}>
-        <label>
-          New root name: 
-          <input value={searchNameBuffer} onChange = {(event) => {setSearchNameBuffer(event.target.value)}}></input>
-        </label>
-        <input type="submit" value="Search Root" />
-      
+        <TextField
+          variant="filled"
+          value={searchNameBuffer}
+          size="small"
+          label="Try a taxon name"
+          onChange={(event) => {
+            setSearchNameBuffer(event.target.value);
+          }}
+        />
+
+        <Button
+          className={useTreeStyles().root}
+          size="large"
+          variant="contained"
+          type="submit"
+          color="primary"
+        >
+          Search Root
+        </Button>
 
         <br></br>
-        <label>
-          Max number of elements to show for each level (sorted by number of fossil count in descending order):
-          <select value={searchMaxElement} onChange = {(event) => {
-            setSearchMaxElement(parseInt(event.target.value))
-            }} >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-            <option value={6}>6</option>
-            <option value={7}>7</option>
-            <option value={8}>8</option>
-            <option value={9}>9</option>
-            <option value={10}>10</option>
-            <option value={11}>11</option>
-            <option value={12}>12</option>
-            <option value={13}>13</option>
-            <option value={14}>14</option>
-            <option value={15}>15</option>
-            <option value={16}>16</option>
-            <option value={17}>17</option>
-            <option value={18}>18</option>
-            <option value={19}>19</option>
-            <option value={20}>20</option>
-          </select>
-        </label>
-
-        <br></br>
-
-        <label>
-          Number of taxon levels to retrieve from the new root:
-          <select value={searchDepth} onChange = {(event) => {
-            setSearchDepth(parseInt(event.target.value))
-            }} >
-            <option value={1}>1</option>
-            <option value={2}>2</option>
-            <option value={3}>3</option>
-            <option value={4}>4</option>
-            <option value={5}>5</option>
-            <option value={6}>6</option>
-            <option value={7}>7</option>
-          </select>
-        </label>
-
-
-
-      </form>
-       
-      {data ? <RadialTreeKasica data={data.getTreeFromWikiNameOrIdWithMya} onClick={handleClick}/>:"Try a new search :)"}
-
-      {(data && data.getTreeFromWikiNameOrIdWithMya.name !== "Biota")? <button onClick={handleBackToTop} >Back to top</button> : null}
-
-      
         
-      {data ? <BackToPrevious data = {data.getTreeFromWikiNameOrIdWithMya} handleBackToPrevious = {handleBackToPrevious} searchDepth = {searchDepth} /> : null}
+        <FormControl>
+          <Select
+            value={searchMaxElement}
+            size="small"
+            onChange={(event) => {
+              setSearchMaxElement(event.target.value as number);
+            }}
+          >
+            {makeOptions(Array.from({ length: 20 }, (_, i) => i + 1))}
+          </Select>
+          <FormHelperText>max element</FormHelperText>
+        </FormControl>
+
+        <FormControl>
+          <Select
+            value={searchDepth}
+            size="small"
+            onChange={(event) => {
+              setSearchDepth(event.target.value as number);
+            }}
+          >
+            {makeOptions(Array.from({ length: 7 }, (_, i) => i + 1))}
+          </Select>
+          <FormHelperText>depth</FormHelperText>
+        </FormControl>
+      </form>
+
+      {data ? (
+        <RadialTreeKasica
+          data={data.getTreeFromWikiNameOrIdWithMya}
+          onClick={handleClick}
+        />
+      ) : (
+        "Try a new search :)"
+      )}
+
+      {data && data.getTreeFromWikiNameOrIdWithMya.name !== "Biota" ? (
+        <Button variant="contained" onClick={handleBackToTop} color="secondary">
+          Back to top
+        </Button>
+      ) : null}
+      {data ? (
+        <BackToPrevious
+          data={data.getTreeFromWikiNameOrIdWithMya}
+          handleBackToPrevious={handleBackToPrevious}
+          searchDepth={searchDepth}
+        />
+      ) : null}
     </div>
   );
 }
-// 
-// <div>{JSON.stringify(constructedTree)}</div>
-// <div><BarChart data={data} /></div>
-// <RadialTree data={data}/>
-// <img src={sampleImage}></img>
-
-// {(data && data.getTreeFromWikiNameOrId.pathFromRootById.split(",").slice(1).length > searchDepth) ? <button onClick={handleBackToPrevious}>Back to {data.getTreeFromWikiNameOrId.pathFromRootByName.split(",").slice(2,3)} </button>  : "nothing"} 

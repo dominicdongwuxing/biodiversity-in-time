@@ -96,6 +96,48 @@ const FossilSchema = new Schema ({
 
 })
 
+const MapProptertySchema = new Schema({
+    name: {
+        type: String
+    }
+})
+
+const MapGeometrySchema = new Schema({
+    type: {
+        type: String
+    },
+
+    coordinates: Schema.Types.Mixed
+
+})
+
+const MapFeatureSchema = new Schema ({
+    type: {
+        type: String
+    },
+
+    properties: {
+        type: MapProptertySchema
+    },
+
+    geometry: {
+        type: MapGeometrySchema
+    }
+})
+
+const MapSchema = new Schema ({
+    mya: {
+        type: Number
+    },
+
+    type: {
+        type: String
+    },
+
+    features: {
+        type: [MapFeatureSchema]
+    }
+})
 
 //FossilSchema.index({ minma: 1, maxma: 1 })
 const Fossil = mongoose.model("Fossil", FossilSchema)
@@ -103,8 +145,12 @@ Fossil.collection.createIndex({ minma: 1, maxma: 1 })
 const Wiki = mongoose.model("Wiki",WikiSchema)
 Wiki.collection.createIndex({ id: 1, minma: 1, maxma: 1 })
 const User = mongoose.model("User",UserSchema)
+
+const Map = mongoose.model("Map", MapSchema)
+
 module.exports = {
     Fossil,
     Wiki,
     User,
+    Map
 }

@@ -5,9 +5,21 @@ const Query = require("./resolvers/Query")
 const mongoose = require("mongoose")
 const resolvers = {
   Query,
+  MapGeometryUnion: {
+    __resolveType: (obj, context, info) => {
+      if (obj.type === "Polygon") {
+        return "MapGeometryPolygon"
+      } else {
+        return "MapGeometryMultiPolygon"
+      }
+    }
+  }
 }
 
-const { Fossil, Wiki } = require("./models")
+ 
+
+const { Fossil, Wiki, Map } = require("./models");
+const { info } = require('console');
 const server = new ApolloServer({
   typeDefs: fs.readFileSync(
     path.join(__dirname, 'schema.graphql'),
@@ -26,9 +38,11 @@ mongoose
       console.log("MongoDB connected successfully")
       //Wiki.collection.drop();
       //Fossil.collection.drop();
+      //Map.collection.drop()
       //console.log("A random fossil is: " + await Fossil.findOne())
-      // console.log("A random wiki is: " + await Wiki.findOne())
+      //console.log("A random wiki is: " + await Wiki.findOne())
       //console.log("A random user is: " + await User.findOne())
+      //console.log("A random map is: " + await Map.findOne())
       server
           .listen()
           .then(({ url }) =>
