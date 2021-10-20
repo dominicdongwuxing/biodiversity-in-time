@@ -6,11 +6,12 @@ import Tree from "./Tree";
 import Footer from "./Footer";
 import styles from "./App.module.css";
 import { useAppStyles } from "./AppStyles";
-import { Grid } from "@mui/material";
+import { Grid, Card } from "@mui/material";
 
 export default function App() {
   const changeMyaMain = (value) => {
     setMyaMain(parseInt(value));
+    setUrl("./resources/tectonicData/reconstructed_" + parseInt(value) + ".00Ma.geojson")
     setMyaRange([
       value - steps < 0 ? 0 : value - steps,
       value + steps > 1000 ? 1000 : value + steps,
@@ -22,19 +23,24 @@ export default function App() {
   };
 
   const steps = 10;
-  const [myaMain, setMyaMain] = useState(200);
+  const initialMya = 400;
+  const [myaMain, setMyaMain] = useState(initialMya);
+  const [url, setUrl] = useState("./resources/tectonicData/reconstructed_" + initialMya + ".00Ma.geojson")
   const [myaRange, setMyaRange] = useState([myaMain - steps, myaMain + steps]);
 
   return (
     <Grid container>
       {/* <div className={styles.app}> */}
       <Grid item sm={12}>
+        <Card>
         <Header />
+        </Card>
+        
       </Grid>
 
       <Grid item sm={12} container >
         <Grid item sm={7} >
-          <Map myaMain={myaMain} myaRange={myaRange}/>
+          <Map myaMain={myaMain} myaRange={myaRange} url={url}/>
         </Grid>
 
         <Grid item sm={5} >

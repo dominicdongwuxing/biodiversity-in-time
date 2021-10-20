@@ -1,3 +1,6 @@
 .scrollBar {
-    composes: show-border from "../index.module.css";
+    /* composes: show-border from "../index.module.css"; */
+
+    border: 5px solid black;
+
 }

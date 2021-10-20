@@ -1,18 +1,20 @@
 const path = require('path');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+// const CopyWebpackPlugin = require("copy-webpack-plugin")
 
 module.exports = {
   entry: ['./src/index.tsx'],
   output: {
     path: path.resolve(__dirname, 'dist/'),
     publicPath:"/",
-    assetModuleFilename: 'images/[name][ext]'
+    //assetModuleFilename: 'images/[name][ext]'
+    assetModuleFilename: 'tectonicData/[name][ext]'
   },
   devtool: 'source-map',
   module: {
     rules: [
       {
-        test: /\.(png|jpg|jpeg|gif)$/i,
+        test: /\.(png|jpg|jpeg|gif|geojson)$/i,
         type: 'asset/resource'
       },
       {
@@ -92,6 +94,12 @@ module.exports = {
   plugins: [
       new HtmlWebpackPlugin ({
         template: 'index.html',
-      })
+      }),
+
+      // new CopyWebpackPlugin({
+      //   patterns: [
+      //     {from: "src/components/tectonicData"}
+      //   ]
+      // })
   ]
 };
