@@ -1,3 +1,10 @@
 .header {
     composes: show-border from "../index.module.css";
+    background-color: lightgray;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    margin: 0;
 }

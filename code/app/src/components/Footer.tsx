@@ -5,7 +5,7 @@ export default function Footer() {
   return (
     <div>
       <footer className={styles.footer}>
-        <h1>footer section</h1>
+        <h1>Created By Wuxing Dong</h1>
       </footer>
     </div>
   );

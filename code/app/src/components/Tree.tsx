@@ -79,30 +79,20 @@ const TREE_QUERY = gql`
 function RadialTreeKasica({ data, onClick }) {
   const ref = useRef();
   useEffect(() => {
-    function collapse(d) {
-      if (d.children) {
-        d._children = d.children;
-        // d._children.forEach(collapse);
-        d.children = null;
-      } else {
-        d.children = d._children;
-        d._children = null;
-      }
-    }
+
     //data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
-    const height = 500;
-    const width = 500;
+    const sideLength = 380;
     const margin = { top: 20, right: 30, bottom: 30, left: 40 };
 
-    const svg = d3.select(ref.current),
-      // width = +svg.attr("width"),
-      // height = +svg.attr("height"),
-      radius = 200,
+    const svg = d3.select(ref.current).
+                    attr("height", sideLength).
+                    attr("width", sideLength),
+      radius = 100,
       g = svg
         .append("g")
         .attr(
           "transform",
-          "translate(" + (width / 2 + 40) + "," + (height / 2 + 90) + ")"
+          "translate(" + (sideLength / 2 + 30) + "," + (sideLength / 2 - 10) + ")"
         );
 
     // var stratify = d3.stratify()
@@ -153,7 +143,7 @@ function RadialTreeKasica({ data, onClick }) {
       .on("mouseout", function () {
         d3.select(this).classed("active", false);
       })
-      .on("click", function (d) {
+      .on("click", function (e, d) {
         // var svg = d3.select(ref.current);
         // svg.remove("g")
         // setData(exampleData);
@@ -201,10 +191,8 @@ function RadialTreeKasica({ data, onClick }) {
     <svg
       ref={ref}
       style={{
-        height: 600,
         width: "100%",
-        marginRight: "0px",
-        marginLeft: "0px",
+        margin: "0px",
       }}
     ></svg>
   );
@@ -236,7 +224,9 @@ const BackToPrevious = ({ data, searchDepth, handleBackToPrevious }) => {
     if (path.length > searchDepth) {
       return (
         <Button
+          style={{margin: "5px"}}
           variant="contained"
+          size="small"
           onClick={handleBackToPrevious}
           color="secondary"
         >
@@ -324,7 +314,6 @@ export default function Tree({ props }) {
 
   return (
     <div className={styles.tree}>
-      <h1>tree section</h1>
 
       <form onSubmit={handleSubmit}>
         <TextField
@@ -339,7 +328,7 @@ export default function Tree({ props }) {
 
         <Button
           className={useTreeStyles().root}
-          size="large"
+          size="small"
           variant="contained"
           type="submit"
           color="primary"
@@ -347,33 +336,7 @@ export default function Tree({ props }) {
           Search Root
         </Button>
 
-        <br></br>
-        
-        <FormControl>
-          <Select
-            value={searchMaxElement}
-            size="small"
-            onChange={(event) => {
-              setSearchMaxElement(event.target.value as number);
-            }}
-          >
-            {makeOptions(Array.from({ length: 20 }, (_, i) => i + 1))}
-          </Select>
-          <FormHelperText>max element</FormHelperText>
-        </FormControl>
 
-        <FormControl>
-          <Select
-            value={searchDepth}
-            size="small"
-            onChange={(event) => {
-              setSearchDepth(event.target.value as number);
-            }}
-          >
-            {makeOptions(Array.from({ length: 7 }, (_, i) => i + 1))}
-          </Select>
-          <FormHelperText>depth</FormHelperText>
-        </FormControl>
       </form>
 
       {data ? (
@@ -382,11 +345,45 @@ export default function Tree({ props }) {
           onClick={handleClick}
         />
       ) : (
-        "Try a new search :)"
+        "This taxon does not exist in the selected time period :)"
       )}
+      
+        <FormControl>
+          <Select
+            style={{margin: "5px"}}
+            value={searchMaxElement}
+            size="small"
+            onChange={(event) => {
+              setSearchMaxElement(event.target.value as number);
+            }}
+          >
+            {makeOptions(Array.from({ length: 20 }, (_, i) => i + 1))}
+          </Select>
+          <FormHelperText>max item</FormHelperText>
+        </FormControl>
+
+        <FormControl>
+          <Select
+            style={{margin: "5px"}}
+            value={searchDepth}
+            size="small"
+            onChange={(event) => {
+              setSearchDepth(event.target.value as number);
+            }}
+          >
+            {makeOptions(Array.from({ length: 5 }, (_, i) => i + 1))}
+          </Select>
+          <FormHelperText>depth</FormHelperText>
+        </FormControl>
+      
 
       {data && data.getTreeFromWikiNameOrIdWithMya.name !== "Biota" ? (
-        <Button variant="contained" onClick={handleBackToTop} color="secondary">
+        <Button 
+          style={{margin: "5px"}}
+          variant="contained" 
+          size="small" 
+          onClick={handleBackToTop} 
+          color="secondary">
           Back to top
         </Button>
       ) : null}

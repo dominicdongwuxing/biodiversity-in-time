@@ -6,7 +6,7 @@ import Tree from "./Tree";
 import Footer from "./Footer";
 import styles from "./App.module.css";
 import { useAppStyles } from "./AppStyles";
-import { Grid, Card } from "@mui/material";
+import { Grid, Card, CardContent, CardActions } from "@mui/material";
 
 export default function App() {
   const changeMyaMain = (value) => {
@@ -23,43 +23,60 @@ export default function App() {
   };
 
   const steps = 10;
-  const initialMya = 400;
+  const initialMya = Math.floor(541/2);
   const [myaMain, setMyaMain] = useState(initialMya);
   const [url, setUrl] = useState("./resources/tectonicData/reconstructed_" + initialMya + ".00Ma.geojson")
-  const [myaRange, setMyaRange] = useState([myaMain - steps, myaMain + steps]);
+  const [myaRange, setMyaRange] = useState([0,541]);
 
   return (
     <Grid container>
       {/* <div className={styles.app}> */}
       <Grid item sm={12}>
         <Card>
-        <Header />
+          <CardContent>
+            <Header />
+          </CardContent>
+        </Card>
+      </Grid>
+
+
+        <Grid item sm={8} >
+          <Card style={{height:"525px"}}>
+            <CardContent>
+              <Map myaMain={myaMain} myaRange={myaRange} url={url}/>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item sm={4} >
+          <Card style={{height: "525px"}}>
+            <CardContent>
+              <Tree props={{ mya: myaMain, myaRange: myaRange }} />
+            </CardContent>
+          </Card>
+        </Grid>
+
+      <Grid item sm={12}>
+        <Card style={{height:"100%"}}>
+          <CardContent>
+            <ScrollBar
+            changeMyaMain={changeMyaMain}
+            changeMyaRange={changeMyaRange}
+            myaMain={myaMain}
+            myaRange={myaRange}
+            steps={steps}
+            />
+          </CardContent>
         </Card>
         
       </Grid>
-
-      <Grid item sm={12} container >
-        <Grid item sm={7} >
-          <Map myaMain={myaMain} myaRange={myaRange} url={url}/>
-        </Grid>
-
-        <Grid item sm={5} >
-          <Tree props={{ mya: myaMain, myaRange: myaRange }} />
-        </Grid>
-      </Grid>
-
-      <Grid item sm={12}>
-        <ScrollBar
-          changeMyaMain={changeMyaMain}
-          changeMyaRange={changeMyaRange}
-          myaMain={myaMain}
-          myaRange={myaRange}
-          steps={steps}
-        />
-      </Grid>
       
       <Grid item sm={12}>
-        <Footer />
+          <Card>
+            <CardContent>
+              <Footer />
+            </CardContent>
+          </Card>
       </Grid>
       {/* </div> */}
     </Grid>

@@ -73,8 +73,7 @@ const Tectonics = ({ geojson, fossilData }) => {
     // parse the fossil data
     
     const fossilArray = fossilData ? fossilData.map(fossil => [fossil.lng, fossil.lat]) : [];
-    console.log(fossilArray)
-    const projection = d3.geoEquirectangular().scale(100);
+    const projection = d3.geoEquirectangular()//.scale(110);
 
     const geoGenerator = d3.geoPath().projection(projection);
     // const bounds = features.map(feature => geoGenerator.bounds(feature))
@@ -85,14 +84,13 @@ const Tectonics = ({ geojson, fossilData }) => {
     // console.log(xmin, xmax, ymin, ymax)
     // set up zoom
     const handleZoom = (e) => {
-      //console.log(e.sourceEvent.stopPropagation)
       d3.select(ref.current)
         .select("g")
         .attr("transform",e.transform)
     }
     const zoom = d3.zoom()
-      .scaleExtent([-5,5])
-      .translateExtent([[0,0],[1800,1600]])
+      .scaleExtent([-1,50])
+      .translateExtent([[0,0],[1000,600]])
       .on("zoom", handleZoom)
 
     d3.select(ref.current) 
@@ -112,13 +110,12 @@ const Tectonics = ({ geojson, fossilData }) => {
     d3.select(ref.current)
       .select("g")
       .selectAll("circle")
-      //.data([[-122,37],[110,60]])
       .data(fossilArray)
       .enter()
       .append("circle")
       .attr("cx", (d) => projection(d)[0])
       .attr("cy", (d) => projection(d)[1])
-      .attr("r", "2px")
+      .attr("r", "1px")
       .attr("fill","red")
 
     
@@ -128,17 +125,17 @@ const Tectonics = ({ geojson, fossilData }) => {
     <svg
       ref={ref}
       style={{
-        height: 600,
+        height: "500px",
         width: "100%",
-        marginRight: "0px",
-        marginLeft: "0px",
+        margin: "0px",
+        border: "1px solid black"
       }}
     ></svg>
   );
 };
 
 export default function Map({ myaMain, myaRange, url }) {
-  const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1] } });
+  // const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1] } });
   const [mapData, setMapData] = useState(null)
   useEffect(() => {
     // let url = "./tectonicData/reconstructed_" + myaMain + ".00Ma.json"
@@ -158,9 +155,8 @@ export default function Map({ myaMain, myaRange, url }) {
   //const data = {"getMapAtMya" : mapData, "getFossilsDuringMya": []}
   return (
     <div className={styles.map}>
-      <h1>map section</h1>
-      {mapData && mapData.getMapAtMya && data && data.getFossilsDuringMya ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={data.getFossilsDuringMya} />
+      {mapData && mapData.getMapAtMya ? (
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />
       ) : (
         <Tectonics geojson={exampleGeojson} fossilData={[]} />
       )}

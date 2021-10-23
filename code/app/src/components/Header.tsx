@@ -6,7 +6,7 @@ export default function Header() {
   return (
     <div>
       <header className={styles.header}>
-        <h1>header section</h1>
+        <h1>Prototype for biodiversity through time visualization</h1>
       </header>
     </div>
   );

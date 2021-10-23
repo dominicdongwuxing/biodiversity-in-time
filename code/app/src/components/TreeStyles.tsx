@@ -7,7 +7,11 @@ export const useTreeStyles = makeStyles({
         background: "blue",
         color: "white",
         padding: "0 30px",
-        height: "49px"
+        height: "48px"
+    },
+
+    nonSubmitButtons: {
+        margin: "5px"
     }
 })
 

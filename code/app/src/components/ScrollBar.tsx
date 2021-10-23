@@ -130,34 +130,23 @@ export default function ScrollBar({
 
   return (
     <div id="scaleBar" className={styles.scrollBar}>
-      <h1>scroll bar section</h1>
       <GeoTimescale changeMyaMain={changeMyaMain} changeMyaRange={changeMyaRange}/>
     </div>
   );
 }
 
 const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
-  const [focus, setFocus] = useState(null)
-  const [sequence, setSequence] = useState([])
   const ref = useRef()
   useEffect(() => {
-    const config = {
-      width: 960,
-      height: 400,
-      tickLength: 10,
-      neighborWidth: 25,
-      fontSize: 12,
-    };
-
     const {width, height, tickLength, neighborWidth, fontSize} = {
       width: 960,
-      height: 400,
-      tickLength: 10,
-      neighborWidth: 25,
-      fontSize: 12,
+      height: 125,
+      tickLength: 5,
+      neighborWidth: 15,
+      fontSize: 9,
     };
 
-    const margins = { bottom: 65 };
+    const margins = { bottom: 40 };
 
     const labelVisible = (d) => +(d.x1 - d.x0 > 14);
 
@@ -177,24 +166,12 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
 
 
     const svg = d3.select(ref.current)
-      // .attr("width",400)
-      // .attr("height",400)
-      // .append("g")
-      // .append("circle")
-      // .attr("cx", 50)
-      // .attr("cy", 50)
-      // .attr("r",50)
-      // .attr("fill","red")
       .attr("viewBox", [0, 0, width, height])
       .style("font", font);
     
       const g = svg.append("g");
-
-      let focus = root;
-
-      // Expose focus and ancestors
-      setFocus(focus);
-      setSequence([]);
+      
+      let focus = root
 
       let hideSmallTicks = true;
 
@@ -220,13 +197,13 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
           // Highlight the ancestors
           cell.attr("fill-opacity", (d) => (sequence.includes(d) ? 1.0 : 0.5));
 
-          setSequence(sequence);
+          //setSequence(sequence);
         })
         .on("click", clicked);
 
         svg.on("pointerleave", () => {
           cell.attr("fill-opacity", 1);
-          setSequence([]);
+          //setSequence([]);
         });
       
         cell.append("title").text((d) => {
@@ -272,7 +249,6 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
           focus = p === focus ? p.parent : p;
           changeMyaMain(Math.floor((focus.data.end + focus.data.start)/2))
           changeMyaRange([focus.data.end , focus.data.start])
-          setFocus(focus);
           hideSmallTicks = [0, 1].includes(focus.depth);
 
           const focusAncestors = focus.ancestors().slice(1); // Ignore clicked node itself
@@ -475,6 +451,8 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
 
           return metrics.width;
         }
+
+        clicked(null, root.children[2])
       },[])
   return (
     <svg ref={ref}></svg>
