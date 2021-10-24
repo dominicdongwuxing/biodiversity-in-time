@@ -108,7 +108,17 @@ with open(os.path.join(PBDBDIR, "pbdb_for_db.json"),"w") as f:
 json_splitter(parsed_pbdb,10,PBDBDIR,"pbdb_for_db")
 
 
+# aggregate pbdb into wikiRef, minma(min of all records under the same wikiRef), maxma (similar to minma)
+# and coordinates ([[lng, lat]])
+agg_pbdb = pbdb.groupby(["wikiRef"]).agg({"minma":"min","maxma":"max"})
+pbdb["coordinate"] = pbdb[["lng","lat"]].values.tolist()
+coordinates = pbdb.groupby(["wikiRef"])["coordinate"].apply(list)
+agg_pbdb["coordinates"] = coordinates
+agg_pbdb.reset_index(level=0, inplace=True)
+parsed_agg_pbdb = json.loads(agg_pbdb.to_json(orient="records"))
 
+with open(os.path.join(PBDBDIR, "agg_pbdb_for_db.json"),"w") as f:
+    json.dump(parsed_agg_pbdb,f)
 
 
 

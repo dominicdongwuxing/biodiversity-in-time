@@ -28,9 +28,7 @@ const MAP_AND_FOSSIL_QUERY = gql`
     }
 
     getFossilsDuringMya (minma: $minma, maxma: $maxma) {
-      lat
-      lng
-      name
+      coordinates
       wikiRef
     }
   }
@@ -71,8 +69,9 @@ const Tectonics = ({ geojson, fossilData }) => {
     const features = geojson.features
 
     // parse the fossil data
-    
-    const fossilArray = fossilData ? fossilData.map(fossil => [fossil.lng, fossil.lat]) : [];
+    let fossilArray = []
+    fossilData ? fossilData.map(fossil => fossil.coordinates.map(oneCoordinate => fossilArray.push(oneCoordinate))) : null;
+    console.log(fossilArray)
     const projection = d3.geoEquirectangular()//.scale(110);
 
     const geoGenerator = d3.geoPath().projection(projection);
@@ -135,7 +134,7 @@ const Tectonics = ({ geojson, fossilData }) => {
 };
 
 export default function Map({ myaMain, myaRange, url }) {
-  // const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1] } });
+  const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1] } });
   const [mapData, setMapData] = useState(null)
   useEffect(() => {
     // let url = "./tectonicData/reconstructed_" + myaMain + ".00Ma.json"
@@ -155,8 +154,8 @@ export default function Map({ myaMain, myaRange, url }) {
   //const data = {"getMapAtMya" : mapData, "getFossilsDuringMya": []}
   return (
     <div className={styles.map}>
-      {mapData && mapData.getMapAtMya ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />
+      {mapData && mapData.getMapAtMya && data && data.getFossilsDuringMya ? (
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={data.getFossilsDuringMya} />
       ) : (
         <Tectonics geojson={exampleGeojson} fossilData={[]} />
       )}

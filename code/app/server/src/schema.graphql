@@ -14,14 +14,10 @@ type Query {
 }
 
 type Fossil {
-    id: ID!
-    wikiRef: String!
-    name: String!
-    rank: String!
+    wikiRef: ID!
     minma: Float!
     maxma: Float!
-    lng: Float!
-    lat: Float!
+    coordinates: [[Float!]]
 }
 
 type Wiki {

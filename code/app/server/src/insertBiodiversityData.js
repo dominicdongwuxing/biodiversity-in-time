@@ -11,21 +11,28 @@ const db = mongoose.connection
     
     async function insert() {
 
-      const wikis = require("../../../../dataset/wikidata/processed/fossil_related_flat_tree_for_db.json")
-        try {
-          await Wiki.insertMany(wikis).then(()=>{console.log("All wikis inserted")})
-        } catch (err) {
-          console.error(err)
-        } 
+      // const wikis = require("../../../../dataset/wikidata/processed/fossil_related_flat_tree_for_db.json")
+      //   try {
+      //     await Wiki.insertMany(wikis).then(()=>{console.log("All wikis inserted")})
+      //   } catch (err) {
+      //     console.error(err)
+      //   } 
 
-      for (let i = 1; i < 11; i++) {
-        const fossils = require("../../../../dataset/pbdb/pbdb_for_db/pbdb_for_db_" + i + ".json")
+      // for (let i = 1; i < 11; i++) {
+      //   const fossils = require("../../../../dataset/pbdb/pbdb_for_db/pbdb_for_db_" + i + ".json")
+      //   try {
+      //     await Fossil.insertMany(fossils).then(()=>{console.log("All fossils inserted, file number " + i)})
+      //   } catch (err) {
+      //     console.error(err)
+      //   }        
+      // }
+
+      const fossils = require("../../../../dataset/pbdb/agg_pbdb_for_db.json")
         try {
-          await Fossil.insertMany(fossils).then(()=>{console.log("All fossils inserted, file number " + i)})
+          await Fossil.insertMany(fossils).then(()=>{console.log("All fossils inserted")})
         } catch (err) {
           console.error(err)
-        }        
-      }
+        }  
 
       // for (let i = 1; i < 51; i++) {
       //   const wikis = require("../../../../dataset/wikidata/processed/flat_tree_for_db/flat_tree_for_db_" + i + ".json")

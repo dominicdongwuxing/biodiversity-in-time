@@ -54,22 +54,7 @@ const WikiSchema = new Schema ({
 }) 
 
 const FossilSchema = new Schema ({
-    id: {
-        type: String,
-        required: true
-    },
-
     wikiRef: {
-        type: String,
-        required: true
-    },
-
-    name: {
-        type: String,
-        required: true
-    },
-
-    rank: {
         type: String,
         required: true
     },
@@ -84,15 +69,10 @@ const FossilSchema = new Schema ({
         required: true
     },
 
-    lng: {
-        type: Number,
+    coordinates: {
+        type: [[Number]],
         required: true
     },
-
-    lat: {
-        type: Number,
-        required: true
-    }
 
 })
 
