@@ -185,3 +185,20 @@ parsed_tree_for_db = json.loads(tree_for_db_pd.to_json(orient="records"))
 # save the flat tree for db into file
 with open(os.path.join(WIKIDIR, "fossil_related_flat_tree_for_db.json"),"w") as f:
     json.dump(parsed_tree_for_db,f)
+
+
+
+
+
+# also append pathFromRootById into fossil data 
+
+
+with open(os.path.join(WIKIDIR, "fossil_related_flat_tree_for_db.json"),"rb") as f:
+    tree_for_db_pd = pd.DataFrame(json.load(f))
+
+agg_pbdb["pathFromRootById"] = tree_for_db_pd.set_index("id").loc[agg_pbdb["wikiRef"],"pathFromRootById"].values
+
+parsed_agg_pbdb = json.loads(agg_pbdb.to_json(orient="records"))
+
+with open(os.path.join(PBDBDIR, "agg_pbdb_for_db.json"),"w") as f:
+    json.dump(parsed_agg_pbdb,f)

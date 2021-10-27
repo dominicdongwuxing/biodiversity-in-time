@@ -1,5 +1,6 @@
 type Query {
-    getFossilsDuringMya (
+    getFossilsDuringMyaByRoot (
+        wikiRef: String,
         minma: Float,
         maxma: Float
     ): [Fossil]

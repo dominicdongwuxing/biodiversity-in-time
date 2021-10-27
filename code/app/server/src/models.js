@@ -1,16 +1,6 @@
 const mongoose = require("mongoose")
 const { Schema } = mongoose
 
-const UserSchema = new Schema ({
-    name: {
-        type: String,
-    },
-    age: {
-        type: Number,
-        required: true
-    }
-}) 
-
 const WikiSchema = new Schema ({
     name: {
         type: String,
@@ -55,6 +45,11 @@ const WikiSchema = new Schema ({
 
 const FossilSchema = new Schema ({
     wikiRef: {
+        type: String,
+        required: true
+    },
+
+    pathFromRootById: {
         type: String,
         required: true
     },
@@ -121,16 +116,14 @@ const MapSchema = new Schema ({
 
 //FossilSchema.index({ minma: 1, maxma: 1 })
 const Fossil = mongoose.model("Fossil", FossilSchema)
-Fossil.collection.createIndex({ minma: 1, maxma: 1 })
+Fossil.collection.createIndex({ wikiRef: 1, minma: 1, maxma: 1 })
 const Wiki = mongoose.model("Wiki",WikiSchema)
 Wiki.collection.createIndex({ id: 1, minma: 1, maxma: 1 })
-const User = mongoose.model("User",UserSchema)
 
 const Map = mongoose.model("Map", MapSchema)
 
 module.exports = {
     Fossil,
     Wiki,
-    User,
     Map
 }

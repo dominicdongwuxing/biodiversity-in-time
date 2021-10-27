@@ -245,14 +245,22 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
         ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks));
 
 
-        function clicked(event, p) {
-          focus = p === focus ? p.parent : p;
-          changeMyaMain(Math.floor((focus.data.end + focus.data.start)/2))
-          changeMyaRange([focus.data.end , focus.data.start])
-          hideSmallTicks = [0, 1].includes(focus.depth);
+        function clicked(event, node) {
+          const ancestorPath = node.ancestors().map(node => node.data.name)
 
-          const focusAncestors = focus.ancestors().slice(1); // Ignore clicked node itself
+          // disable focusing on Geological time (root) or top levels under Phanerozoic
+          if (node == root || (ancestorPath.includes("Phanerozoic") && node.depth < 3)) return null
+          // focus = p === focus ? p.parent : p;
+          
+          changeMyaMain(Math.floor((node.data.end + node.data.start)/2))
+          changeMyaRange([node.data.end , node.data.start])
+          hideSmallTicks = true//[0, 1, 2].includes(node.depth);
+  
+          // before Phanerozoic, focus on Geologic time, otherwise, focus on Phanerozoic
+          const focus = ancestorPath.includes("Phanerozoic") ? root.children[2] : root
 
+          const focusAncestors = node.ancestors().slice(1); // Ignore clicked node itself
+        
           const t = event ? d3.transition().duration(450) : null; // Can't transition when using input, bit of a hack
 
           // Show a bit of the neighbouring cells on focus of an interval
@@ -305,9 +313,13 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
             )
             .attr("x", (d) => {
               // Position all the ancestors labels in the middle
-              if (focusAncestors.includes(d)) {
-                return -d.target.x0 + width / 2;
-              }
+              // if (focusAncestors.includes(d)) {
+              //   return -d.target.x0 + width / 2;
+              // }
+
+              // Position Geologic time (root) label in the middle
+              if (d == root) return -d.target.x0 + width/2
+
               const rectWidth = d.target.x1 - d.target.x0;
               const textX = rectWidth / 2;
 
@@ -324,18 +336,18 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
           ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks));
         }
 
-        svg.call(
-          d3.zoom()
-            .extent([
-              [0, 0],
-              [width, height],
-            ])
-            .scaleExtent([1, 8])
-            .on("zoom", zoomed)
-            .on("end", () => {
-              rect.attr("cursor", "pointer");
-            })
-        );
+        // svg.call(
+        //   d3.zoom()
+        //     .translateExtent([
+        //       [0, 0],
+        //       [width, height],
+        //     ])
+        //     .scaleExtent([1, 8])
+        //     .on("zoom", zoomed)
+        //     .on("end", () => {
+        //       rect.attr("cursor", "pointer");
+        //     })
+        // );
 
         function zoomed(e) {
           if (!root.target) return;
@@ -452,7 +464,9 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
           return metrics.width;
         }
 
-        clicked(null, root.children[2])
+        // zero in Geologic time > Phanerozoic > Cenozoic > Quaternary > Holocene (0.0117-0 mya)
+        clicked(null, root.children[2].children[2].children[2].children[0])
+        
       },[])
   return (
     <svg ref={ref}></svg>

@@ -255,16 +255,16 @@ export default function Tree({ props }) {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setSearchName(searchNameBuffer);
-    setSearchId("");
+    props.setSearchName(searchNameBuffer);
+    props.setSearchId("");
   };
 
   const handleBackToTop = () => {
-    setSearchId("Q2382443");
+    props.setSearchId("Q2382443");
   };
 
   const handleClick = (id) => {
-    setSearchId(id);
+    props.setSearchId(id);
   };
 
   const handleBackToPrevious = () => {
@@ -273,9 +273,9 @@ export default function Tree({ props }) {
         .split(",")
         .slice(1);
       if (path.length < searchDepth) {
-        setSearchId("Q2382443");
+        props.setSearchId("Q2382443");
       } else {
-        setSearchId(path[path.length - searchDepth]);
+        props.setSearchId(path[path.length - searchDepth]);
       }
     }
   };
@@ -291,17 +291,17 @@ export default function Tree({ props }) {
   // }
 
   const [searchNameBuffer, setSearchNameBuffer] = useState("");
-  const [searchName, setSearchName] = useState("");
-  const [searchId, setSearchId] = useState("Q2382443");
+  // const [searchName, setSearchName] = useState("");
+  // const [searchId, setSearchId] = useState("Q2382443");
   const [searchDepth, setSearchDepth] = useState(3);
   const [searchMaxElement, setSearchMaxElement] = useState(7);
 
   const { data } = useQuery(TREE_QUERY, {
     variables: {
-      name: searchName,
+      name: props.searchName,
       maxElement: searchMaxElement,
       depth: searchDepth,
-      id: searchId,
+      id: props.searchId,
       minma: props.myaRange[0],
       maxma: props.myaRange[1],
     },

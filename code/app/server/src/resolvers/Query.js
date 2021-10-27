@@ -1,16 +1,48 @@
 const { Fossil, Wiki, Map } = require("../models")
 
-// const getFossilsAtMya = async (parent, args, context, info) => {
-//     const result = await Fossil.find({ maxma: { $gt: args.mya }, minma: { $lte: args.mya }})
-//     return result
-// }
+const getFossilsDuringMyaByRoot= async (parent, args, context, info) => {
+    const maxElement = 7
+    const collectWikiRefsFromRoot = async (root) => {
+        const sortAndTrimChildren = (children) => {
+            return children.sort((a,b)=>{
+                if (a.count < b.count) {
+                    return 1
+                }
+                if (a.count > b.count) {
+                    return -1
+                }
+                return 0
+            }).slice(0,maxElement)
+        }
 
-// const getFossilsUptoMya = async (parent, args, context, info) => {
-//     const result = await Fossil.find({ maxma: { $gt: args.mya }})
-//     return result
-// }
-const getFossilsDuringMya = async (parent, args, context, info) => {
-    const result = await Fossil.find({minma: {$lte: args.maxma}, maxma: {$gte: args.minma}})
+        const children = await Wiki.find({id: {$in: root.children}, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(sortAndTrimChildren)
+        for (let child of children) {
+            wikiRefs.push(child.id)
+            await collectWikiRefsFromRoot(child)
+        }
+        // console.log(wikiRefs)
+    }
+
+    // if wikiRef is a name then convert it to the corresponding id
+    let rootId = args.wikiRef
+
+    if (isNaN(rootId.slice(1,2))) {
+        const rootName = rootId.trim().charAt(0).toUpperCase() + rootId.trim().slice(1)
+        root = await Wiki.find({name: rootName}).then(root => rootId = root[0].id)
+    } 
+
+
+    //let wikiRefs = [rootId]
+
+    //const pathLookUp = await Wiki.find({}, "id pathFromRootById").then(arr => arr.reduce((obj, item) => (obj[item.id] = item.pathFromRootById, obj) ,{}))
+    //console.log(pathLookUp)
+    //await collectWikiRefsFromRoot(root)
+    // console.log(wikiRefs)
+    let result = await Fossil.find({minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(result => {
+        return result.filter(item => item.pathFromRootById.includes(rootId))
+    })
+
+    //result = result.filter(item => pathLookUp[item.wikiRef].includes(rootId))
     return result
 }
 
@@ -77,7 +109,7 @@ const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
 }
 
 module.exports = {
-    getFossilsDuringMya,
+    getFossilsDuringMyaByRoot,
     getMapAtMya,
     getTreeFromWikiNameOrIdWithMya
 }

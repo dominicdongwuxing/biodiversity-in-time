@@ -23,10 +23,12 @@ export default function App() {
   };
 
   const steps = 10;
-  const initialMya = Math.floor(541/2);
+  const initialMya = Math.floor(0.0117/2);
   const [myaMain, setMyaMain] = useState(initialMya);
   const [url, setUrl] = useState("./resources/tectonicData/reconstructed_" + initialMya + ".00Ma.geojson")
-  const [myaRange, setMyaRange] = useState([0,541]);
+  const [myaRange, setMyaRange] = useState([0,0.0117]);
+  const [searchName, setSearchName] = useState("Biota");
+  const [searchId, setSearchId] = useState("Q2382443");
 
   return (
     <Grid container>
@@ -43,7 +45,7 @@ export default function App() {
         <Grid item sm={8} >
           <Card style={{height:"525px"}}>
             <CardContent>
-              <Map myaMain={myaMain} myaRange={myaRange} url={url}/>
+              <Map myaMain={myaMain} myaRange={myaRange} url={url} searchName={searchName} searchId={searchId}/>
             </CardContent>
           </Card>
         </Grid>
@@ -51,7 +53,7 @@ export default function App() {
         <Grid item sm={4} >
           <Card style={{height: "525px"}}>
             <CardContent>
-              <Tree props={{ mya: myaMain, myaRange: myaRange }} />
+              <Tree props={{ mya: myaMain, myaRange: myaRange, searchName: searchName, searchId: searchId, setSearchName: setSearchName, setSearchId: setSearchId }} />
             </CardContent>
           </Card>
         </Grid>

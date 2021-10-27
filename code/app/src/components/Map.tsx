@@ -6,7 +6,7 @@ import { Container } from "@mui/material"
 import axios from "axios"
 
 const MAP_AND_FOSSIL_QUERY = gql`
-  query retrieveMapAndFossils($mya: Int, $maxma: Float, $minma: Float) {
+  query retrieveMapAndFossils($mya: Int, $maxma: Float, $minma: Float, $wikiRef: String) {
     getMapAtMya(mya: $mya) {
       mya
       # type
@@ -27,7 +27,7 @@ const MAP_AND_FOSSIL_QUERY = gql`
       # }
     }
 
-    getFossilsDuringMya (minma: $minma, maxma: $maxma) {
+    getFossilsDuringMyaByRoot (wikiRef: $wikiRef, minma: $minma, maxma: $maxma) {
       coordinates
       wikiRef
     }
@@ -71,7 +71,7 @@ const Tectonics = ({ geojson, fossilData }) => {
     // parse the fossil data
     let fossilArray = []
     fossilData ? fossilData.map(fossil => fossil.coordinates.map(oneCoordinate => fossilArray.push(oneCoordinate))) : null;
-    console.log(fossilArray)
+    //console.log(fossilArray)
     const projection = d3.geoEquirectangular()//.scale(110);
 
     const geoGenerator = d3.geoPath().projection(projection);
@@ -133,8 +133,9 @@ const Tectonics = ({ geojson, fossilData }) => {
   );
 };
 
-export default function Map({ myaMain, myaRange, url }) {
-  const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1] } });
+export default function Map({ myaMain, myaRange, url, searchName, searchId }) {
+  const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1], wikiRef: searchId ? searchId : searchName } });
+  //const [data, setData] = useState({"getFossilsDuringMya":[]})
   const [mapData, setMapData] = useState(null)
   useEffect(() => {
     // let url = "./tectonicData/reconstructed_" + myaMain + ".00Ma.json"
@@ -154,8 +155,8 @@ export default function Map({ myaMain, myaRange, url }) {
   //const data = {"getMapAtMya" : mapData, "getFossilsDuringMya": []}
   return (
     <div className={styles.map}>
-      {mapData && mapData.getMapAtMya && data && data.getFossilsDuringMya ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={data.getFossilsDuringMya} />
+      {mapData && mapData.getMapAtMya && data && data.getFossilsDuringMyaByRoot ? (
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={data.getFossilsDuringMyaByRoot} />
       ) : (
         <Tectonics geojson={exampleGeojson} fossilData={[]} />
       )}
