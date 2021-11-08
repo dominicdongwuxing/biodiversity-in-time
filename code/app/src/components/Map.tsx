@@ -6,26 +6,26 @@ import { Container } from "@mui/material"
 import axios from "axios"
 
 const MAP_AND_FOSSIL_QUERY = gql`
-  query retrieveMapAndFossils($mya: Int, $maxma: Float, $minma: Float, $wikiRef: String) {
-    getMapAtMya(mya: $mya) {
-      mya
-      # type
-      # features {
-      #   type
-      #   properties {
-      #     name
-      #   }
-      #   geometry {
-      #     __typename
-      #     ... on MapGeometryMultiPolygon {
-      #       coordinatesMultiPolygon: coordinates
-      #     }
-      #     ... on MapGeometryPolygon {
-      #       coordinatesPolygon: coordinates
-      #     }
-      #   }
-      # }
-    }
+  query retrieveMapAndFossils($maxma: Float, $minma: Float, $wikiRef: String) {
+  #   getMapAtMya(mya: $mya) {
+  #     mya
+  #     type
+  #     features {
+  #       type
+  #       properties {
+  #         name
+  #       }
+  #       geometry {
+  #         __typename
+  #         ... on MapGeometryMultiPolygon {
+  #           coordinatesMultiPolygon: coordinates
+  #         }
+  #         ... on MapGeometryPolygon {
+  #           coordinatesPolygon: coordinates
+  #         }
+  #       }
+  #     }
+  #   }
 
     getFossilsDuringMyaByRoot (wikiRef: $wikiRef, minma: $minma, maxma: $maxma) {
       coordinates
@@ -155,11 +155,15 @@ export default function Map({ myaMain, myaRange, url, searchName, searchId }) {
   //const data = {"getMapAtMya" : mapData, "getFossilsDuringMya": []}
   return (
     <div className={styles.map}>
-      {mapData && mapData.getMapAtMya && data && data.getFossilsDuringMyaByRoot ? (
+      {myaMain > 410 ? 
+      "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
+      mapData && mapData.getMapAtMya && data && data.getFossilsDuringMyaByRoot ? (
         <Tectonics geojson={mapData.getMapAtMya} fossilData={data.getFossilsDuringMyaByRoot} />
-      ) : (
-        <Tectonics geojson={exampleGeojson} fossilData={[]} />
-      )}
+      ) : mapData && mapData.getMapAtMya ? (
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />
+      ) : "Loading map..."}
+
+
     </div>
   );
 }

@@ -130,6 +130,7 @@ export default function ScrollBar({
 
   return (
     <div id="scaleBar" className={styles.scrollBar}>
+      Current map view: {myaMain} million years ago (mya); Current tree and fossil range: {myaRange[0]} - {myaRange[1]} (mya)
       <GeoTimescale changeMyaMain={changeMyaMain} changeMyaRange={changeMyaRange}/>
     </div>
   );

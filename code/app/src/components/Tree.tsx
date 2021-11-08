@@ -344,9 +344,8 @@ export default function Tree({ props }) {
           data={data.getTreeFromWikiNameOrIdWithMya}
           onClick={handleClick}
         />
-      ) : (
-        "This taxon does not exist in the selected time period :)"
-      )}
+      ) : "This taxon doesn't exist in the time period, pleast try a new search :)"}
+      <br></br>
       
         <FormControl>
           <Select

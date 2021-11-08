@@ -8,7 +8,9 @@ import collections
 import requests
 import json
 
-DATADIR = "../../dataset"
+# ROOTDIR is where I have my thesis folder on my computer
+ROOTDIR = "/home/dongwuxing/Documents/thesis"
+DATADIR = ROOTDIR + "/dataset"
 WIKIDIR = DATADIR + "/wikidata"
 PARSED_WIKIDIR = WIKIDIR + "/parsed"
 PROCESSED_WIKIDIR = WIKIDIR + "/processed"
@@ -26,11 +28,12 @@ def is_nan(value):
         return False
     
 
-def build_tree (data):
+def build_flat_tree (data):
     '''
-    generate tree of life using the code names 
-    from the fully combined parsed data 
-    return dict, where key is each parent code and 
+    generate a flat tree of life from data
+
+    input: data in pandas dataframe
+    return: dict, where key is each parent code and 
     values are their corresponding children codes
     '''
     tree_dict = {}
@@ -45,6 +48,7 @@ def build_tree (data):
             else:
                 tree_dict[parent_code].append(name)
     
+    # also append leaves into the tree dict (those that are not parents)
     for i in range(data.shape[0]):
         potential_leaf = data.index[i]
         if potential_leaf not in tree_dict:
@@ -55,7 +59,9 @@ def build_tree (data):
 def get_missing_parents(data):
     '''
     Look for missing parents, which are parents whose id cannot be found in the data
-    return: list of id code of the missing parents.
+
+    input: dataset in pandas dataframe
+    return: list of id codes of the missing parents.
     '''
     missing_parents = []
     all_ids = data.index
@@ -64,11 +70,19 @@ def get_missing_parents(data):
             missing_parents.append(parent)
     return missing_parents
 
-def build_tree_from_root(root_id, tree, data):
+def build_rooted_tree(root_id, tree, data):
+    '''
+    recursively build a rooted tree from the
+    pre-build flat tree using build_flat_tree, and the dataset
+
+    input: root_id, the pre-built flat tree dict and 
+    the dataset in pandas dataframe
+    return: a rooted tree organized in dict of dicts
+    {name: taxon_name, id: Q headed id code, rank: rank name in English,
+    children: [{subtree in dict of the same structure}]}
+    '''
     try:
         name = data.loc[root_id]["taxon_name"]
-        if is_nan(name):
-            name = data.loc[root_id]["species_name_value"]
         if is_nan(name):
             name = ""
     except KeyError:
@@ -89,41 +103,58 @@ def build_tree_from_root(root_id, tree, data):
         del rooted_tree["children"]
     else:
         # merge nodes or leaves that are siblings but has identical taxon names
+
+        # collect taxon_names that are repetitive in the children list for a rooted tree
         repeated_names = [item for item, count in collections.Counter([child["name"] for child in rooted_tree["children"]]).items() if count > 1]
+        # initialize a new children list, first put in children with no repeating taxon names
         new_children_list = [child for child in rooted_tree["children"] if child["name"] not in repeated_names]
+        # then iterate over all repeated taxon names
         for rep in repeated_names:
+            # initialize a replacement dictionary for a repeating taxon name
             replacement = {"name":rep,"rank":"", "id": "","children":[]}
             for child in rooted_tree["children"]:
+                # in the children list, find the taxon name that equals to the current taxon name under process
                 if child["name"] == rep:
+                    # the new id attribute would be all ids under the same taxon name, separated by _
                     if replacement["id"]:
                         replacement["id"] += "_" + child["id"]
                     else:
                         replacement["id"] = child["id"]
+
+                    # the new rank attribute would be all rank names under the same taxon name, separated by _
                     if replacement["rank"]:
                         replacement["rank"] += "_" + child["rank"]
                     else:
                         replacement["rank"] = child["rank"]
                     
+                    # bring all children under the same taxon name together 
                     if "children" in child.keys():
                         try:
                             replacement["children"] += child["children"]
                         except KeyError:
                             replacement["children"] = child["children"]
+                    
+                    # # if there is still no children in the end, delete this attribute
+                    # if replacement["children"] == []:
+                    #     del replacement["children"]
+                    
+            # append this merged item into children list
             new_children_list.append(replacement)
-
+        # replace the chilren list with the merged children list
         rooted_tree["children"] = new_children_list
     return rooted_tree
 
 def trim_data(data):
     '''
-    give the dataframe, break species_name into two attributes: species_name_language and species_name_value
-    and return only "taxon_name","taxon_rank","parent_taxon","species_name_value", while "id" is set as the index
-    '''
-    species_name_language, species_name_value = \
-    [data["species_name"][i]["language"] for i in range(data.shape[0])],\
-    [data["species_name"][i]["value"] for i in range(data.shape[0])]
+    give the dataframe, break species_name into two attributes and only take species_name_value; 
+    and return only "taxon_name","taxon_rank","parent_taxon","species_name_value" attributes
+    and "id" attribute is set as the index
 
-    data["species_name_value"], data["species_name_language"] = species_name_value,species_name_language
+    input: untrimmed dataset as pandas dataframe
+    return: trimmed dataset as pandas dataframe
+    '''
+    species_name_value = [data["species_name"][i]["value"] for i in range(data.shape[0])]
+    data["species_name_value"]= species_name_value
     data = data[["id","taxon_name","taxon_rank","parent_taxon","species_name_value"]]
     data = data.set_index("id")
     return data
@@ -131,7 +162,11 @@ def trim_data(data):
 def re_query_data(data):
     '''
     add new entries to the data by re-querying the data and searching for
-    missing parents information and filling 
+    missing parents (either has no parent or has a parent that is not in 
+    the dataset) information and adding those missing data to the dataset
+    
+    input: dataset as pandas dataframe with potentially missing data
+    return: new dataset as pandas dataframe with added missing data (if available)
     '''
     # a missing parent is a parent whose id is not in the dataset
     missing_parents = get_missing_parents(data)
@@ -141,31 +176,37 @@ def re_query_data(data):
         temp_missing_parents.loc[missing_parent] = [np.nan,np.nan,np.nan,np.nan]
     temp_missing_parents.to_csv(PROCESSED_WIKIDIR + "/temp_missing_parents.csv")
     exec(open("query_wikidata.py").read())
-    with open(os.path.join(PROCESSED_WIKIDIR, "temp_updated_entries.json")) as a:
-        temp_updated_entries = json.load(a)
+    with open(os.path.join(PROCESSED_WIKIDIR, "temp_updated_entries.json")) as f:
+        temp_updated_entries = json.load(f)
         extra_data = trim_data(pd.DataFrame.from_dict(temp_updated_entries, orient="index"))
     for idx in extra_data.index:
         data.loc[idx] = extra_data.loc[idx]
     return data
 
-def get_rank_id_name_lookup(ranks):
-    '''
-    input a list of rank ids and query wikidata
-    to return the corresponding rank name in English
-    return: a dictionary, where keys are rank ids
-    and values are corresponding English rank names
-    '''
-    rank_dict = {}
-    for rank in ranks:
-        request_result = requests.get(f"https://www.wikidata.org/wiki/Special:EntityData/{rank}.json").json()
-        rank_dict[rank] = request_result["entities"][rank]["labels"]["en"]["value"]
-    return rank_dict
-
 def get_names_for_taxon_rank(data):
     '''
-    input data and turn taxon_rank from ids into English names 
+    input: data in pandas dataframe, where taxon_rank is in ID form 
+    return: data in pandas dataframe, where taxon_rank is in English name 
     '''
+
+    def get_rank_id_name_lookup(ranks):
+        '''
+        input a list of rank ids and query wikidata
+        to return the corresponding rank name in English
+
+        input: a list of rank ids
+        return: a dictionary, where keys are rank ids
+        and values are corresponding English rank names
+        '''
+        rank_dict = {}
+        for rank in ranks:
+            request_result = requests.get(f"https://www.wikidata.org/wiki/Special:EntityData/{rank}.json").json()
+            rank_dict[rank] = request_result["entities"][rank]["labels"]["en"]["value"]
+        return rank_dict
+
     ranks = [rank for rank in data["taxon_rank"].unique().tolist() if not is_nan(rank)]
+    
+    # if the rank ID to English name mapping has been computed, load it, otherwise compute it now
     if os.path.isfile(os.path.join(PROCESSED_WIKIDIR,"rank_id_name_lookup.pkl")):
         with open(os.path.join(PROCESSED_WIKIDIR,"rank_id_name_lookup.pkl"), "rb") as f:
             rank_id_name_lookup = pickle.load(f)
@@ -173,6 +214,7 @@ def get_names_for_taxon_rank(data):
         rank_id_name_lookup = get_rank_id_name_lookup(ranks)
         with open(os.path.join(PROCESSED_WIKIDIR,"rank_id_name_lookup.pkl"), "wb") as f:
             pickle.dump(rank_id_name_lookup, f)
+
     rank_list = data["taxon_rank"].tolist()
     for i in range(len(rank_list)):
         rank = rank_list[i]
@@ -181,7 +223,7 @@ def get_names_for_taxon_rank(data):
     data["taxon_rank"] = rank_list
     return data
     
-###################################################################################################################################
+########################################################################################################################
 
 # combine all parsed JSON files into one file (maybe this work has already been done and saved as wikidata_records.csv)
 data = pd.DataFrame()
@@ -191,7 +233,7 @@ for file in os.listdir(PARSED_WIKIDIR):
 
 data = trim_data(data)
 
-# add missing entries to data
+# recursively add missing entries to data until no more new data can be added
 old_data_size = data.shape[0]
 data = re_query_data(data)
 while data.shape[0] != old_data_size:
@@ -207,12 +249,12 @@ data["taxon_name"].fillna(data["species_name_value"],inplace=True)
 data.to_csv(PROCESSED_WIKIDIR + "/data.csv")
 
 # build a flat tree from dataset, which is a dictionary with parents as keys and their children as values
-tree = build_tree(data)
+tree = build_flat_tree(data)
 with open(os.path.join(PROCESSED_WIKIDIR,"tree_flat.pkl"), "wb") as tree_file:
     pickle.dump(tree, tree_file)
 
 # build a tree rooted from biota, which is a dicitonary of dictionaries
-tree_from_biota = build_tree_from_root("Q2382443", tree, data)
+tree_from_biota = build_rooted_tree("Q2382443", tree, data)
 with open(os.path.join(PROCESSED_WIKIDIR, "tree.json"), 'w') as fp:
     json.dump(tree_from_biota, fp)
 

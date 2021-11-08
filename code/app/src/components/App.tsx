@@ -27,8 +27,8 @@ export default function App() {
   const [myaMain, setMyaMain] = useState(initialMya);
   const [url, setUrl] = useState("./resources/tectonicData/reconstructed_" + initialMya + ".00Ma.geojson")
   const [myaRange, setMyaRange] = useState([0,0.0117]);
-  const [searchName, setSearchName] = useState("Biota");
-  const [searchId, setSearchId] = useState("Q2382443");
+  const [searchName, setSearchName] = useState("Mammalia");
+  const [searchId, setSearchId] = useState("Q7377");
 
   return (
     <Grid container>

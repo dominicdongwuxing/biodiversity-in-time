@@ -117,8 +117,8 @@ if __name__ == '__main__':
 
     import pandas as pd
     import os
-
-    # df = pd.read_csv("no_parent_taxon-1.csv")
+    
+    # load the dataset with missing parents in order to query the data by their ID
     df = pd.read_csv("../dataset/wikidata/processed/temp_missing_parents.csv", index_col="id")
     # We create a cache, so we don't have to actually query wikidata everytime,
     # so we don't get blacklisted or throttled down

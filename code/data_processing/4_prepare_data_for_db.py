@@ -3,38 +3,51 @@ import os
 import json
 import requests
 import pickle as pkl
-import matplotlib.pyplot as plt
 import numpy as np
 
-DATADIR = "../../dataset"
-WIKIDIR = DATADIR + "/wikidata/processed"
+# ROOTDIR is where I have my thesis folder on my computer
+ROOTDIR = "/home/dongwuxing/Documents/thesis"
+DATADIR = ROOTDIR + "/dataset"
+PROCESSED_WIKIDIR = DATADIR + "/wikidata/processed"
 PBDBDIR = DATADIR + "/pbdb"
 
 def get_flat_tree_from_tree(tree):
     '''
-    input a nested tree and output all full and incomplete 
-    branches of the tree.
-    return: a list where each element is a dictionary, where
-    there is name, rank, id of each node/leave and path to root.
+    Get a flat tree from rooted tree. There maybe more effective
+    way for this data processing flow, since the rooted tree is 
+    built from a flat tree, however, the two flat trees have different structures. 
+
+    input: a nested rooted tree (dict of dicts) with name, rank, id and children keys
+    return: a list where each element is a dictionary, where there is name, rank, id 
+    of each node/leave and paths from root by id, taxon name and rank name, separated by ","
     '''
     def visit_nodes (root_child, path_from_root_id, path_from_root_name,path_from_root_rank):
         '''
         input a root (root_child) and recursively append information
-        of each of its downstream nodes and leaves to the list, branches.
+        of each of its downstream nodes/leaves to the list called branches.
         '''
+
+        # add to the paths the current item information (id/name/rank)
         path_from_root_id += "," + root_child["id"]
         path_from_root_name += "," + root_child["name"]
         path_from_root_rank += "," + root_child["rank"]
         children = []
+
+        # append children id to the children list
         if "children" in root_child.keys():
             for child in root_child["children"]:
                 children.append(child["id"])
+
+        # append the current item to the branches list
         branches.append({"name": root_child["name"], "rank": root_child["rank"], "id": root_child["id"], \
                          "pathFromRootById": path_from_root_id, \
                          "pathFromRootByName": path_from_root_name, \
                          "pathFromRootByRank": path_from_root_rank, \
                          "children": children})
+
+        # if the item has children then recursively explore them
         if "children" in root_child.keys():
+            # recursively visit the children, while passing paths information to add 
             for child in root_child["children"]:
                 visit_nodes(child, path_from_root_id, path_from_root_name, path_from_root_rank)
         
@@ -61,19 +74,20 @@ def json_splitter(document, splits, DIR, folder_name):
 ################################################################################################################################
 
 # load tree from biota
-with open(os.path.join(WIKIDIR, "tree.json"),"rb") as f:
+with open(os.path.join(PROCESSED_WIKIDIR, "tree.json"),"rb") as f:
     tree_from_biota = json.load(f)
 
-# compute flat tree for db
+# compute flat tree for database(db) and process this data later
 tree_for_db = get_flat_tree_from_tree(tree_from_biota)
-
+tree_for_db_pd = pd.DataFrame(tree_for_db)
+del tree_for_db
 del tree_from_biota
 
 # load linked pbdb fossils 
-with open(os.path.join(PBDBDIR, "pbdb.json"),"rb") as f:
-    pbdb = json.load(f)
+with open(os.path.join(PBDBDIR, "pbdb_linked.json"),"rb") as f:
+    pbdb = pd.DataFrame(json.load(f))
 
-pbdb = pd.DataFrame(pbdb)
+# get all wikiRefs in pbdb and all wiki Q_codes from tree from biota
 all_wikiRef = pbdb["wikiRef"].unique().tolist()
 all_biota_wiki = [item["id"] for item in tree_for_db]
 
@@ -99,53 +113,48 @@ print(non_biota_wikiRef)
 # exclude pbdb records with non biota wikiRefs 
 pbdb = pbdb[~pbdb["wikiRef"].isin(non_biota_wikiRef)]
 
-parsed_pbdb = json.loads(pbdb.to_json(orient="records"))
+# store the intermediate result for now
+with open(os.path.join(PBDBDIR, "noagg_pbdb_for_db.json"),"w") as f:
+    json.dump(json.loads(pbdb.to_json(orient="records")),f)
 
-with open(os.path.join(PBDBDIR, "pbdb_for_db.json"),"w") as f:
-    json.dump(parsed_pbdb,f)
-
-# split linked pbdb fossils into 10 files
-json_splitter(parsed_pbdb,10,PBDBDIR,"pbdb_for_db")
-
-
-# aggregate pbdb into wikiRef, minma(min of all records under the same wikiRef), maxma (similar to minma)
-# and coordinates ([[lng, lat]])
-agg_pbdb = pbdb.groupby(["wikiRef"]).agg({"minma":"min","maxma":"max"})
+# first, for each fossil records build a "coordinate" column, which is [lng,lat]
 pbdb["coordinate"] = pbdb[["lng","lat"]].values.tolist()
-coordinates = pbdb.groupby(["wikiRef"])["coordinate"].apply(list)
-agg_pbdb["coordinates"] = coordinates
+# aggregate pbdb into wikiRef, minma(min of all records under the same wikiRef), maxma (similar to minma)
+# and records ([{"maxma":maxma, "minma":minma, "id":id, "coordinate": [lng, lat]}])
+agg_pbdb = pbdb.groupby(["wikiRef"]).agg({"minma":"min","maxma":"max"})
+pbdb["record"] = pbdb[["maxma","minma","coordinate","id"]].to_dict(orient="records")
+records = pbdb.groupby(["wikiRef"])["record"].apply(list)
+agg_pbdb["records"] = records
 agg_pbdb.reset_index(level=0, inplace=True)
-parsed_agg_pbdb = json.loads(agg_pbdb.to_json(orient="records"))
+
+# and find the wikiRef in wikidata and append the path from root by id information to pbdb data
+agg_pbdb["pathFromRootById"] = tree_for_db_pd.set_index("id").loc[agg_pbdb["wikiRef"],"pathFromRootById"].values
 
 with open(os.path.join(PBDBDIR, "agg_pbdb_for_db.json"),"w") as f:
-    json.dump(parsed_agg_pbdb,f)
+    json.dump(json.loads(agg_pbdb.to_json(orient="records")),f)
 
 
 
+# back to process for the wiki tree database
+# cut down tree_for_db_pd by only keeping the items that are present in the tree from all fossil records
 
-with open("../../dataset/pbdb/pbdb_for_db.json","rb") as f:
-    pbdb = pd.DataFrame(json.load(f))
+# get all paths 
+all_paths = agg_pbdb["pathFromRootById"].values.tolist()
 
-
-tree_for_db_pd = pd.DataFrame(tree_for_db)
-
-# cut down tree_for_bd_pd by only keeping the items that are present in the tree from all fossil records
-all_paths = tree_for_db_pd[tree_for_db_pd["id"].isin(set(pbdb["wikiRef"].unique()))]["pathFromRootById"].tolist()
-
+# get all ids that are present in the paths
 all_ids_fossil_tree = set()
 for path in all_paths:
     path = path.split(",")[1:]
     all_ids_fossil_tree.update(path)
 
-
+# only keep the items that are in the all paths extracted from all fossil records
 tree_for_db_pd = tree_for_db_pd[tree_for_db_pd["id"].isin(all_ids_fossil_tree)]
 
 # build dataframe for wikiRef id counts, min of minma, max of maxma
 # indices are wikiRefs 
-wikiRef_count_and_time_pd = pd.DataFrame(pbdb.groupby(["wikiRef"])["id"].count())
-wikiRef_count_and_time_pd.columns = ["count"]
-wikiRef_count_and_time_pd["minma"] = pbdb.groupby(["wikiRef"])["minma"].min().tolist()
-wikiRef_count_and_time_pd["maxma"] = pbdb.groupby(["wikiRef"])["maxma"].max().tolist()
+wikiRef_count_and_time_pd = agg_pbdb[["wikiRef","maxma","minma"]]
+wikiRef_count_and_time_pd["count"] = agg_pbdb.records.apply(len)
+wikiRef_count_and_time_pd = wikiRef_count_and_time_pd.set_index("wikiRef")
 
 # initialize count, maxma, minma to 0
 tree_for_db_pd["count"],tree_for_db_pd["maxma"], tree_for_db_pd["minma"] = [0]*tree_for_db_pd.shape[0], [-1]*tree_for_db_pd.shape[0],[-1]*tree_for_db_pd.shape[0]
@@ -157,48 +166,33 @@ tree_for_db_pd = tree_for_db_pd.set_index("id")
 # maxma of an entry is the max of maxma in its substree
 # minma of an entry is the min of minma in its subtree
 i = 0
-for wikiRef in wikiRef_count_and_time_pd.index:
-    i += 1
-    if i % 1000 == 0:
-        print(i)
+for wikiRef in wikiRef_count_and_time_pd["wikiRef"].values:
+    # # to visually track progress
+    # i += 1
+    # if i % 1000 == 0:
+    #     print(i)
+
+    # get count, maxma (max of all maxma among fossils) and, similarly, minma for the fossil linked to the wikiRef
     count, maxma, minma = wikiRef_count_and_time_pd.loc[wikiRef, "count"], \
     wikiRef_count_and_time_pd.loc[wikiRef, "maxma"], \
     wikiRef_count_and_time_pd.loc[wikiRef, "minma"]
     
-    tree_for_db_pd.loc[wikiRef, "count"] = count
-    tree_for_db_pd.loc[wikiRef, "maxma"] = maxma
-    tree_for_db_pd.loc[wikiRef, "minma"] = minma
-
+    # get all ids from root to the wikiRef itself
     ids_from_root = tree_for_db_pd.loc[wikiRef].pathFromRootById.split(",")[1:]
 
-    for upstream_id in ids_from_root[:-1]:
-        tree_for_db_pd.loc[upstream_id, "count"] += count
-        if float(tree_for_db_pd.loc[upstream_id, "maxma"]) < maxma:
-            tree_for_db_pd.loc[upstream_id, "maxma"] = maxma
-        if float(tree_for_db_pd.loc[upstream_id, "minma"]) == -1 or \
-            float(tree_for_db_pd.loc[upstream_id, "minma"]) > minma:
-            tree_for_db_pd.loc[upstream_id, "minma"] = minma
+    # add count, and update maxma and minma for all upstream parent for the wikiRef
+    # and the wikiRef itself
+    for i in ids_from_root:
+        tree_for_db_pd.loc[i, "count"] += count
+        if float(tree_for_db_pd.loc[i, "maxma"]) < maxma:
+            tree_for_db_pd.loc[i, "maxma"] = maxma
+        if float(tree_for_db_pd.loc[i, "minma"]) == -1 or \
+            float(tree_for_db_pd.loc[i, "minma"]) > minma:
+            tree_for_db_pd.loc[i, "minma"] = minma
 
 tree_for_db_pd.reset_index(level=0,inplace=True)
 
-parsed_tree_for_db = json.loads(tree_for_db_pd.to_json(orient="records"))
 # save the flat tree for db into file
-with open(os.path.join(WIKIDIR, "fossil_related_flat_tree_for_db.json"),"w") as f:
-    json.dump(parsed_tree_for_db,f)
+with open(os.path.join(PROCESSED_WIKIDIR, "fossil_related_flat_tree_for_db.json"),"w") as f:
+    json.dump(json.loads(tree_for_db_pd.to_json(orient="records")),f)
 
-
-
-
-
-# also append pathFromRootById into fossil data 
-
-
-with open(os.path.join(WIKIDIR, "fossil_related_flat_tree_for_db.json"),"rb") as f:
-    tree_for_db_pd = pd.DataFrame(json.load(f))
-
-agg_pbdb["pathFromRootById"] = tree_for_db_pd.set_index("id").loc[agg_pbdb["wikiRef"],"pathFromRootById"].values
-
-parsed_agg_pbdb = json.loads(agg_pbdb.to_json(orient="records"))
-
-with open(os.path.join(PBDBDIR, "agg_pbdb_for_db.json"),"w") as f:
-    json.dump(parsed_agg_pbdb,f)
