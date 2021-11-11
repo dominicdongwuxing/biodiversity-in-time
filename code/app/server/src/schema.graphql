@@ -5,6 +5,10 @@ type Query {
         maxma: Float
     ): [Fossil]
 
+    getWikiIdByName (
+        name: String
+    ): String
+
     getMapAtMya (
         mya: Int,
     ): Map

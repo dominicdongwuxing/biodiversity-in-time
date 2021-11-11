@@ -1,5 +1,12 @@
 const { Fossil, Wiki, Map } = require("../models")
 
+const getWikiIdByName = async (parent, args, context, info) => {
+    let id
+    const name = args.name.trim().charAt(0).toUpperCase() + args.name.trim().slice(1)
+    await Wiki.find({name: name}).then(results => id = results[0].id)
+    return id
+}
+
 const getFossilsDuringMyaByRoot= async (parent, args, context, info) => {
     const maxElement = 7
     const collectWikiRefsFromRoot = async (root) => {
@@ -111,5 +118,6 @@ const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
 module.exports = {
     getFossilsDuringMyaByRoot,
     getMapAtMya,
-    getTreeFromWikiNameOrIdWithMya
+    getTreeFromWikiNameOrIdWithMya,
+    getWikiIdByName
 }

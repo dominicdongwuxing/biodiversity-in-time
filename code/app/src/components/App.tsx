@@ -7,11 +7,13 @@ import Footer from "./Footer";
 import styles from "./App.module.css";
 import { useAppStyles } from "./AppStyles";
 import { Grid, Card, CardContent, CardActions } from "@mui/material";
+import { useQuery, gql } from "@apollo/client";
+
+
 
 export default function App() {
   const changeMyaMain = (value) => {
     setMyaMain(parseInt(value));
-    setUrl("./resources/tectonicData/reconstructed_" + parseInt(value) + ".00Ma.geojson")
     setMyaRange([
       value - steps < 0 ? 0 : value - steps,
       value + steps > 1000 ? 1000 : value + steps,
@@ -25,10 +27,12 @@ export default function App() {
   const steps = 10;
   const initialMya = Math.floor(0.0117/2);
   const [myaMain, setMyaMain] = useState(initialMya);
-  const [url, setUrl] = useState("./resources/tectonicData/reconstructed_" + initialMya + ".00Ma.geojson")
   const [myaRange, setMyaRange] = useState([0,0.0117]);
-  const [searchName, setSearchName] = useState("Mammalia");
-  const [searchId, setSearchId] = useState("Q7377");
+  // const [searchName, setSearchName] = useState("Mammalia");
+  // const [searchId, setSearchId] = useState("Q7377");
+
+  const [searchName, setSearchName] = useState("Biota");
+  const [searchId, setSearchId] = useState("Q2382443");
 
   return (
     <Grid container>
@@ -45,7 +49,7 @@ export default function App() {
         <Grid item sm={8} >
           <Card style={{height:"525px"}}>
             <CardContent>
-              <Map myaMain={myaMain} myaRange={myaRange} url={url} searchName={searchName} searchId={searchId}/>
+              <Map myaMain={myaMain} myaRange={myaRange} searchName={searchName} searchId={searchId}/>
             </CardContent>
           </Card>
         </Grid>

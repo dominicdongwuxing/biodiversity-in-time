@@ -466,7 +466,7 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
         }
 
         // zero in Geologic time > Phanerozoic > Cenozoic > Quaternary > Holocene (0.0117-0 mya)
-        clicked(null, root.children[2].children[2].children[2].children[0])
+        clicked(null, root.children[2].children[2].children[2].children[1])
         
       },[])
   return (

@@ -5,6 +5,12 @@ import { useQuery, gql } from "@apollo/client";
 import { Container } from "@mui/material"
 import axios from "axios"
 
+const ID_QUERY = gql`
+  query retrieveWikiIdByName ($name: String) {
+    getWikiIdByName(name: $name) 
+  }
+`;
+
 const MAP_AND_FOSSIL_QUERY = gql`
   query retrieveMapAndFossils($maxma: Float, $minma: Float, $wikiRef: String) {
   #   getMapAtMya(mya: $mya) {
@@ -67,7 +73,7 @@ const Tectonics = ({ geojson, fossilData }) => {
 
 
     const features = geojson.features
-
+  
     // parse the fossil data
     let fossilArray = []
     fossilData ? fossilData.map(fossil => fossil.coordinates.map(oneCoordinate => fossilArray.push(oneCoordinate))) : null;
@@ -133,22 +139,48 @@ const Tectonics = ({ geojson, fossilData }) => {
   );
 };
 
-export default function Map({ myaMain, myaRange, url, searchName, searchId }) {
-  const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1], wikiRef: searchId ? searchId : searchName } });
+export default function Map({ myaMain, myaRange, searchName, searchId }) {
+  // const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1], wikiRef: searchId ? searchId : searchName } });
   //const [data, setData] = useState({"getFossilsDuringMya":[]})
+  const { data } = useQuery(ID_QUERY, { variables: { name: searchName } })
   const [mapData, setMapData] = useState(null)
+  const [fossilData, setFossilData] = useState(null)
+  
   useEffect(() => {
     // let url = "./tectonicData/reconstructed_" + myaMain + ".00Ma.json"
     // console.log("inside url: " + url)
-    axios.get(url).then((res) => {
+    
+    const urlForMap = "./resources/tectonicData/reconstructed_" + myaMain + ".00Ma.geojson"
+    const urlForFossil = "./resources/reconstructedAggPbdbForDb/" +  myaMain + "mya.json"
+    axios.get(urlForMap).then((res) => {
       setMapData({"getMapAtMya" : res.data})
       // console.log("inside data is now: ", data)
       // data ? console.log("inside, time is " + data.getMapAtMya.features[0].properties.TIME) : console.log("inside no time")
     })
-    
-  },[url])
-  
 
+    
+    axios.get(urlForFossil).then((res) => {
+      // console.log(res.data["mya"] == myaMain)
+      let rootId = searchId
+      if (rootId == "") {
+        console.log("Has no root Id")
+        
+        if (data) { 
+          console.log("Has no rootId and got data")
+          rootId = data.getWikiIdByName
+          setFossilData({"getFossilsDuringMyaByRoot": res.data["fossilData"].filter(item => item.pathFromRootById.includes(rootId))})
+        }
+      } else {
+        console.log("Has rootId: ", rootId)
+        setFossilData({"getFossilsDuringMyaByRoot": res.data["fossilData"].filter(item => item.pathFromRootById.includes(rootId))})
+      }
+      
+      
+    })
+    
+  },[myaMain, searchName, searchId])
+
+  
   // console.log("outside  url: " + url)
   // data ? console.log("outside, time is " + data.getMapAtMya.features[0].properties.TIME) : console.log("outside no time")
   //data ? console.log(data.getMapAtMya):"no data"
@@ -157,8 +189,8 @@ export default function Map({ myaMain, myaRange, url, searchName, searchId }) {
     <div className={styles.map}>
       {myaMain > 410 ? 
       "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
-      mapData && mapData.getMapAtMya && data && data.getFossilsDuringMyaByRoot ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={data.getFossilsDuringMyaByRoot} />
+      mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilsDuringMyaByRoot ? (
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={fossilData.getFossilsDuringMyaByRoot} />
       ) : mapData && mapData.getMapAtMya ? (
         <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />
       ) : "Loading map..."}

@@ -97,7 +97,7 @@ pbdb.to_csv(os.path.join(PBDBDIR, "pbdb_linked.csv"),index=False)
 included_pbdb = pbdb[(pbdb["wiki_ref"].notna()) & (~pbdb["wiki_ref"].str.contains("_", na= False))].rename(columns={'occurrence_no': 'id', "accepted_name":"name","accepted_rank":"rank","min_ma":"minma","max_ma":"maxma","wiki_ref":"wikiRef"})[["id","wikiRef","name","rank","minma","maxma","lng","lat"]].to_json(orient="records")
 parsed_included_pbdb = json.loads(included_pbdb)
 
-with open(os.path.join(PBDBDIR, "pbdb.json"),"w") as f:
+with open(os.path.join(PBDBDIR, "pbdb_linked.json"),"w") as f:
     json.dump(parsed_included_pbdb,f)
 
 
