@@ -14,26 +14,22 @@ import { useQuery, gql } from "@apollo/client";
 export default function App() {
   const changeMyaMain = (value) => {
     setMyaMain(parseInt(value));
-    setMyaRange([
-      value - steps < 0 ? 0 : value - steps,
-      value + steps > 1000 ? 1000 : value + steps,
-    ]);
   };
 
   const changeMyaRange = (valueArr) => {
-    setMyaRange([parseInt(valueArr[0]), parseInt(valueArr[1])]);
+    setMyaRange(valueArr);
   };
 
   const steps = 10;
   const initialMya = Math.floor(0.0117/2);
   const [myaMain, setMyaMain] = useState(initialMya);
-  const [myaRange, setMyaRange] = useState([0,0.0117]);
+  const [myaRange, setMyaRange] = useState([0.0117,0]);
   // const [searchName, setSearchName] = useState("Mammalia");
   // const [searchId, setSearchId] = useState("Q7377");
 
   const [searchName, setSearchName] = useState("Biota");
   const [searchId, setSearchId] = useState("Q2382443");
-
+  
   return (
     <Grid container>
       {/* <div className={styles.app}> */}

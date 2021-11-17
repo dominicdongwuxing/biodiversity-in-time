@@ -4,6 +4,7 @@ import * as d3 from "d3";
 import { useQuery, gql } from "@apollo/client";
 import { Container } from "@mui/material"
 import axios from "axios"
+import range from "../../dist/resources/plateID.json"
 
 const ID_QUERY = gql`
   query retrieveWikiIdByName ($name: String) {
@@ -73,6 +74,9 @@ const Tectonics = ({ geojson, fossilData }) => {
 
 
     const features = geojson.features
+
+    //const range = [...new Set(features.map(shape => shape.properties.PLATEID1))]
+    //console.log(range)
   
     // parse the fossil data
     let fossilArray = []
@@ -111,6 +115,12 @@ const Tectonics = ({ geojson, fossilData }) => {
       .data(features)
       .join("path")
       .attr("d", geoGenerator)
+      .attr("fill",d => {
+        const colors = d3.scaleOrdinal().domain(range).range(["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9","#fff2ae","#f1e2cc","#cccccc"])
+        const number = typeof(d.properties.PLATEID1) == "string" ? parseInt(d.properties.PLATEID1) : d.properties.PLATEID1
+        return colors(number) 
+      })
+    
     
     d3.select(ref.current)
       .select("g")
@@ -121,7 +131,7 @@ const Tectonics = ({ geojson, fossilData }) => {
       .attr("cx", (d) => projection(d)[0])
       .attr("cy", (d) => projection(d)[1])
       .attr("r", "1px")
-      .attr("fill","red")
+      .attr("fill","black")
 
     
   },[geojson, fossilData]);
@@ -150,8 +160,10 @@ export default function Map({ myaMain, myaRange, searchName, searchId }) {
     // let url = "./tectonicData/reconstructed_" + myaMain + ".00Ma.json"
     // console.log("inside url: " + url)
     
-    const urlForMap = "./resources/tectonicData/reconstructed_" + myaMain + ".00Ma.geojson"
-    const urlForFossil = "./resources/reconstructedAggPbdbForDb/" +  myaMain + "mya.json"
+    //const urlForMap = "./resources/tectonicData/reconstructed_" + myaMain + ".00Ma.geojson"
+    const urlForMap = "./resources/map/Global_coastlines_2015_v1_low_res_reconstructed_" + myaMain + ".geojson"
+    //const urlForFossil = "./resources/reconstructedAggPbdbForDb/" + myaMain + "mya.json"
+    const urlForFossil = "./resources/reconstructedAggPbdbForDb/from" + myaRange[0] + "To" + myaRange[1] + "mean" + myaMain + "_reconstructed_" + myaMain + ".geojson"
     axios.get(urlForMap).then((res) => {
       setMapData({"getMapAtMya" : res.data})
       // console.log("inside data is now: ", data)
@@ -178,7 +190,7 @@ export default function Map({ myaMain, myaRange, searchName, searchId }) {
       
     })
     
-  },[myaMain, searchName, searchId])
+  },[myaMain, searchName, searchId, myaRange])
 
   
   // console.log("outside  url: " + url)

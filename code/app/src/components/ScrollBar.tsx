@@ -128,15 +128,17 @@ export default function ScrollBar({
   steps,
 }) {
 
+  const [geologicalTime, setGeologicalTime] = useState("")
+
   return (
     <div id="scaleBar" className={styles.scrollBar}>
-      Current map view: {myaMain} million years ago (mya); Current tree and fossil range: {myaRange[0]} - {myaRange[1]} (mya)
-      <GeoTimescale changeMyaMain={changeMyaMain} changeMyaRange={changeMyaRange}/>
+      Current map view: {myaMain} million years ago (mya) ---- Current tree and fossil range: {myaRange[0]} - {myaRange[1]} (mya) ---- Current geological time period: {geologicalTime}
+      <GeoTimescale changeMyaMain={changeMyaMain} changeMyaRange={changeMyaRange} setGeologicalTime={setGeologicalTime}/>
     </div>
   );
 }
 
-const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
+const GeoTimescale = ({ changeMyaMain, changeMyaRange, setGeologicalTime }) => {
   const ref = useRef()
   useEffect(() => {
     const {width, height, tickLength, neighborWidth, fontSize} = {
@@ -252,9 +254,9 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange }) => {
           // disable focusing on Geological time (root) or top levels under Phanerozoic
           if (node == root || (ancestorPath.includes("Phanerozoic") && node.depth < 3)) return null
           // focus = p === focus ? p.parent : p;
-          
+          setGeologicalTime(ancestorPath.reverse().slice(1).join(" -> "))
           changeMyaMain(Math.floor((node.data.end + node.data.start)/2))
-          changeMyaRange([node.data.end , node.data.start])
+          changeMyaRange([node.data.start , node.data.end])
           hideSmallTicks = true//[0, 1, 2].includes(node.depth);
   
           // before Phanerozoic, focus on Geologic time, otherwise, focus on Phanerozoic

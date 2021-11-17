@@ -302,8 +302,8 @@ export default function Tree({ props }) {
       maxElement: searchMaxElement,
       depth: searchDepth,
       id: props.searchId,
-      minma: props.myaRange[0],
-      maxma: props.myaRange[1],
+      maxma: props.myaRange[0],
+      minma: props.myaRange[1],
     },
     fetchPolicy: "no-cache",
   });
