@@ -12,6 +12,7 @@ import {
   Container
 } from "@mui/material";
 import { useTreeStyles } from "./TreeStyles";
+import { color } from "@mui/system";
 
 const TREE_QUERY = gql`
   query retrieveTreeFromWikiNameOrIdWithMya(
@@ -76,9 +77,11 @@ const TREE_QUERY = gql`
   }
 `;
 // adapted from https://bl.ocks.org/swkasica/6c2b7784ec654b999397b8bc29b84c08
-function RadialTreeKasica({ data, onClick }) {
+function RadialTreeKasica({ data, onClick, setWikiRefRange}) {
   const ref = useRef();
   useEffect(() => {
+
+    
 
     //data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))
     const sideLength = 380;
@@ -107,6 +110,11 @@ function RadialTreeKasica({ data, onClick }) {
 
     const root = tree(d3.hierarchy(data));
     // root.children.forEach(collapse);
+
+    // build a color palete for the outmost children
+    const wikiRefRange = root.descendants().filter(node => node.data.children.length === 0).map(node => node.data.id)
+    setWikiRefRange(wikiRefRange)
+    const colors = d3.scaleOrdinal().domain(wikiRefRange).range(["#800000","#191970","#006400","#9acd32","#ff0000","#ff8c00","#ffd700","#00ff00","#ba55d3","#00fa9a","#00ffff","#0000ff","#ff00ff","#1e90ff","#fa8072","#dda0dd"])
 
     const link = g
       .selectAll(".link")
@@ -137,11 +145,16 @@ function RadialTreeKasica({ data, onClick }) {
       .attr("transform", function (d) {
         return "translate(" + radialPoint(d.x, d.y) + ")";
       })
-      .on("mouseover", function () {
+      .on("mouseover", function (e,d) {
         d3.select(this).classed("active", true);
+        d3.select(this).select("circle").attr("r",5)
+        if (!(d.depth === 0 || d.data.children.length === 0)){
+          d3.select(this).append("title").text(d.data.name)
+        }
       })
-      .on("mouseout", function () {
+      .on("mouseout", function (e,d) {
         d3.select(this).classed("active", false);
+        d3.select(this).select("circle").attr("r", d => d.depth ? 2.5 : 4.5)
       })
       .on("click", function (e, d) {
         // var svg = d3.select(ref.current);
@@ -151,8 +164,14 @@ function RadialTreeKasica({ data, onClick }) {
         //d3.select(ref.current).remove();
         onClick(d.data.id);
       });
-
-    node.append("circle").attr("r", 2.5);
+    
+    node.append("circle")
+      .attr("r", (d) => {
+        return d.depth ? 2.5 : 4.5
+      })
+      //.on("mouseover", handleMouseOver);
+    
+    
     // node.append("image")
     //     .attr("x", -6)
     //     .attr("y", -6)
@@ -179,8 +198,17 @@ function RadialTreeKasica({ data, onClick }) {
         );
       })
       .text(function (d) {
-        return d.data.name;
-      });
+        return d.depth === 0 || d.data.children.length === 0 ? d.data.name : null
+      })
+      .style("fill", function (d) {
+        return wikiRefRange.includes(d.data.id) ? colors(d.data.id) : "black" 
+      })
+
+      // .on("mouseover", (e,d) => {
+      //   if (!(d.depth === 0 || d.depth === searchDepth - 1)){
+      //     return this.text
+      //   }
+      // });
 
     function radialPoint(x, y) {
       return [(y = +y) * Math.cos((x -= Math.PI / 2)), y * Math.sin(x)];
@@ -343,6 +371,7 @@ export default function Tree({ props }) {
         <RadialTreeKasica
           data={data.getTreeFromWikiNameOrIdWithMya}
           onClick={handleClick}
+          setWikiRefRange={props.setWikiRefRange}
         />
       ) : "This taxon doesn't exist in the time period, pleast try a new search :)"}
       <br></br>

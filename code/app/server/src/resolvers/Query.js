@@ -82,8 +82,7 @@ const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
                     let subtree = {id: child.id, name: child.name, rank: child.rank, count: child.count, children: []}
                     subtree = await buildTree (child, subtree)
                     tree.children.push(subtree)
-                }
-                
+                }               
             }
         return tree
     }
@@ -95,8 +94,6 @@ const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
         const name = args.name.trim().charAt(0).toUpperCase() + args.name.trim().slice(1)
         root = await Wiki.find({name: name, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(root => root[0])
     }
-    console.log(args.maxma, args.minma)
-    console.log(root)
 
     const rootId = root.id
     const result = await buildTree(root, {id: root.id, name: root.name, rank: root.rank, count: root.count, children: [], pathFromRootByName: root.pathFromRootByName, pathFromRootById: root.pathFromRootById})

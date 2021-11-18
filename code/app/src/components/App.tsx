@@ -29,6 +29,7 @@ export default function App() {
 
   const [searchName, setSearchName] = useState("Biota");
   const [searchId, setSearchId] = useState("Q2382443");
+  const [wikiRefRange, setWikiRefRange] = useState([])
   
   return (
     <Grid container>
@@ -45,7 +46,7 @@ export default function App() {
         <Grid item sm={8} >
           <Card style={{height:"525px"}}>
             <CardContent>
-              <Map myaMain={myaMain} myaRange={myaRange} searchName={searchName} searchId={searchId}/>
+              <Map myaMain={myaMain} myaRange={myaRange} searchName={searchName} searchId={searchId} wikiRefRange={wikiRefRange}/>
             </CardContent>
           </Card>
         </Grid>
@@ -53,7 +54,7 @@ export default function App() {
         <Grid item sm={4} >
           <Card style={{height: "525px"}}>
             <CardContent>
-              <Tree props={{ mya: myaMain, myaRange: myaRange, searchName: searchName, searchId: searchId, setSearchName: setSearchName, setSearchId: setSearchId }} />
+              <Tree props={{ mya: myaMain, myaRange: myaRange, searchName: searchName, searchId: searchId, wikiRefRange: wikiRefRange, setSearchName: setSearchName, setSearchId: setSearchId, setWikiRefRange: setWikiRefRange }} />
             </CardContent>
           </Card>
         </Grid>
