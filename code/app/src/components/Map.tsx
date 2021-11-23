@@ -5,6 +5,7 @@ import { useQuery, gql } from "@apollo/client";
 import { Container } from "@mui/material"
 import axios from "axios"
 import range from "../../dist/resources/plateID.json"
+import { GlobalStateContextConsumer } from "./globalStateContext";
 
 const ID_QUERY = gql`
   query retrieveWikiIdByName ($name: String) {
@@ -147,7 +148,7 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
         return "black"
       })
       .on("mouseover", (e,d) => {
-        //console.log(d.pathFromRootById)
+        console.log(d.pathFromRootById)
       })
 
       //console.log(wikiRefRange)
@@ -168,7 +169,7 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
   );
 };
 
-export default function Map({ myaMain, myaRange, searchName, searchId, wikiRefRange }) {
+export default function Map({ myaMain, myaRange, searchName, searchId}) {
   // const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1], wikiRef: searchId ? searchId : searchName } });
   //const [data, setData] = useState({"getFossilsDuringMya":[]})
   const { data } = useQuery(ID_QUERY, { variables: { name: searchName } })
@@ -220,9 +221,17 @@ export default function Map({ myaMain, myaRange, searchName, searchId, wikiRefRa
       {myaMain > 410 ? 
       "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
       mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilsDuringMyaByRoot ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={fossilData.getFossilsDuringMyaByRoot} wikiRefRange={wikiRefRange} />
+         <GlobalStateContextConsumer>
+           {({wikiRefRange}) => (
+             <Tectonics 
+              geojson={mapData.getMapAtMya} 
+              fossilData={fossilData.getFossilsDuringMyaByRoot} 
+              wikiRefRange={wikiRefRange} />
+           )}
+         </GlobalStateContextConsumer>
+        
       ) : mapData && mapData.getMapAtMya ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} wikiRefRange={wikiRefRange} />
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} wikiRefRange={[]} />
       ) : "Loading map..."}
 
 

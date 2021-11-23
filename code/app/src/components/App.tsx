@@ -9,27 +9,11 @@ import { useAppStyles } from "./AppStyles";
 import { Grid, Card, CardContent, CardActions } from "@mui/material";
 import { useQuery, gql } from "@apollo/client";
 
+import {GlobalStateContextConsumer} from "./globalStateContext"
+
 
 
 export default function App() {
-  const changeMyaMain = (value) => {
-    setMyaMain(parseInt(value));
-  };
-
-  const changeMyaRange = (valueArr) => {
-    setMyaRange(valueArr);
-  };
-
-  const steps = 10;
-  const initialMya = Math.floor(0.0117/2);
-  const [myaMain, setMyaMain] = useState(initialMya);
-  const [myaRange, setMyaRange] = useState([0.0117,0]);
-  // const [searchName, setSearchName] = useState("Mammalia");
-  // const [searchId, setSearchId] = useState("Q7377");
-
-  const [searchName, setSearchName] = useState("Biota");
-  const [searchId, setSearchId] = useState("Q2382443");
-  const [wikiRefRange, setWikiRefRange] = useState([])
   
   return (
     <Grid container>
@@ -46,7 +30,17 @@ export default function App() {
         <Grid item sm={8} >
           <Card style={{height:"525px"}}>
             <CardContent>
-              <Map myaMain={myaMain} myaRange={myaRange} searchName={searchName} searchId={searchId} wikiRefRange={wikiRefRange}/>
+              <GlobalStateContextConsumer>
+                {({myaMain, myaRange, searchName, searchId, wikiRefRange}) => (
+                  <Map 
+                      myaMain={myaMain} 
+                      myaRange={myaRange} 
+                      searchName={searchName} 
+                      searchId={searchId} 
+                  />)
+                }
+              </GlobalStateContextConsumer>
+              
             </CardContent>
           </Card>
         </Grid>
@@ -54,7 +48,18 @@ export default function App() {
         <Grid item sm={4} >
           <Card style={{height: "525px"}}>
             <CardContent>
-              <Tree props={{ mya: myaMain, myaRange: myaRange, searchName: searchName, searchId: searchId, wikiRefRange: wikiRefRange, setSearchName: setSearchName, setSearchId: setSearchId, setWikiRefRange: setWikiRefRange }} />
+              <GlobalStateContextConsumer>
+                {({myaRange, searchName, searchId, searchMaxElement, searchDepth }) => (
+                  <Tree 
+                    myaRange={myaRange}
+                    searchName={searchName}
+                    searchId={searchId}
+                    searchMaxElement={searchMaxElement}
+                    searchDepth={searchDepth}
+                  />
+                )}
+              </GlobalStateContextConsumer>
+              
             </CardContent>
           </Card>
         </Grid>
@@ -62,13 +67,16 @@ export default function App() {
       <Grid item sm={12}>
         <Card style={{height:"100%"}}>
           <CardContent>
-            <ScrollBar
-            changeMyaMain={changeMyaMain}
-            changeMyaRange={changeMyaRange}
-            myaMain={myaMain}
-            myaRange={myaRange}
-            steps={steps}
-            />
+            <GlobalStateContextConsumer>
+              {({myaMain, myaRange, setMyaMain, setMyaRange}) => (
+                <ScrollBar
+                changeMyaMain={setMyaMain}
+                changeMyaRange={setMyaRange}
+                myaMain={myaMain}
+                myaRange={myaRange}
+                />
+              )}
+            </GlobalStateContextConsumer>
           </CardContent>
         </Card>
         

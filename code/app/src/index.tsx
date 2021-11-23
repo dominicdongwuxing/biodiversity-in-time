@@ -13,6 +13,8 @@ import {
 } from "@apollo/client";
 // import { AUTH_TOKEN } from './constants';
 
+import { GlobalStateProvider } from "components/globalStateContext";
+
 const cache = new InMemoryCache({
   typePolicies: {
     Tree: {
@@ -39,7 +41,9 @@ const client = new ApolloClient({
 
 ReactDOM.render(
   <ApolloProvider client={client}>
-    <App />
+    <GlobalStateProvider>
+      <App />
+    </GlobalStateProvider>
   </ApolloProvider>,
   document.getElementById("root")
 );

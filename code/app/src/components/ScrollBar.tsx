@@ -125,7 +125,6 @@ export default function ScrollBar({
   changeMyaRange,
   myaMain,
   myaRange,
-  steps,
 }) {
 
   const [geologicalTime, setGeologicalTime] = useState("")
