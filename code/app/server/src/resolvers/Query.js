@@ -1,13 +1,24 @@
 const { Fossil, Wiki, Map } = require("../models")
+const {performance} = require("perf_hooks")
 
 const getWikiIdByName = async (parent, args, context, info) => {
     let id
-    const name = args.name.trim().charAt(0).toUpperCase() + args.name.trim().slice(1)
+    const name = args.name.trim().charAt(0)+ args.name.trim().slice(1)
     await Wiki.find({name: name}).then(results => id = results[0].id)
     return id
 }
 
+const test = async (parent, args, context, info) => {
+    const start = performance.now()
+    const result = await Fossil.find({wikiRef: "Q7377"})
+    console.log(result[0].coordinates.length)
+    const end = performance.now()
+    console.log(end - start)
+    return result
+}
+
 const getFossilsDuringMyaByRoot= async (parent, args, context, info) => {
+    const start = performance.now()
     const maxElement = 7
     const collectWikiRefsFromRoot = async (root) => {
         const sortAndTrimChildren = (children) => {
@@ -34,7 +45,7 @@ const getFossilsDuringMyaByRoot= async (parent, args, context, info) => {
     let rootId = args.wikiRef
 
     if (isNaN(rootId.slice(1,2))) {
-        const rootName = rootId.trim().charAt(0).toUpperCase() + rootId.trim().slice(1)
+        const rootName = rootId.trim().charAt(0)+ rootId.trim().slice(1)
         root = await Wiki.find({name: rootName}).then(root => rootId = root[0].id)
     } 
 
@@ -50,6 +61,8 @@ const getFossilsDuringMyaByRoot= async (parent, args, context, info) => {
     })
 
     //result = result.filter(item => pathLookUp[item.wikiRef].includes(rootId))
+    const end = performance.now()
+    console.log(end - start)
     return result
 }
 
@@ -91,7 +104,7 @@ const getTreeFromWikiNameOrIdWithMya = async(parent, args, context, info) => {
     if (args.id !== "") {
         root = await Wiki.find({id: args.id, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(root => root[0])
     } else {
-        const name = args.name.trim().charAt(0).toUpperCase() + args.name.trim().slice(1)
+        const name = args.name.trim().charAt(0)+ args.name.trim().slice(1)
         root = await Wiki.find({name: name, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(root => root[0])
     }
 
@@ -118,5 +131,6 @@ module.exports = {
     getFossilsDuringMyaByRoot,
     getMapAtMya,
     getTreeFromWikiNameOrIdWithMya,
-    getWikiIdByName
+    getWikiIdByName,
+    test
 }

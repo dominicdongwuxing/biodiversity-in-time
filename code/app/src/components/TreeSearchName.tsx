@@ -5,13 +5,16 @@ import {
   } from "@mui/material";
   import { useTreeStyles } from "./TreeStyles";
 
-export default function TreeSearchName (setSearchName, setSearchId) {
+export default function TreeSearchName ({setSearchName, setSearchId}) {
     const [searchNameBuffer, setSearchNameBuffer] = useState("");
+
+    //console.log(searchNameBuffer)
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        setSearchName(searchNameBuffer);
         setSearchId("");
+        setSearchName(searchNameBuffer);
+        
       };
 
     return (

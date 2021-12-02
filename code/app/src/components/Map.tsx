@@ -1,59 +1,17 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import styles from "./Map.module.css";
 import * as d3 from "d3";
 import { useQuery, gql } from "@apollo/client";
-import { Container } from "@mui/material"
 import axios from "axios"
 import range from "../../dist/resources/plateID.json"
 import { GlobalStateContextConsumer } from "./globalStateContext";
-
-const ID_QUERY = gql`
-  query retrieveWikiIdByName ($name: String) {
-    getWikiIdByName(name: $name) 
-  }
-`;
-
-const MAP_AND_FOSSIL_QUERY = gql`
-  query retrieveMapAndFossils($maxma: Float, $minma: Float, $wikiRef: String) {
-  #   getMapAtMya(mya: $mya) {
-  #     mya
-  #     type
-  #     features {
-  #       type
-  #       properties {
-  #         name
-  #       }
-  #       geometry {
-  #         __typename
-  #         ... on MapGeometryMultiPolygon {
-  #           coordinatesMultiPolygon: coordinates
-  #         }
-  #         ... on MapGeometryPolygon {
-  #           coordinatesPolygon: coordinates
-  #         }
-  #       }
-  #     }
-  #   }
-
-    getFossilsDuringMyaByRoot (wikiRef: $wikiRef, minma: $minma, maxma: $maxma) {
-      coordinates
-      wikiRef
-    }
-  }
-`;
-
-const FOSSIL_QUERY = gql`
-  query retrieveFossilsDuringMya($minma: Float, $maxma: Float) {
-    getFossilsDuringMya(mya: $mya) {
-      wikiRef
-      lat
-      lng
-    }
-  }
-`;
+import {ID_QUERY, MAP_AND_FOSSIL_QUERY, FOSSIL_QUERY } from "./queries"
+import { GlobalStateContext } from "./globalStateContext";
 
 const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
   const ref = useRef();
+  const {myaRange} = useContext(GlobalStateContext)
+  const mapYear = Math.round(myaRange[1]-myaRange[0]/2)
   useEffect(() => {
     // parse the map data   
     // const features = geojson.features.map((feature) => {
@@ -71,9 +29,6 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
     //   };
     // });
 
-   
-
-
     const features = geojson.features
 
     //const range = [...new Set(features.map(shape => shape.properties.PLATEID1))]
@@ -81,11 +36,15 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
   
     // parse the fossil data
     let fossilArray = []
-    fossilData ? fossilData.map(fossilCollection => 
-      fossilCollection.coordinates.map(oneCoordinate => 
-        fossilArray.push({coordinate: oneCoordinate, 
-                          pathFromRootById: fossilCollection.pathFromRootById}))) : null;
-    //console.log(fossilArray)
+    fossilData.map(fossilCollection => 
+      fossilCollection.records.map(record => {
+        if (record.id=="866953") {
+          console.log(record, fossilCollection.pathFromRootById)}
+        fossilArray.push({coordinate: record.coordinate, 
+                          id: record.id,
+                          pathFromRootById: fossilCollection.pathFromRootById})
+      }))
+    console.log(fossilArray.length)
     const projection = d3.geoEquirectangular()//.scale(110);
 
     const geoGenerator = d3.geoPath().projection(projection);
@@ -128,7 +87,7 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
       })
     
     
-    d3.select(ref.current)
+    const fossilPoints = d3.select(ref.current)
       .select("g")
       .selectAll("circle")
       .data(fossilArray)
@@ -148,15 +107,17 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
         return "black"
       })
       .on("mouseover", (e,d) => {
-        console.log(d.pathFromRootById)
+        console.log("fossil id: ",d.id, "path from root:", d.pathFromRootById)
       })
 
       //console.log(wikiRefRange)
-
+      
     
   },[geojson, fossilData, wikiRefRange]);
-
+  
   return (
+    <>
+    <p>Eearth at {mapYear} million year{!mapYear && "s"} ago, viewing life existing from {myaRange[0]} to {myaRange[1]} million years ago</p>
     <svg
       ref={ref}
       style={{
@@ -166,6 +127,7 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
         border: "1px solid black"
       }}
     ></svg>
+    </>
   );
 };
 
@@ -183,7 +145,7 @@ export default function Map({ myaMain, myaRange, searchName, searchId}) {
     //const urlForMap = "./resources/tectonicData/reconstructed_" + myaMain + ".00Ma.geojson"
     const urlForMap = "./resources/map/Global_coastlines_2015_v1_low_res_reconstructed_" + myaMain + ".geojson"
     //const urlForFossil = "./resources/reconstructedAggPbdbForDb/" + myaMain + "mya.json"
-    const urlForFossil = "./resources/reconstructedAggPbdbForDb/from" + myaRange[0] + "To" + myaRange[1] + "mean" + myaMain + "_reconstructed_" + myaMain + ".geojson"
+    const urlForFossil = "./resources/reconstructedAggPbdbForDb/from" + myaRange[0] + "To" + myaRange[1] + "mean" + myaMain + "_reconstructed_" + myaMain + ".json"
     axios.get(urlForMap).then((res) => {
       setMapData({"getMapAtMya" : res.data})
       // console.log("inside data is now: ", data)
@@ -238,63 +200,3 @@ export default function Map({ myaMain, myaRange, searchName, searchId}) {
     </div>
   );
 }
-
-const exampleGeojson = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      properties: {
-        name: "Africa",
-      },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-6, 36],
-            [33, 30],
-            [43, 11],
-            [51, 12],
-            [29, -33],
-            [18, -35],
-            [7, 5],
-            [-17, 14],
-            [-6, 36],
-          ],
-        ],
-      },
-    },
-    {
-      type: "Feature",
-      properties: {
-        name: "Australia",
-      },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [143, -11],
-            [153, -28],
-            [144, -38],
-            [131, -31],
-            [116, -35],
-            [114, -22],
-            [136, -12],
-            [140, -17],
-            [143, -11],
-          ],
-        ],
-      },
-    },
-    {
-      type: "Feature",
-      properties: {
-        name: "Timbuktu",
-      },
-      geometry: {
-        type: "Point",
-        coordinates: [-3.0026, 16.7666],
-      },
-    },
-  ],
-};

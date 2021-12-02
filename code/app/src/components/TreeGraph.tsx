@@ -71,6 +71,7 @@ export default function TreeGraph({ data, setSearchId, setWikiRefRange}) {
           d3.select(this).classed("active", true);
           d3.select(this).select("circle").attr("r",5)
           if (!(d.depth === 0 || d.data.children.length === 0)){
+            
             d3.select(this).append("title").text(d.data.name)
           }
         })

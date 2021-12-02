@@ -46,13 +46,13 @@ timeIntervals.forEach(interval => {
         const result = {"start": start, "end": end, fossilData: []}
         wikiRefArr.forEach(wikiRef => {
             // initialize the object for this wikiRef
-            const fossilDataUnderWikiRef = {"wikiRef": wikiRef, "pathFromRootById": wikiRefPathLookup[wikiRef], "coordinates":[]}
+            const fossilDataUnderWikiRef = {"wikiRef": wikiRef, "pathFromRootById": wikiRefPathLookup[wikiRef], "records":[]}
             // push coordinates only if it has the current wikiRef
-            fossilDataUnderWikiRef.coordinates = data.map(record => {
-                if (record.properties.wikiRef === wikiRef) {
-                    return record.geometry.coordinates
-                }
-            }).filter(i => i)
+            fossilDataUnderWikiRef.records = data
+                .filter(fossilRecord => fossilRecord.properties.wikiRef == wikiRef)
+                .map(fossilRecord => {
+                    return {"id":fossilRecord.properties.id,"coordinate":fossilRecord.geometry.coordinates}
+                })
             result.fossilData.push(fossilDataUnderWikiRef)
         })
         fs.writeFile(outputPath, JSON.stringify(result, null, 2), err => {if (err) throw err}) 

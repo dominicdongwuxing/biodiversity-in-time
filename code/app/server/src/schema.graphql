@@ -16,6 +16,10 @@ type Query {
     getTreeFromWikiNameOrIdWithMya (
         name: String, maxElement: Int, depth: Int, id: String, minma: Float, maxma: Float
     ): Tree
+
+    test (
+        wikiRef: String
+    ): [Fossil]
 }
 
 type Fossil {

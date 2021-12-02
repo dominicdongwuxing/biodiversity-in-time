@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 
 export default function TreeGraphCustomize ({data, setSearchId, searchDepth, setSearchDepth, searchMaxElement, setSearchMaxElement}) {
-    
+
     const makeOptions = (valueArr) => {
         const optionArr = [];
         for (const value of valueArr) {
@@ -69,7 +69,7 @@ export default function TreeGraphCustomize ({data, setSearchId, searchDepth, set
             </FormControl>
         
 
-            {data && data.getTreeFromWikiNameOrIdWithMya.name !== "Biota" ? (
+            {data?.getTreeFromWikiNameOrIdWithMya.name !== "Biota" ? (
                 <Button 
                 style={{margin: "5px"}}
                 variant="contained" 

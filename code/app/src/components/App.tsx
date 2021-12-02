@@ -48,18 +48,7 @@ export default function App() {
         <Grid item sm={4} >
           <Card style={{height: "525px"}}>
             <CardContent>
-              <GlobalStateContextConsumer>
-                {({myaRange, searchName, searchId, searchMaxElement, searchDepth }) => (
-                  <Tree 
-                    myaRange={myaRange}
-                    searchName={searchName}
-                    searchId={searchId}
-                    searchMaxElement={searchMaxElement}
-                    searchDepth={searchDepth}
-                  />
-                )}
-              </GlobalStateContextConsumer>
-              
+              <Tree/>          
             </CardContent>
           </Card>
         </Grid>

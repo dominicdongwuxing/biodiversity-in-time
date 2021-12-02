@@ -248,6 +248,7 @@ data["taxon_name"].fillna(data["species_name_value"],inplace=True)
 
 data.to_csv(PROCESSED_WIKIDIR + "/data.csv")
 
+'''
 # build a flat tree from dataset, which is a dictionary with parents as keys and their children as values
 tree = build_flat_tree(data)
 with open(os.path.join(PROCESSED_WIKIDIR,"tree_flat.pkl"), "wb") as tree_file:
@@ -266,3 +267,4 @@ for missing_parent in [i for i in list(data[data["parent_taxon"].isna()].index) 
         file_name = os.path.join(PROCESSED_WIKIDIR, "dangling_trees",missing_parent + ".json")
         with open(file_name, 'w') as fp:
             json.dump(dangling_tree, fp, indent=4)
+'''

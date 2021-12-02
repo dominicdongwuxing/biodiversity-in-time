@@ -17,7 +17,7 @@ interface GlobalState {
     setSearchMaxElement: (value: number) => void;
 }
 
-const {Provider, Consumer} = React.createContext<Partial<GlobalState>>({})
+const GlobalStateContext = React.createContext<Partial<GlobalState>>({})
 
 function GlobalStateProvider (props) {
     // const [searchName, setSearchName] = useState("Biota");
@@ -31,7 +31,7 @@ function GlobalStateProvider (props) {
     const [searchMaxElement, setSearchMaxElement] = useState(7);
 
     return (
-        <Provider value={{searchName, setSearchName,
+        <GlobalStateContext.Provider value={{searchName, setSearchName,
                           searchId, setSearchId, 
                           wikiRefRange, setWikiRefRange, 
                           myaMain, setMyaMain,
@@ -41,9 +41,10 @@ function GlobalStateProvider (props) {
                         }}
         >
             {props.children}
-        </Provider>
+        </GlobalStateContext.Provider>
     )
 }
 
-export {GlobalStateProvider, Consumer as GlobalStateContextConsumer}
+const {Consumer} = GlobalStateContext
+export {GlobalStateProvider, Consumer as GlobalStateContextConsumer, GlobalStateContext}
 
