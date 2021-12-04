@@ -1,26 +1,22 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import styles from "./ScrollBar.module.css";
 import * as d3 from "d3";
 import intervals from "../../dist/resources/intervalsNew.json"
+import { GlobalStateContext } from "./GlobalStateContext"
 
-export default function ScrollBar({
-  changeMyaMain,
-  changeMyaRange,
-  myaMain,
-  myaRange,
-}) {
-
+export default function ScrollBar() {
   const [geologicalTime, setGeologicalTime] = useState("")
 
   return (
     <div id="scaleBar" className={styles.scrollBar}>
       Current geological time period: {geologicalTime}
-      <GeoTimescale changeMyaMain={changeMyaMain} changeMyaRange={changeMyaRange} setGeologicalTime={setGeologicalTime}/>
+      <GeoTimescale setGeologicalTime={setGeologicalTime}/>
     </div>
   );
 }
 
-const GeoTimescale = ({ changeMyaMain, changeMyaRange, setGeologicalTime }) => {
+const GeoTimescale = ({ setGeologicalTime }) => {
+  const { setMyaMain, setMyaRange, myaMain, myaRange } = useContext(GlobalStateContext)
   const ref = useRef()
   useEffect(() => {
     const {width, height, tickLength, neighborWidth, fontSize, margins} = {
@@ -86,6 +82,10 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange, setGeologicalTime }) => {
             if (cellData == d){
               console.log(cellData)
               return parent.x1-parent.x0
+            }
+
+            if (sequence.includes(cellData)) {
+              console.log(cellData)
             }
           })
 
@@ -162,8 +162,8 @@ const GeoTimescale = ({ changeMyaMain, changeMyaRange, setGeologicalTime }) => {
       if (node == root || (ancestorPath.includes("Phanerozoic") && node.depth < 3)) return null
       // focus = p === focus ? p.parent : p;
       setGeologicalTime(ancestorPath.reverse().slice(1).join(" -> "))
-      changeMyaMain(Math.floor((node.data.end + node.data.start)/2))
-      changeMyaRange([node.data.start , node.data.end])
+      setMyaMain(Math.floor((node.data.end + node.data.start)/2))
+      setMyaRange([node.data.start , node.data.end])
       hideSmallTicks = true//[0, 1, 2].includes(node.depth);
 
       // before Phanerozoic, focus on Geologic time, otherwise, focus on Phanerozoic

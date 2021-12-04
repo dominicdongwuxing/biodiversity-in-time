@@ -9,10 +9,6 @@ import { useAppStyles } from "./AppStyles";
 import { Grid, Card, CardContent, CardActions } from "@mui/material";
 import { useQuery, gql } from "@apollo/client";
 
-import {GlobalStateContextConsumer} from "./globalStateContext"
-
-
-
 export default function App() {
   
   return (
@@ -30,17 +26,7 @@ export default function App() {
         <Grid item sm={8} >
           <Card style={{height:"525px"}}>
             <CardContent>
-              <GlobalStateContextConsumer>
-                {({myaMain, myaRange, searchName, searchId, wikiRefRange}) => (
-                  <Map 
-                      myaMain={myaMain} 
-                      myaRange={myaRange} 
-                      searchName={searchName} 
-                      searchId={searchId} 
-                  />)
-                }
-              </GlobalStateContextConsumer>
-              
+              <Map />              
             </CardContent>
           </Card>
         </Grid>
@@ -56,16 +42,7 @@ export default function App() {
       <Grid item sm={12}>
         <Card style={{height:"100%"}}>
           <CardContent>
-            <GlobalStateContextConsumer>
-              {({myaMain, myaRange, setMyaMain, setMyaRange}) => (
-                <ScrollBar
-                changeMyaMain={setMyaMain}
-                changeMyaRange={setMyaRange}
-                myaMain={myaMain}
-                myaRange={myaRange}
-                />
-              )}
-            </GlobalStateContextConsumer>
+            <ScrollBar />
           </CardContent>
         </Card>
         

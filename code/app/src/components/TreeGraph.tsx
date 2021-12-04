@@ -1,8 +1,10 @@
-import React, {useState, useEffect, useRef} from "react"
+import React, {useState, useEffect, useRef, useContext} from "react"
 import * as d3 from "d3"
+import { GlobalStateContext } from "./GlobalStateContext";
 
 // adapted from https://bl.ocks.org/swkasica/6c2b7784ec654b999397b8bc29b84c08
-export default function TreeGraph({ data, setSearchId, setWikiRefRange}) {
+export default function TreeGraph({ data }) {
+    const {setSearchId, setWikiRefRange} = useContext(GlobalStateContext)
     const ref = useRef(null);
     useEffect(() => {
       //data.children.forEach(child => child.children.forEach(grandchild => grandchild.children.forEach(collapse)))

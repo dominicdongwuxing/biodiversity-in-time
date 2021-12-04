@@ -1,11 +1,13 @@
-import React, {useState} from "react"
+import React, { useState, useContext } from "react"
+import { GlobalStateContext } from "./GlobalStateContext";
 import {
     Button,
     TextField,
   } from "@mui/material";
   import { useTreeStyles } from "./TreeStyles";
 
-export default function TreeSearchName ({setSearchName, setSearchId}) {
+export default function TreeSearchName () {
+    const {setSearchName, setSearchId} = useContext(GlobalStateContext)
     const [searchNameBuffer, setSearchNameBuffer] = useState("");
 
     //console.log(searchNameBuffer)
@@ -14,7 +16,6 @@ export default function TreeSearchName ({setSearchName, setSearchId}) {
         event.preventDefault();
         setSearchId("");
         setSearchName(searchNameBuffer);
-        
       };
 
     return (

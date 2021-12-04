@@ -31,14 +31,15 @@ function GlobalStateProvider (props) {
     const [searchMaxElement, setSearchMaxElement] = useState(7);
 
     return (
-        <GlobalStateContext.Provider value={{searchName, setSearchName,
-                          searchId, setSearchId, 
-                          wikiRefRange, setWikiRefRange, 
-                          myaMain, setMyaMain,
-                          myaRange, setMyaRange,
-                          searchDepth, setSearchDepth,
-                          searchMaxElement, setSearchMaxElement
-                        }}
+        <GlobalStateContext.Provider value={{
+            searchName, setSearchName,
+            searchId, setSearchId, 
+            wikiRefRange, setWikiRefRange, 
+            myaMain, setMyaMain,
+            myaRange, setMyaRange,
+            searchDepth, setSearchDepth,
+            searchMaxElement, setSearchMaxElement
+            }}
         >
             {props.children}
         </GlobalStateContext.Provider>

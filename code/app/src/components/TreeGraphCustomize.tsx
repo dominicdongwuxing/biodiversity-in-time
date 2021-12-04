@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import {
   Button,
   Select,
@@ -6,9 +6,10 @@ import {
   FormControl,
   FormHelperText,
 } from "@mui/material";
+import { GlobalStateContext } from "./GlobalStateContext";
 
-export default function TreeGraphCustomize ({data, setSearchId, searchDepth, setSearchDepth, searchMaxElement, setSearchMaxElement}) {
-
+export default function TreeGraphCustomize ({data,  }) {
+    const { setSearchId, setSearchDepth, setSearchMaxElement, searchDepth, searchMaxElement } = useContext(GlobalStateContext)
     const makeOptions = (valueArr) => {
         const optionArr = [];
         for (const value of valueArr) {

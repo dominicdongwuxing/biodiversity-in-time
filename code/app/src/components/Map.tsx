@@ -4,13 +4,12 @@ import * as d3 from "d3";
 import { useQuery, gql } from "@apollo/client";
 import axios from "axios"
 import range from "../../dist/resources/plateID.json"
-import { GlobalStateContextConsumer } from "./globalStateContext";
-import {ID_QUERY, MAP_AND_FOSSIL_QUERY, FOSSIL_QUERY } from "./queries"
-import { GlobalStateContext } from "./globalStateContext";
+import {ID_QUERY, MAP_AND_FOSSIL_QUERY, FOSSIL_QUERY } from "./Queries"
+import { GlobalStateContext } from "./GlobalStateContext";
 
-const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
+const Tectonics = ({ geojson, fossilData }) => {
   const ref = useRef();
-  const {myaRange} = useContext(GlobalStateContext)
+  const {myaRange, wikiRefRange} = useContext(GlobalStateContext)
   const mapYear = Math.round(myaRange[1]-myaRange[0]/2)
   useEffect(() => {
     // parse the map data   
@@ -30,24 +29,57 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
     // });
 
     const features = geojson.features
-
+    
     //const range = [...new Set(features.map(shape => shape.properties.PLATEID1))]
     //console.log(range)
-  
+    console.log(fossilData)
     // parse the fossil data
+    let count = 0
     let fossilArray = []
-    fossilData.map(fossilCollection => 
-      fossilCollection.records.map(record => {
-        if (record.id=="866953") {
-          console.log(record, fossilCollection.pathFromRootById)}
-        fossilArray.push({coordinate: record.coordinate, 
-                          id: record.id,
-                          pathFromRootById: fossilCollection.pathFromRootById})
-      }))
-    console.log(fossilArray.length)
+    fossilData.forEach(fossilPointTraces => {
+      fossilPointTraces.points.forEach(fossilPoint => {
+        count++
+        // features.push({
+        //   "type": "Feature",
+        //   "properties": {
+        //     "ANCHOR": 0,
+        //     "TIME": fossilPoint.time,
+        //     "name": fossilPointTraces.name,
+        //     "rank": fossilPointTraces.rank,
+        //     "kingdom": fossilPointTraces.kingdom,
+        //     "phylum": fossilPointTraces.phylum,
+        //     "class": fossilPointTraces.class,
+        //     "order": fossilPointTraces.order,
+        //     "family": fossilPointTraces.family,
+        //     "genus": fossilPointTraces.genus,
+        //     "maxma": fossilPointTraces.maxma,
+        //     "minma": fossilPointTraces.minma,
+        //     "id": fossilPointTraces.id
+        //   },
+        //   "geometry": {
+        //     "type": "Point",
+        //     "coordinates": [
+        //       fossilPoint.lon,
+        //       fossilPoint.lat
+        //     ]
+        //   }
+        // })
+        fossilArray.push({coordinate: [fossilPoint.lon, fossilPoint.lat], id: fossilPointTraces.id})
+      })
+    })
+    console.log(`There are ${count} fossil points to render`)
+
+    // let fossilArray = []
+    // fossilData.map(fossilCollection => 
+    //   fossilCollection.records.map(record => {
+    //     fossilArray.push({coordinate: record.coordinate, 
+    //                       id: record.id,
+    //                       pathFromRootById: fossilCollection.pathFromRootById})
+    //   }))
+    //console.log(fossilArray.length)
     const projection = d3.geoEquirectangular()//.scale(110);
 
-    const geoGenerator = d3.geoPath().projection(projection);
+    const geoGenerator = d3.geoPath().projection(projection).pointRadius(2);
     // const bounds = features.map(feature => geoGenerator.bounds(feature))
     // const xmin = d3.min(bounds.map(bound => d3.min(bound[0])))
     // const xmax = d3.max(bounds.map(bound => d3.max(bound[0])))
@@ -79,13 +111,24 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
       .join("path")
       .attr("d", geoGenerator)
       .attr("fill",d => {
-        const colors = d3.scaleOrdinal().domain(range).range(["#cecece","#b4b4b4","#979797","#7a7a7a","#5f5f5f"])
+        //const colors = d3.scaleOrdinal().domain(range).range(["#cecece","#b4b4b4","#979797","#7a7a7a","#5f5f5f"])
         //["#b3e2cd","#fdcdac","#cbd5e8","#f4cae4","#e6f5c9","#fff2ae","#f1e2cc","#cccccc"]
-        
-        const number = typeof(d.properties.PLATEID1) == "string" ? parseInt(d.properties.PLATEID1) : d.properties.PLATEID1
-        return colors(number) 
+        // if the path is for coastline
+        if (d.properties.PLATEID1) {
+          const number = typeof(d.properties.PLATEID1) == "string" ? parseInt(d.properties.PLATEID1) : d.properties.PLATEID1
+          return "#cecece"
+        }
+        // if the path is for points
+        else {
+          //console.log(d.geometry.type)
+          const pointColors = ["black","red","green","blue","brown","purple","black","red","green","blue","brown","purple","black","red","green","blue","brown","purple","black","red","green","blue","brown","purple"]
+          const color = pointColors[d.properties.TIME/10]
+          return color
+        }
       })
-    
+      .attr("stroke","black")
+      .attr("stroke-width","0.2px")
+
     
     const fossilPoints = d3.select(ref.current)
       .select("g")
@@ -97,14 +140,14 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
       .attr("cy", (d) => projection(d.coordinate)[1])
       .attr("r", "1px")
       .attr("fill", (d) => {
-        const colors = d3.scaleOrdinal().domain(wikiRefRange).range(["#800000","#191970","#006400","#9acd32","#ff0000","#ff8c00","#ffd700","#00ff00","#ba55d3","#00fa9a","#00ffff","#0000ff","#ff00ff","#1e90ff","#fa8072","#dda0dd"])
-        const pathArr = d.pathFromRootById.split(",").slice(1)
-        for (let id of pathArr) {
-          if (wikiRefRange.includes(id)){
-            return colors(id)
-          }
-        }
-        return "black"
+        // const colors = d3.scaleOrdinal().domain(wikiRefRange).range(["#800000","#191970","#006400","#9acd32","#ff0000","#ff8c00","#ffd700","#00ff00","#ba55d3","#00fa9a","#00ffff","#0000ff","#ff00ff","#1e90ff","#fa8072","#dda0dd"])
+        // const pathArr = d.pathFromRootById.split(",").slice(1)
+        // for (let id of pathArr) {
+        //   if (wikiRefRange.includes(id)){
+        //     return colors(id)
+        //   }
+        // }
+        return "red"
       })
       .on("mouseover", (e,d) => {
         console.log("fossil id: ",d.id, "path from root:", d.pathFromRootById)
@@ -131,13 +174,13 @@ const Tectonics = ({ geojson, fossilData, wikiRefRange }) => {
   );
 };
 
-export default function Map({ myaMain, myaRange, searchName, searchId}) {
+export default function Map() {
   // const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1], wikiRef: searchId ? searchId : searchName } });
   //const [data, setData] = useState({"getFossilsDuringMya":[]})
+  const {myaMain, myaRange, searchName, searchId} = useContext(GlobalStateContext)
   const { data } = useQuery(ID_QUERY, { variables: { name: searchName } })
   const [mapData, setMapData] = useState(null)
   const [fossilData, setFossilData] = useState(null)
-  
   useEffect(() => {
     // let url = "./tectonicData/reconstructed_" + myaMain + ".00Ma.json"
     // console.log("inside url: " + url)
@@ -151,25 +194,32 @@ export default function Map({ myaMain, myaRange, searchName, searchId}) {
       // console.log("inside data is now: ", data)
       // data ? console.log("inside, time is " + data.getMapAtMya.features[0].properties.TIME) : console.log("inside no time")
     })
-
-    
-    axios.get(urlForFossil).then((res) => {
-      // console.log(res.data["mya"] == myaMain)
-      let rootId = searchId
-      if (rootId == "") {
-        //console.log("Has no root Id")
-        
-        if (data) { 
-          //console.log("Has no rootId and got data")
-          //console.log(data)
-          rootId = data.getWikiIdByName
-          setFossilData({"getFossilsDuringMyaByRoot": res.data["fossilData"].filter(item => item.pathFromRootById.split(",").includes(rootId))})
-        }
-      } else {
-        //console.log("Has rootId: ", rootId)
-        setFossilData({"getFossilsDuringMyaByRoot": res.data["fossilData"].filter(item => item.pathFromRootById.split(",").includes(rootId))})
-      }
+    // axios.defaults.headers['Access-Control-Allow-Origin'] = "*"
+    // axios.defaults.headers['Content-Type'] = 'application/json'
+    // ,{headers:{'Access-Control-Allow-Origin': '*',}}
+    axios.get("http://127.0.0.1:5000/traces?order=Primates").then(res => {
+      //console.log(res.data)
+      setFossilData({"getFossilsDuringMyaByRoot": res.data})
     })
+
+    // this is for getting the fossil from static files
+    // axios.get(urlForFossil).then((res) => {
+    //   // console.log(res.data["mya"] == myaMain)
+    //   let rootId = searchId
+    //   if (rootId == "") {
+    //     //console.log("Has no root Id")
+        
+    //     if (data) { 
+    //       //console.log("Has no rootId and got data")
+    //       //console.log(data)
+    //       rootId = data.getWikiIdByName
+    //       setFossilData({"getFossilsDuringMyaByRoot": res.data["fossilData"].filter(item => item.pathFromRootById.split(",").includes(rootId))})
+    //     }
+    //   } else {
+    //     //console.log("Has rootId: ", rootId)
+    //     setFossilData({"getFossilsDuringMyaByRoot": res.data["fossilData"].filter(item => item.pathFromRootById.split(",").includes(rootId))})
+    //   }
+    // })
     
   },[myaMain, searchName, searchId, myaRange, data])
 
@@ -183,17 +233,12 @@ export default function Map({ myaMain, myaRange, searchName, searchId}) {
       {myaMain > 410 ? 
       "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
       mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilsDuringMyaByRoot ? (
-         <GlobalStateContextConsumer>
-           {({wikiRefRange}) => (
-             <Tectonics 
-              geojson={mapData.getMapAtMya} 
-              fossilData={fossilData.getFossilsDuringMyaByRoot} 
-              wikiRefRange={wikiRefRange} />
-           )}
-         </GlobalStateContextConsumer>
-        
+        <Tectonics 
+        geojson={mapData.getMapAtMya} 
+        fossilData={fossilData.getFossilsDuringMyaByRoot} 
+        />
       ) : mapData && mapData.getMapAtMya ? (
-        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} wikiRefRange={[]} />
+        <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />
       ) : "Loading map..."}
 
 

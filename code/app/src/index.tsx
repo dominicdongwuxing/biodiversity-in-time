@@ -13,7 +13,7 @@ import {
 } from "@apollo/client";
 // import { AUTH_TOKEN } from './constants';
 
-import { GlobalStateProvider } from "components/globalStateContext";
+import { GlobalStateProvider } from "components/GlobalStateContext";
 
 const cache = new InMemoryCache({
   typePolicies: {
