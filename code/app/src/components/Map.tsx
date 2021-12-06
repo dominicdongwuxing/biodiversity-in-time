@@ -197,7 +197,7 @@ export default function Map() {
     // axios.defaults.headers['Access-Control-Allow-Origin'] = "*"
     // axios.defaults.headers['Content-Type'] = 'application/json'
     // ,{headers:{'Access-Control-Allow-Origin': '*',}}
-    axios.get("http://127.0.0.1:5000/traces?order=Primates").then(res => {
+    axios.get("http://127.0.0.1:5000/traces?genus=Homo").then(res => {
       //console.log(res.data)
       setFossilData({"getFossilsDuringMyaByRoot": res.data})
     })

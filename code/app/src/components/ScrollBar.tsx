@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import styles from "./ScrollBar.module.css";
 import * as d3 from "d3";
-import intervals from "../../dist/resources/intervalsNew.json"
+import intervals from "../../dist/resources/intervalsPhanerozoic.json"
+//import intervals from "../../dist/resources/intervalsNew.json"
 import { GlobalStateContext } from "./GlobalStateContext"
 
 export default function ScrollBar() {
@@ -64,57 +65,104 @@ const GeoTimescale = ({ setGeologicalTime }) => {
       .append("rect")
       .attr("width", (d) => d.x1 - d.x0)
       .attr("height", (d) => d.y1 - d.y0)
-      .attr("fill", (d) => d.data.color)
+      .attr("fill", (d) => {
+        // use different blues from top to bottom
+        const bluePalette = ["#00163d","#08306b","#0a4a90", "#1864aa","#2f7ebc","#4b97c9"]
+        return bluePalette[d.depth]
+      })
       .attr("stroke", "white")
       .attr("stroke-width", 0.5)
       .attr("cursor", "pointer")
-      .on("pointerenter", (_event, d) => {
-        // get the ancestors of the current segment
-        const sequence = d.ancestors().reverse();
-        // get direct parent of the current time period segment
-        const parent = sequence.length > 1 ? sequence[sequence.length - 2] : null
+      .on("pointerenter", (_event, focus) => {
+
+          // get the ancestors of the current segment
+          const sequence = focus.ancestors();        
+          // get direct parent of the current time period segment
+          const focusParent = sequence.length > 1 ? sequence[1] : sequence[0]
+          // find out index of focus among it's parent's children list
+          const focusIndex = focus.depth ? focus.ancestors()[1].children.indexOf(focus) : -1
+  
+          const parentLength = focusParent.x1 - focusParent.x0
+          const focusLength = focus.x1 - focus.x0
+          const scaleFactor = (parentLength - (parentLength - focusLength) * 0.1)/focusLength
+  
+          cell
+            .transition()
+            .duration(200)
+            // Highlight the ancestors
+            .attr("fill-opacity", (d) => (sequence.includes(d) ? 1.0 : 0.5))
+            .attr("transform", (d) => { 
+              // only do the shrinking and expanding when focus depth is no less than 3
+              if (focus.depth >= 3){             
+                const parentX0 = focusParent.x0
+                const parentX1 = focusParent.x1
+                const originalOffsetX0 = d.x0 - parentX0
+                const originalOffsetX1 = parentX1 - d.x0
+                // if time depth is no less than focus depth, and it belongs to the sibling tree of the current focus
+                if (d.depth >= focus.depth && d.ancestors().includes(focusParent) && !d.ancestors().includes(focus)){              
+                  // find out the position index of its ancestor that is sibling to the focus in focus's parent's children list
+                  const ancestorSiblingToFocus = d.ancestors()[d.ancestors().indexOf(focusParent) - 1]
+                  const index = ancestorSiblingToFocus.ancestors()[1].children.indexOf(ancestorSiblingToFocus)
+                  //console.log(d.data.name, index)
+                  let startX0;
+                  if (index < focusIndex) {
+                    startX0 = parentX0 + originalOffsetX0 * 0.1
+                  } else {
+                    startX0 = parentX1 - originalOffsetX1 * 0.1
+                  }
+                  return `translate(${startX0},${d.y0})`
+                } 
+                // if time depth is no less than focus depth and it belongs to the current focus rooted tree (including focus itself)
+                else if(d.depth >= focus.depth && d.ancestors().includes(focus)){
+                  const focusStartX0 = parentX0 + (focus.x0 - parentX0) * 0.1
+                  const distanceToFocusStartX0 = (d.x0 - focus.x0 ) * scaleFactor
+                  const startX0 = focusStartX0 + distanceToFocusStartX0
+                  return `translate(${startX0},${d.y0})`
+                } else {
+                  return `translate(${d.x0},${d.y0})`
+                }
+              } else {
+              return `translate(${d.x0},${d.y0})`
+            }
+              
+            });
+            rect
+              .transition()
+              .duration(200)  
+              .attr("width", d => {
+                // only do the shrinking and expanding when focus depth is no less than 3
+                if (focus.depth >= 3){
+                  // if time depth is no less than focus depth, and it belongs to the sibling tree of the current focus
+                  if (d.depth >= focus.depth && d.ancestors().includes(focusParent) && !d.ancestors().includes(focus)){              
+                    return 0.1 *(d.x1 - d.x0) 
+                  } 
+                  // if time depth is no less than focus depth and it belongs to the current focus rooted tree (including focus itself)
+                  else if(d.depth >= focus.depth && d.ancestors().includes(focus)){
+                    const originalLength = d.x1 - d.x0
+                    return originalLength * scaleFactor
+                  } else {
+                    return d.x1 - d.x0
+                  }
+                } else {
+                  return d.x1 - d.x0
+                }
+              })
+        
+      })
+      .on("pointerleave", () => {
         cell
           .transition()
-          .duration(500)
-          // Highlight the ancestors
-          .attr("fill-opacity", (cellData) => (sequence.includes(cellData) ? 1.0 : 0.5))
-          .attr("width", (cellData) => {
-            if (cellData == d){
-              console.log(cellData)
-              return parent.x1-parent.x0
-            }
-
-            if (sequence.includes(cellData)) {
-              console.log(cellData)
-            }
-          })
-
-          // .transition()
-          // .duration(500)
-          // .attr("transform", (cellData) => {
-          //   if (cellData == d) {
-          //     console.log(cellData)
-          //     //return `translate(${parent.x0},${parent.y0})`
-          //   }
-          // })
-          // .attr("width", (cellData) => {
-          //   if (cellData == d) {
-          //     //console.log(d)
-          //     return parent.x1-parent.x0
-          //   }
-          // })
-          
-
-        //setSequence(sequence);
+          .duration(200)
+          .attr("fill-opacity", 1)
+          .attr("transform", d => `translate(${d.x0},${d.y0})`);
+        rect
+          .transition()
+          .duration(200)
+          .attr("width", d => d.x1 -d.x0)
       })
       .on("click", clicked);
 
-    svg.on("pointerleave", () => {
-      cell
-      .transition()
-      .duration(500).attr("fill-opacity", 1);
-      //setSequence([]);
-    });
+
       
     cell.append("title").text((d) => {
       const sequence = d
@@ -129,12 +177,9 @@ const GeoTimescale = ({ setGeologicalTime }) => {
       .append("text")
       .style("user-select", "none")
       .attr("pointer-events", "none")
-      .attr("x", (d) => {
-        const textX = (d.x1 - d.x0) / 2;
-        return Number.isNaN(textX) ? 0 : textX;
-      })
+      .attr("x", (d) => (d.x1 - d.x0) / 2)
       .attr("y", (d) => (d.y1 - d.y0) / 2)
-      .attr("fill", (d) => d.data.textColor ?? "black")
+      .attr("fill", "white")
       .attr("fill-opacity", labelVisible)
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "middle")
@@ -157,7 +202,6 @@ const GeoTimescale = ({ setGeologicalTime }) => {
 
     function clicked(event, node) {
       const ancestorPath = node.ancestors().map(node => node.data.name)
-
       // disable focusing on Geological time (root) or top levels under Phanerozoic
       if (node == root || (ancestorPath.includes("Phanerozoic") && node.depth < 3)) return null
       // focus = p === focus ? p.parent : p;
@@ -375,7 +419,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
     }
 
     // zero in Geologic time > Phanerozoic > Cenozoic > Quaternary > Holocene (0.0117-0 mya)
-    clicked(null, root.children[2].children[2].children[2].children[1])
+    //clicked(null, root.children[2].children[2].children[2].children[1])
         
   },[])
   return (
@@ -475,25 +519,6 @@ const GeoTimescale = ({ setGeologicalTime }) => {
 //   );
 // }
 
-// export default function ScrollBar({
-//   changeMyaMain,
-//   changeMyaRange,
-//   myaMain,
-//   myaRange,
-//   steps,
-// }) {
-//   return (
-//     <div className={styles.scrollBar}>
-//       <h1>scroll bar section</h1>
-//       Select how many million years ago (mya) to view the map: {myaMain}
-//       <MyaMainScrollBar handleChange={changeMyaMain} myaMain={myaMain} />
-//       Fine tune the range around the mya value to view the tree: from{" "}
-//       {myaRange[0]} mya to {myaRange[1]} mya:
-//       <MyaRangeScrollBar
-//         handleChange={changeMyaRange}
-//         myaMain={myaMain}
-//         steps={steps}
-//       />
-//     </div>
-//   );
-// }
+
+
+
