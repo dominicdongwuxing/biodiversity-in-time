@@ -74,91 +74,214 @@ const GeoTimescale = ({ setGeologicalTime }) => {
       .attr("stroke-width", 0.5)
       .attr("cursor", "pointer")
       .on("pointerenter", (_event, focus) => {
-
           // get the ancestors of the current segment
-          const sequence = focus.ancestors();        
-          // get direct parent of the current time period segment
-          const focusParent = sequence.length > 1 ? sequence[1] : sequence[0]
-          // find out index of focus among it's parent's children list
-          const focusIndex = focus.depth ? focus.ancestors()[1].children.indexOf(focus) : -1
-  
-          const parentLength = focusParent.x1 - focusParent.x0
-          const focusLength = focus.x1 - focus.x0
-          const scaleFactor = (parentLength - (parentLength - focusLength) * 0.1)/focusLength
-  
+          const ancestorsDescending = focus.ancestors().reverse();       
+          // find the ancestor on the zoom level and the level above
+          const ancestorZoomLevel = ancestorsDescending[3]
+          const ancestorZoomLevelParent = ancestorsDescending[2]
+
+          // find out index of ancestor on zoom level among it's parent's children list
+          const ancestorZoomLevelIndex = ancestorZoomLevelParent ? ancestorZoomLevelParent.children.indexOf(ancestorZoomLevel) : -1
+
+          // find out the scale factor by which the zoomed in object expand
+          const ancestorZoomLevelParentLength = ancestorZoomLevelParent ? ancestorZoomLevelParent.x1 - ancestorZoomLevelParent.x0 : null
+          const ancestorZoomLevelLength = ancestorZoomLevel ? ancestorZoomLevel.x1 - ancestorZoomLevel.x0 : null
+          const scaleFactor = (ancestorZoomLevelParentLength - (ancestorZoomLevelParentLength - ancestorZoomLevelLength) * 0.1)/ancestorZoomLevelLength
+
           cell
             .transition()
             .duration(200)
             // Highlight the ancestors
-            .attr("fill-opacity", (d) => (sequence.includes(d) ? 1.0 : 0.5))
+            .attr("fill-opacity", (d) => (ancestorsDescending.includes(d) ? 1.0 : 0.5))
             .attr("transform", (d) => { 
               // only do the shrinking and expanding when focus depth is no less than 3
-              if (focus.depth >= 3){             
-                const parentX0 = focusParent.x0
-                const parentX1 = focusParent.x1
-                const originalOffsetX0 = d.x0 - parentX0
-                const originalOffsetX1 = parentX1 - d.x0
-                // if time depth is no less than focus depth, and it belongs to the sibling tree of the current focus
-                if (d.depth >= focus.depth && d.ancestors().includes(focusParent) && !d.ancestors().includes(focus)){              
-                  // find out the position index of its ancestor that is sibling to the focus in focus's parent's children list
-                  const ancestorSiblingToFocus = d.ancestors()[d.ancestors().indexOf(focusParent) - 1]
-                  const index = ancestorSiblingToFocus.ancestors()[1].children.indexOf(ancestorSiblingToFocus)
-                  //console.log(d.data.name, index)
+              if (focus.depth >= 3){       
+                // find out the parent boundaries that don't change
+                const parentX0 = ancestorZoomLevelParent.x0
+                const parentX1 = ancestorZoomLevelParent.x1
+                // find out how fat the d.x0 is from the parent boundaries
+                const originalOffsetFromParentX0 = d.x0 - parentX0
+                const originalOffsetFromParentX1 = parentX1 - d.x0
+                // if time depth is no less than ancestor on zoom level's depth, then it belongs to the sibling tree of the current ancestor on zoom level
+                if (d.depth >= ancestorZoomLevel.depth && d.ancestors().includes(ancestorZoomLevelParent) && !d.ancestors().includes(ancestorZoomLevel)){              
+                  // find out on the sibling list, the position index of its ancestor that is sibling to the ancestor on zoom level 
+                  const ancestorSiblingToAncestorZoomLevel = d.ancestors()[d.ancestors().indexOf(ancestorZoomLevelParent) - 1]
+                  const index = ancestorSiblingToAncestorZoomLevel.ancestors()[1].children.indexOf(ancestorSiblingToAncestorZoomLevel)
                   let startX0;
-                  if (index < focusIndex) {
-                    startX0 = parentX0 + originalOffsetX0 * 0.1
+                  // if this segment belongs to the left side of the zoomed in part
+                  if (index < ancestorZoomLevelIndex) {
+                    // compute x0 from left offset
+                    startX0 = parentX0 + originalOffsetFromParentX0 * 0.1
+                  // if the segment belongs to the right side of the zoomed in part
                   } else {
-                    startX0 = parentX1 - originalOffsetX1 * 0.1
+                    // compute x0 from the right offset
+                    startX0 = parentX1 - originalOffsetFromParentX1 * 0.1
                   }
+                  d.targetX0 = startX0
+                  ticksData.find(data => data.text == d.data.start).targetX0 = startX0
                   return `translate(${startX0},${d.y0})`
                 } 
-                // if time depth is no less than focus depth and it belongs to the current focus rooted tree (including focus itself)
-                else if(d.depth >= focus.depth && d.ancestors().includes(focus)){
-                  const focusStartX0 = parentX0 + (focus.x0 - parentX0) * 0.1
-                  const distanceToFocusStartX0 = (d.x0 - focus.x0 ) * scaleFactor
-                  const startX0 = focusStartX0 + distanceToFocusStartX0
+                // if time depth is no less than ancestor on zoom level depth and it belongs to the current ancestor on zoom level rooted tree (including ancestor on zoom level itself)
+                else if(d.depth >= ancestorZoomLevel.depth && d.ancestors().includes(ancestorZoomLevel)){
+                  const ancestorZoomLevelStartX0 = parentX0 + (ancestorZoomLevel.x0 - parentX0) * 0.1
+                  const distanceToancestorZoomLevelStartX0 = (d.x0 - ancestorZoomLevel.x0 ) * scaleFactor
+                  const startX0 = ancestorZoomLevelStartX0 + distanceToancestorZoomLevelStartX0
+                  d.targetX0 = startX0
+                  ticksData.find(data => data.text == d.data.start).targetX0 = startX0
                   return `translate(${startX0},${d.y0})`
                 } else {
                   return `translate(${d.x0},${d.y0})`
                 }
               } else {
               return `translate(${d.x0},${d.y0})`
-            }
+              }
               
             });
-            rect
-              .transition()
-              .duration(200)  
-              .attr("width", d => {
-                // only do the shrinking and expanding when focus depth is no less than 3
-                if (focus.depth >= 3){
-                  // if time depth is no less than focus depth, and it belongs to the sibling tree of the current focus
-                  if (d.depth >= focus.depth && d.ancestors().includes(focusParent) && !d.ancestors().includes(focus)){              
-                    return 0.1 *(d.x1 - d.x0) 
-                  } 
-                  // if time depth is no less than focus depth and it belongs to the current focus rooted tree (including focus itself)
-                  else if(d.depth >= focus.depth && d.ancestors().includes(focus)){
-                    const originalLength = d.x1 - d.x0
-                    return originalLength * scaleFactor
-                  } else {
-                    return d.x1 - d.x0
-                  }
+          rect
+            .transition()
+            .duration(200)  
+            .attr("width", d => {
+              // only do the shrinking and expanding when focus depth is no less than 3
+              if (focus.depth >= 3){
+                // if time depth is no less than ancestorZoomLevel depth, and it belongs to the sibling tree of the current ancestorZoomLevel
+                if (d.depth >= ancestorZoomLevel.depth && d.ancestors().includes(ancestorZoomLevelParent) && !d.ancestors().includes(ancestorZoomLevel)){ 
+                  const newWidth = 0.1 * (d.x1 - d.x0)     
+                  d.targetWidth = newWidth     
+                  return newWidth
+                } 
+                // if time depth is no less than ancestorZoomLevel depth and it belongs to the current ancestorZoomLevel rooted tree (including ancestorZoomLevel itself)
+                else if(d.depth >= ancestorZoomLevel.depth && d.ancestors().includes(ancestorZoomLevel)){
+                  const originalLength = d.x1 - d.x0
+                  const newWidth = originalLength * scaleFactor
+                  d.targetWidth = newWidth             
+                  return newWidth
                 } else {
                   return d.x1 - d.x0
                 }
-              })
-        
+              } else {
+                return d.x1 - d.x0
+              }
+            })
+
+          text
+            .transition()
+            .duration(200)
+            .attr("fill-opacity", (d) => {
+              let width
+              if (focus.depth >= 3) {
+                
+                if (d.ancestors().includes(ancestorZoomLevelParent)) {
+                  width = d.targetWidth ? d.targetWidth : d.x1 - d.x0
+                } else {
+                  width = d.x1 - d.x0
+                }
+              } else {
+                width = d.x1 - d.x0
+              }
+              const opcacity = width > 14 ? 1 : 0
+              return opcacity
+            })
+            .attr("x", (d) => {
+              // Position all the ancestors labels in the middle
+              // if (focusAncestors.includes(d)) {
+              //   return -d.target.x0 + width / 2;
+              // }
+    
+              // Position Geologic time (root) label in the middle
+              //if (d == root) return -d.target.x0 + width/2
+              if (focus.depth >= 3) {
+                if (d.ancestors().includes(ancestorZoomLevelParent)) {
+                  const width = d.targetWidth ? d.targetWidth : d.x1 - d.x0
+                  return width / 2;
+                } else {
+                  return (d.x1 - d.x0) / 2
+                }
+              } else {
+                return (d.x1 - d.x0) / 2
+              }
+            })
+            .text((d) => {
+              
+              const labelWidth = getTextWidth(d.data.name, font);
+              const abbrev = d.data.abbr || d.data.name.charAt(0);
+              let width
+              if (focus.depth >= 3) {
+                
+                if (d.ancestors().includes(ancestorZoomLevelParent)) {
+                  width = d.targetWidth ? d.targetWidth : d.x1 - d.x0
+                } else {
+                  width = d.x1 - d.x0
+                }
+              } else {
+                width = d.x1 - d.x0
+              }
+              return width - 10 < labelWidth ? abbrev : d.data.name;
+            });
+          //ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks,focus))
+          tick
+            .transition()
+            .duration(200)
+            .attr("opacity", (d) => {
+              if (focus && focus.depth >= 3) {
+                if (d.ancestors.includes(ancestorZoomLevel)) {
+                  return 1
+                } else if (d.ancestors.includes(ancestorZoomLevelParent) && !d.ancestors.includes(ancestorZoomLevel)) {
+                  return 0
+                } else {
+                  return [4,5].includes(d.depth) && hideSmallTicks ? 0 : 1
+                }
+              } else {
+                return [4,5].includes(d.depth) && hideSmallTicks ? 0 : 1
+              }
+            })
+            .attr("transform", (d) => {
+              if (focus && focus.depth >= 3) {
+                if (d.ancestors.includes(ancestorZoomLevelParent)) {
+                  return `translate(${d.targetX0}, 0)`
+                }
+                return `translate(${d.x0}, 0)`
+              } else {
+                return `translate(${d.x0}, 0)`
+              }
+            })
       })
       .on("pointerleave", () => {
+        const leaveTime = 600
         cell
           .transition()
-          .duration(200)
+          .duration(leaveTime)
           .attr("fill-opacity", 1)
           .attr("transform", d => `translate(${d.x0},${d.y0})`);
         rect
           .transition()
-          .duration(200)
+          .duration(leaveTime)
           .attr("width", d => d.x1 -d.x0)
+        text
+          .transition()
+          .duration(leaveTime)
+          .attr("fill-opacity", labelVisible)
+          .attr("x", (d) => (d.x1 - d.x0) / 2)
+          .attr("y", (d) => (d.y1 - d.y0) / 2)
+          .attr("fill", "white")
+          .attr("fill-opacity", labelVisible)
+          .attr("text-anchor", "middle")
+          .attr("dominant-baseline", "middle")
+          .text((d) => {
+            const rectWidth = d.x1 - d.x0;
+            const labelWidth = getTextWidth(d.data.name, font);
+            const abbrev = d.data.abbr || d.data.name.charAt(0);
+      
+            return rectWidth - 10 < labelWidth ? abbrev : d.data.name;
+          })
+        
+        tick 
+          .transition()
+          .duration(leaveTime)
+          .attr("transform", (d) => `translate(${d.x0},0)`)
+          .attr("opacity", (d) =>
+            [4,5].includes(d.depth) && hideSmallTicks ? 0 : 1
+          )
+        //ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks,null))
       })
       .on("click", clicked);
 
@@ -196,10 +319,175 @@ const GeoTimescale = ({ setGeologicalTime }) => {
       .append("g")
       .attr("id", "ticks")
       .attr("transform", `translate(0,${height - margins.bottom})`); // Move tick group down
-  
-    ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks));
+    
+    const ticksData = makeTicksData(root)
+    const tick = ticksGroup
+      .selectAll("g")
+      .data(ticksData)
+      .join("g")
+      .attr("transform", (d) => `translate(${d.x0},0)`)
+      .attr("text-anchor", (d) => {
+        if (d.x0 === 0) {
+          return "start"
+        }
+
+        if (d.x0 === width) {
+          return "end"
+        }
+
+        return "middle"
+        }
+      )
+      .attr("opacity", (d) =>
+        [4,5].includes(d.depth) && hideSmallTicks ? 0 : 1
+      )
+    
+    tick
+      .append("line")
+      .attr("stroke", "#555")
+      .attr("stroke-width", 1)
+      .attr("x1", 0)
+      .attr("y1", 2)
+      .attr("x2", 0)
+      .attr(
+        "y2",
+        (d) => margins.bottom - d.depth * tickLength - fontSize
+      )
+
+    tick
+      .append("text")
+      .attr("x", 0)
+      .attr(
+        "y",
+        (d) => margins.bottom - d.depth * tickLength - fontSize / 2
+      )
+      .attr("dominant-baseline", "middle")
+      .attr("font-size", (d) => `${1 - 0.05 * d.depth}em`)
+      .text((d) => d.text)
+      .clone(true)
+      .lower()
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-width", 2)
+      .attr("stroke", "white");
+    //ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks, null));
+
+    function ticks(g, data, hideSmallTicks, focus) {
+      g.selectAll("g")
+        .data(data)
+        .join(
+          (enter) => {
+            console.log("running enter")
+            const tick = enter
+              .append("g")
+              .attr("transform", (d) => `translate(${d.x0}, 0)`)
+              .attr("text-anchor", (d) =>
+                d.x0 === 0 ? "start" : d.x0 === width ? "end" : "middle"
+              )
+              .attr("opacity", (d) =>
+                [4,5].includes(d.depth) && hideSmallTicks ? 0 : 1
+              );
+
+            tick
+              .append("line")
+              .attr("stroke", "#555")
+              .attr("stroke-width", 1)
+              .attr("x1", 0)
+              .attr("y1", 2)
+              .attr("x2", 0)
+              .attr(
+                "y2",
+                (d) => margins.bottom - d.depth * tickLength - fontSize
+              );
+
+            tick
+              .append("text")
+              .attr("x", 0)
+              .attr(
+                "y",
+                (d) => margins.bottom - d.depth * tickLength - fontSize / 2
+              )
+              .attr("dominant-baseline", "middle")
+              .attr("font-size", (d) => `${1 - 0.05 * d.depth}em`)
+              .text((d) => d.text)
+              .clone(true)
+              .lower()
+              .attr("stroke-linejoin", "round")
+              .attr("stroke-width", 2)
+              .attr("stroke", "white");
+          },
+          (update) => {
+            console.log("running update")
+            update
+              .transition()
+              .attr("opacity", (d) =>
+                [6].includes(d.depth) && hideSmallTicks ? 0 : 1
+              )
+              .attr("transform", (d) => {
+                if (focus && focus.depth >= 3) {
+                  return `translate(${d.targetX0}, 0)`
+                } else {
+                  return `translate(${d.x0}, 0)`
+                }
+                
+              })
+              .attr("dominant-baseline", "hanging")
+              .attr("text-anchor", (d) => {
+                if (focus && focus.depth >= 3) {
+                  return d.targetX0 === 0 ? "start" : d.targetX0 === width ? "end" : "middle"
+                } else {
+                  return d.x0 === 0 ? "start" : d.x0 === width ? "end" : "middle"
+                }
+              }
+                
+              )
+            }
+        );
+    }
 
 
+    function makeTicksData(root, width = 960) {
+      const uniqueStartAges = new Set(
+        root.descendants().map((node) => node.data.start)
+      );
+
+      const ticksData = Array.from(uniqueStartAges)
+        .map((start) =>
+          root.descendants().find((node) => node.data.start === start)
+        )
+        .map((d) => ({
+          x0: d.x0,
+          depth: d.depth,
+          targetX0: d.targetX0,
+          text: d.data.start,
+          ancestors: d.ancestors()
+        }));
+
+      const now = {
+        x0: root.x1,
+        depth: 0,
+        targetX0: root.targetX0 + root.targetWidth || width,
+        text: 0,
+        ancestors: []
+      };
+
+      ticksData.push(now);
+
+      return ticksData;
+    }
+
+    // Via https://stackoverflow.com/questions/1636842/svg-get-text-element-width
+    function getTextWidth(text, font) {
+      // re-use canvas object for better performance
+      // var canvas =
+      //   getTextWidth.canvas ||
+      //   (getTextWidth.canvas = document.createElement("canvas"));
+      
+      const context = document.createElement("canvas").getContext("2d");
+      context.font = font;
+      const metrics = context.measureText(text);
+
+      return metrics.width;
+    }
     function clicked(event, node) {
       const ancestorPath = node.ancestors().map(node => node.data.name)
       // disable focusing on Geological time (root) or top levels under Phanerozoic
@@ -287,10 +575,10 @@ const GeoTimescale = ({ setGeologicalTime }) => {
           return rectWidth - 8 < labelWidth ? abbrev : d.data.name;
         });
 
-      ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks));
+      //ticksGroup.call((g) => ticks(g, makeTicksData(root), hideSmallTicks, focus));
     }
 
-        // svg.call(
+            // svg.call(
         //   d3.zoom()
         //     .translateExtent([
         //       [0, 0],
@@ -303,124 +591,24 @@ const GeoTimescale = ({ setGeologicalTime }) => {
         //     })
         // );
 
-    function zoomed(e) {
-      if (!root.target) return;
+    // function zoomed(e) {
+    //   if (!root.target) return;
 
-      const translateX = e.transform.x;
+    //   const translateX = e.transform.x;
 
-      if (
-        translateX + root.target.x0 > 0 ||
-        root.x1 - translateX > root.target.x1
-      )
-        return;
+    //   if (
+    //     translateX + root.target.x0 > 0 ||
+    //     root.x1 - translateX > root.target.x1
+    //   )
+    //     return;
 
-      rect.attr("cursor", "grabbing");
-      g.attr("transform", `translate(${translateX},0)`);
-    }
-
-    function ticks(g, data, hideSmallTicks) {
-      g.selectAll("g")
-        .data(data)
-        .join(
-          (enter) => {
-            const tick = enter
-              .append("g")
-              .attr("transform", (d) => `translate(${d.x}, 0)`)
-              .attr("text-anchor", (d) =>
-                d.x === 0 ? "start" : d.x === width ? "end" : "middle"
-              )
-              .attr("opacity", (d) =>
-                [4, 5].includes(d.depth) && hideSmallTicks ? 0 : 1
-              );
-
-            tick
-              .append("line")
-              .attr("stroke", "#555")
-              .attr("stroke-width", 1)
-              .attr("x1", 0)
-              .attr("y1", 2)
-              .attr("x2", 0)
-              .attr(
-                "y2",
-                (d) => margins.bottom - d.depth * tickLength - fontSize
-              );
-
-            tick
-              .append("text")
-              .attr("x", 0)
-              .attr(
-                "y",
-                (d) => margins.bottom - d.depth * tickLength - fontSize / 2
-              )
-              .attr("dominant-baseline", "middle")
-              .attr("font-size", (d) => `${1 - 0.05 * d.depth}em`)
-              .text((d) => d.text)
-              .clone(true)
-              .lower()
-              .attr("stroke-linejoin", "round")
-              .attr("stroke-width", 2)
-              .attr("stroke", "white");
-          },
-          (update) =>
-            update
-              .transition()
-              .attr("opacity", (d) =>
-                [4, 5].includes(d.depth) && hideSmallTicks ? 0 : 1
-              )
-              .attr("transform", (d) => `translate(${d.targetX}, 0)`)
-              .attr("dominant-baseline", "hanging")
-              .attr("text-anchor", (d) =>
-                d.targetX === 0 ? "start" : d.targetX === width ? "end" : "middle"
-              )
-        );
-    }
-
-
-    function makeTicksData(root, width = 960) {
-      const uniqueStartAges = new Set(
-        root.descendants().map((node) => node.data.start)
-      );
-
-      const ticksData = Array.from(uniqueStartAges)
-        .map((start) =>
-          root.descendants().find((node) => node.data.start === start)
-        )
-        .map((d) => ({
-          x: d.x0,
-          depth: d.depth,
-          targetX: d?.target?.x0 || 0,
-          text: d.data.start,
-        }));
-
-      const now = {
-        x: root.x1,
-        depth: 0,
-        targetX: root?.target?.x1 || width,
-        text: 0,
-      };
-
-      ticksData.push(now);
-
-      return ticksData;
-    }
-
-    // Via https://stackoverflow.com/questions/1636842/svg-get-text-element-width
-    function getTextWidth(text, font) {
-      // re-use canvas object for better performance
-      // var canvas =
-      //   getTextWidth.canvas ||
-      //   (getTextWidth.canvas = document.createElement("canvas"));
-      
-      const context = document.createElement("canvas").getContext("2d");
-      context.font = font;
-      const metrics = context.measureText(text);
-
-      return metrics.width;
-    }
+    //   rect.attr("cursor", "grabbing");
+    //   g.attr("transform", `translate(${translateX},0)`);
+    // }
 
     // zero in Geologic time > Phanerozoic > Cenozoic > Quaternary > Holocene (0.0117-0 mya)
     //clicked(null, root.children[2].children[2].children[2].children[1])
-        
+  
   },[])
   return (
     <svg ref={ref}></svg>
