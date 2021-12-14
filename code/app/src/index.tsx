@@ -15,20 +15,20 @@ import {
 
 import { GlobalStateProvider } from "components/GlobalStateContext";
 
-const cache = new InMemoryCache({
-  typePolicies: {
-    Tree: {
-      fields: {
-        children: {
-          merge(existing, incoming) {
-            // Equivalent to what happens if there is no custom merge function.
-            return incoming;
-          },
-        },
-      },
-    },
-  },
-});
+// const cache = new InMemoryCache({
+//   typePolicies: {
+//     Tree: {
+//       fields: {
+//         children: {
+//           merge(existing, incoming) {
+//             // Equivalent to what happens if there is no custom merge function.
+//             return incoming;
+//           },
+//         },
+//       },
+//     },
+//   },
+// });
 
 const httpLink = createHttpLink({
   uri: "http://localhost:4000",
@@ -36,7 +36,7 @@ const httpLink = createHttpLink({
 
 const client = new ApolloClient({
   link: httpLink,
-  cache: cache,
+  cache: new InMemoryCache(),
 });
 
 ReactDOM.render(

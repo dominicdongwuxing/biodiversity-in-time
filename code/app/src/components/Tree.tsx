@@ -19,9 +19,10 @@ export default function Tree() {
               <div className={styles.tree}>
                 <TreeSearchName />
 
-                {loading ? "Data is loading..." : data?.getTreeFromWikiNameOrIdWithMya? (
+                {loading ? "Data is loading..." : data?.getFlatTreeByUniqueNameWithMya? (
                   <TreeGraph
-                    data={data.getTreeFromWikiNameOrIdWithMya} />
+                    data={data.getFlatTreeByUniqueNameWithMya.treeNodes} 
+                    pathFromRoot={data.getFlatTreeByUniqueNameWithMya.pathFromRoot} />
                 ) : "This taxon doesn't exist in the time period, pleast try a new search :)" }
                 <br></br>
                 

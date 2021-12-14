@@ -25,6 +25,7 @@ import string
 import os
 import re
 import json
+import collections
 
 # ROOTDIR is where I have my thesis folder on my computer
 ROOTDIR = "/home/dongwuxing/Documents/thesis"
@@ -64,20 +65,46 @@ def get_additional_nodes(tree):
     pd_to_add = pd.DataFrame(data={"pathFromRoot":pathFromRoot_list, "name": name_list, "rank":rank_list}).drop_duplicates()
     return pd_to_add
 
+def append_unique_name(tree, repetitive_names):
+    '''
+    Append a unique name attribute, where if the name is already unique, is just
+    the name, but if the name is not unique, then it is its pathFromRoot
+    input: tree data frame, a set of repetitive names
+    output: tree appended with unique name attribute
+    '''
+    unique_name_list = [""]*tree.shape[0]
+    for i, row in tree.iterrows():
+        if row["name"] in repetitive_names:
+            unique_name_list[i] = row["pathFromRoot"]
+        else:
+            unique_name_list[i] = row["name"]
+    tree["uniqueName"] = unique_name_list
+    return tree
+
 def append_parent (tree):
     '''
-    Add parent attribute for each tree item, which is the string before last comma
+    Add parent attribute for each tree item by uniqueName
     
     input: tree dataframe
     return: tree appended with parent attribute
     '''
-    parent_list = [""]*tree.shape[0]
-    for i, row in tree.iterrows():
-        last_comma_index = row["pathFromRoot"].rfind(",")
+    tree["parent"] = [""]*tree.shape[0]
+    # set pathFromRoot as index for tree for faser processing
+    tree = tree.set_index("pathFromRoot")
+    index = 0
+    for pathFromRoot in tree.index.values:
+        index += 1
+        if index % 5000 == 0:
+            print(index)
+        last_comma_index = pathFromRoot.rfind(",")
         # if the node is not the root Eukaryota
         if last_comma_index != -1 :
-            parent_list[i] = row["pathFromRoot"][:last_comma_index]
-    tree["parent"] = parent_list
+            parentPathFromRoot = pathFromRoot[:last_comma_index]
+            tree.loc[pathFromRoot,"parent"] = tree.loc[parentPathFromRoot,"uniqueName"]
+    
+    
+    tree.reset_index(inplace=True)
+    
     return tree
 
 def get_name_id_dict (wiki):
@@ -94,18 +121,20 @@ def get_name_id_dict (wiki):
             name_id_dict[name].append(idx)
     return name_id_dict
 
-def get_wikiRef(tree, wikidata, name_id_lookup):
+def get_wikiRef(tree, wikidata, name_id_lookup, repetitive_names):
     '''
     Find wikiRef links for tree elements from wikidata. The wikiRef is a unique code starting with Q
     and there is a match if only there is an exact match beween name and rank and the match has to be unique
     
-    input: tree dataframe, wiki dataframe, name_id_lookup for wiki dataframe
+    input: tree dataframe, wiki dataframe, name_id_lookup for wiki dataframe, and set of repetitive names
     return: a list of wikiRef for tree dataframe to append to tree dataframe
     '''
     wikiRef_list = [""] * tree.shape[0]
     for i, row in tree.iterrows():
+        if i % 5000 == 0:
+            print(i)
         name, rank = row["name"], row["rank"]
-        if name in name_id_lookup:
+        if name in name_id_lookup and name not in repetitive_names:
             # get Q_codes (there maybe multiple) that links to the same taxon name
             codes = name_id_lookup[name]
             # only proceed when there is only one match
@@ -156,6 +185,33 @@ def append_count_and_time (tree, data):
     tree.reset_index(inplace=True)
     return tree
 
+def append_children(tree):
+    '''
+    Add children attribute, which is a list of uniqueNames
+    input: tree dataframe
+    return: tree appended with children
+    '''
+    children_list = [[]]*tree.shape[0]
+    for i, row in tree.iterrows():
+        if i % 100 == 0:
+            print(i)
+        children_list[i] = tree[tree["parent"]==row["uniqueName"]].uniqueName.tolist()
+    tree["children"] = children_list
+    return tree
+
+def append_fossil_identified_to_name(tree, data):
+    '''
+    Append for each node, the number of fossils identified to this node
+    input: tree and fossil dataframes
+    return: tree data appended with fossil_identified_to_name
+    '''
+    count_df = data[["pathFromRoot","occurrence_no"]].groupby(["pathFromRoot"]).count()
+    tree["fossilCountIdentifiedToName"] = [0] * tree.shape[0]
+    tree = tree.set_index("pathFromRoot")
+    for pathFromRoot in count_df.index.values:
+        tree.loc[pathFromRoot, "fossilCountIdentifiedToName"] = count_df.loc[pathFromRoot].occurrence_no
+    tree.reset_index(inplace=True)
+    return tree
 #####################################################################################################################
 
 data = pd.read_csv(os.path.join(PBDBDIR, "data.csv"))
@@ -165,18 +221,27 @@ tree = tree.reset_index(drop=True)
 # add the missing nodes along the paths to the tree
 pd_to_add = get_additional_nodes(tree)
 tree = pd.concat([pd_to_add, tree], ignore_index = True)
+
+# get names that appeared for more than once
+repetitive_names = set([item for item, count in collections.Counter(tree["name"].tolist()).items() if count > 1])
+
+tree = append_unique_name(tree,repetitive_names)
+
 # add parent attribute to the tree
 tree = append_parent(tree)
 
 wikidata = pd.read_csv(os.path.join(WIKIDIR,"data.csv"), index_col = "id")
 # match pbdb name to wiki Q_code: first match accepted_name, then genus, family, order, class, phylum and kingdom 
 name_id_lookup = get_name_id_dict(wikidata)
-wikiRef_list = get_wikiRef(tree, wikidata, name_id_lookup)
+wikiRef_list = get_wikiRef(tree, wikidata, name_id_lookup, repetitive_names)
 tree["wikiRef"] = wikiRef_list
 
 # add maxma, minma and count information for the tree
 tree = append_count_and_time(tree, data)
 
+tree = append_fossil_identified_to_name(tree, data)
+
+tree = append_children(tree)
 tree.to_csv(os.path.join(PBDBDIR, "tree.csv"), index = False)
 with open(os.path.join(PBDBDIR, "tree.json"),"w") as f:
     json.dump(json.loads(tree.to_json(orient="records")),f)

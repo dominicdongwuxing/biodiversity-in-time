@@ -17,33 +17,9 @@ type Query {
         name: String, maxElement: Int, depth: Int, id: String, minma: Float, maxma: Float
     ): Tree
 
-    getFlatTreeByUniqueNameWithMya (
-        uniqueName: String, minma: Float, maxma: Float, maxElement: Int, depth: Int
-    ): FlatTree
-
     test (
         wikiRef: String
     ): [Fossil]
-}
-
-type FlatTree {
-    pathFromRoot: String!
-    treeNodes: [TreeNode]
-}
-
-type TreeNode {
-    name: String!
-    uniqueName: String!
-    rank: String!
-    pathFromRoot: String!
-    wikiRef: String
-    parent: String
-    count: Int!
-    fossilCountIdentifiedToName: Int!
-    maxma: Float!
-    minma: Float!
-    children: [String]
-    leaf: Boolean
 }
 
 type Fossil {

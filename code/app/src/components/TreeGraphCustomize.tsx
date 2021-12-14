@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 import { GlobalStateContext } from "./GlobalStateContext";
 
-export default function TreeGraphCustomize ({data,  }) {
-    const { setSearchId, setSearchDepth, setSearchMaxElement, searchDepth, searchMaxElement } = useContext(GlobalStateContext)
+export default function TreeGraphCustomize ({data }) {
+    const { setSearchName, setSearchDepth, setSearchMaxElement, searchDepth, searchMaxElement } = useContext(GlobalStateContext)
     const makeOptions = (valueArr) => {
         const optionArr = [];
         for (const value of valueArr) {
@@ -23,18 +23,16 @@ export default function TreeGraphCustomize ({data,  }) {
       };
     
       const handleBackToTop = () => {
-        setSearchId("Q2382443");
+        setSearchName("Eukaryota");
       };
     
       const handleBackToPrevious = () => {
-        if (data) {
-          const path = data.getTreeFromWikiNameOrIdWithMya.pathFromRootById
-            .split(",")
-            .slice(1);
+        if (data && data.getFlatTreeByUniqueNameWithMya) {
+          const path = data.getFlatTreeByUniqueNameWithMya.pathFromRoot.split(",")
           if (path.length < searchDepth) {
-            setSearchId("Q2382443");
+            setSearchName("Eukaryota");
           } else {
-            setSearchId(path[path.length - searchDepth]);
+            setSearchName(path[path.length - searchDepth - 1]);
           }
         }
       };
@@ -70,7 +68,7 @@ export default function TreeGraphCustomize ({data,  }) {
             </FormControl>
         
 
-            {data?.getTreeFromWikiNameOrIdWithMya.name !== "Biota" ? (
+            {data?.getFlatTreeByUniqueNameWithMya.name !== "Biota" ? (
                 <Button 
                 style={{margin: "5px"}}
                 variant="contained" 
@@ -82,7 +80,7 @@ export default function TreeGraphCustomize ({data,  }) {
             ) : null}
             {data ? (
                 <BackToPrevious
-                data={data.getTreeFromWikiNameOrIdWithMya}
+                data={data.getFlatTreeByUniqueNameWithMya}
                 handleBackToPrevious={handleBackToPrevious}
                 searchDepth={searchDepth}
                 />
@@ -93,8 +91,11 @@ export default function TreeGraphCustomize ({data,  }) {
 
 function BackToPrevious ({ data, searchDepth, handleBackToPrevious }) {
     if (data) {
-      const path = data.pathFromRootByName.split(",").slice(1);
-      if (path.length > searchDepth) {
+      const path = data.pathFromRoot.split(",");
+      if (path.length > searchDepth + 1) {
+        // in case unique name is a path, just show the name on lowest level
+        const uniqueName = path[path.length - searchDepth - 1]
+        const displayName = uniqueName.split(",").reverse()[0]
         return (
           <Button
             style={{margin: "5px"}}
@@ -103,7 +104,7 @@ function BackToPrevious ({ data, searchDepth, handleBackToPrevious }) {
             onClick={handleBackToPrevious}
             color="secondary"
           >
-            Back to {path[path.length - searchDepth]}
+            Back to {displayName}
           </Button>
         );
       }

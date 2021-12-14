@@ -46,63 +46,27 @@ const FOSSIL_QUERY = gql`
 `;
 
 const TREE_QUERY = gql`
-  query retrieveTreeFromWikiNameOrIdWithMya(
-    $name: String
+  query retrieveFlatTree(
+    $uniqueName: String
     $maxElement: Int
     $depth: Int
-    $id: String
     $minma: Float
     $maxma: Float
   ) {
-    getTreeFromWikiNameOrIdWithMya(
-      name: $name
+    getFlatTreeByUniqueNameWithMya(
+      uniqueName: $uniqueName
       maxElement: $maxElement
       depth: $depth
-      id: $id
       minma: $minma
       maxma: $maxma
     ) {
-      name
-      id
-      rank
-      count
-      pathFromRootByName
-      pathFromRootById
-      children {
-        name
-        id
-        rank
+      pathFromRoot
+      treeNodes {
+        uniqueName
+        parent
+        fossilCountIdentifiedToName
         count
-        children {
-          name
-          id
-          rank
-          count
-          children {
-            name
-            id
-            rank
-            count
-            children {
-              name
-              id
-              rank
-              count
-              children {
-                name
-                id
-                rank
-                count
-                children {
-                  name
-                  id
-                  rank
-                  count
-                }
-              }
-            }
-          }
-        }
+        leaf
       }
     }
   }
@@ -110,3 +74,64 @@ const TREE_QUERY = gql`
 
 
 export {ID_QUERY, MAP_AND_FOSSIL_QUERY, FOSSIL_QUERY, TREE_QUERY }
+
+// query retrieveTreeFromWikiNameOrIdWithMya(
+//   $name: String
+//   $maxElement: Int
+//   $depth: Int
+//   $id: String
+//   $minma: Float
+//   $maxma: Float
+// ) {
+//   getTreeFromWikiNameOrIdWithMya(
+//     name: $name
+//     maxElement: $maxElement
+//     depth: $depth
+//     id: $id
+//     minma: $minma
+//     maxma: $maxma
+//   ) {
+//     name
+//     id
+//     rank
+//     count
+//     pathFromRootByName
+//     pathFromRootById
+//     children {
+//       name
+//       id
+//       rank
+//       count
+//       children {
+//         name
+//         id
+//         rank
+//         count
+//         children {
+//           name
+//           id
+//           rank
+//           count
+//           children {
+//             name
+//             id
+//             rank
+//             count
+//             children {
+//               name
+//               id
+//               rank
+//               count
+//               children {
+//                 name
+//                 id
+//                 rank
+//                 count
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+// }
