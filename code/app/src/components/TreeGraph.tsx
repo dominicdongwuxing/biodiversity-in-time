@@ -15,7 +15,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
       radius: 100,
       backgroundColor: "white",
       fontSize: "0.5em",
-      breadcrumbParams: {width: 100, tipWidth: 10, height: 20, padding: 5, gap: 2}
+      breadcrumbParams: {width: 55, tipWidth: 10, height: 20, padding: 5, gap: 2, fontSize: "0.5em"}
     };
 
     const partitionLayout = d3.partition().size([2*Math.PI, radius])
@@ -66,7 +66,9 @@ export default function TreeGraph({ data, pathFromRoot }) {
     })
 
     // make a trail of breadcrumbs from Eukaryota to the current root
-    const breadcrumbUpstream = svg.append("g")
+    const breadcrumbUpstream = svg
+      .append("g")
+      .attr("transform", `translate(0,${breadcrumbParams.gap})`)
     makeBreadcrumb (breadcrumbUpstream, pathFromRoot.split(","))
     
 
@@ -74,7 +76,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
     // make a trail of breadcrumbs from current root to the item on hover
     const breadcrumbDownstream = svg
       .append("g")
-      .attr("transform", `translate(0,${breadcrumbParams.height + breadcrumbParams.gap})`)
+      .attr("transform", `translate(0,${breadcrumbParams.height + breadcrumbParams.gap * 2})`)
 
     const arc = svg
       .append("g")
@@ -168,6 +170,22 @@ export default function TreeGraph({ data, pathFromRoot }) {
       return metrics.width;
     }
 
+    // measure final width of a breadcrumb, if the name is not a specie/subspecies then 
+    // just return the defined width, otherwise measure a new, longer width and return it
+    function getBreadcrumbFinalWidth (d) {
+      let finalWidth = breadcrumbParams.width
+      // if the name is a species/subspecies then it should have a gap 
+      let name
+      if (typeof(d) != "string" && d.data.uniqueName.split(" ").length > 1) {
+        name = d.data.uniqueName.slice(d.data.uniqueName.lastIndexOf(",")+1)
+        finalWidth = 2 * breadcrumbParams.gap + getTextWidth(name, breadcrumbParams.fontSize)
+      } else if (typeof(d) == "string" && d.split(" ").length > 1) {
+        name = d.slice(d.lastIndexOf(",")+1)
+        finalWidth = 2 * breadcrumbParams.gap + getTextWidth(name, breadcrumbParams.fontSize)
+      }
+      return finalWidth
+    }
+
     function makeBreadcrumb (breadcrumb, pathList) {
 
       breadcrumb
@@ -189,14 +207,17 @@ export default function TreeGraph({ data, pathFromRoot }) {
         .selectAll("text")
         .data(pathList)
         .join("text")
-        .attr("x",breadcrumbParams.width/2)
-        .attr("transform", (d, i) => `translate(${i * (breadcrumbParams.width + breadcrumbParams.gap)},0)`)
+        .attr("x", d => getBreadcrumbFinalWidth(d) / 2)
+        .attr("transform", (d, i) => i || typeof(d) != "string"? 
+          `translate(${i * (breadcrumbParams.width + breadcrumbParams.gap) + breadcrumbParams.tipWidth},0)` :
+          `translate(0,0)`)
         .attr("y", breadcrumbParams.height / 2)
         .attr("text-anchor", "middle")
         .attr("dominant-baseline","middle")
         .attr("fill", d => typeof(d) == "string" ? "white" : "black")
         .attr("fill-opacity", 1)
-        .attr("font-size","0.8em")
+        .attr("font-size",breadcrumbParams.fontSize)
+        .attr("font-weight", 800)
         .text(d => typeof(d) == "string" ? d : d.data.uniqueName.slice(d.data.uniqueName.lastIndexOf(",") + 1))
         .on("click", (e,d) => {
           setSearchName(typeof(d) == "string" ? d : d.data.uniqueName)
@@ -206,13 +227,15 @@ export default function TreeGraph({ data, pathFromRoot }) {
         breadcrumb.exit().remove()
     }
 
+
     function breadcrumbPoints (d, i) {
       const points = []
+      const finalWidth = getBreadcrumbFinalWidth (d)
       points.push("0,0")
-      points.push(breadcrumbParams.width + ",0")
-      points.push(breadcrumbParams.width + breadcrumbParams.tipWidth + "," + (breadcrumbParams.height / 2))
-      points.push(breadcrumbParams.width + "," + breadcrumbParams.height)
-      points.push(breadcrumbParams.width + "," + breadcrumbParams.height)
+      points.push(finalWidth + ",0")
+      points.push(finalWidth + breadcrumbParams.tipWidth + "," + (breadcrumbParams.height / 2))
+      points.push(finalWidth + "," + breadcrumbParams.height)
+      points.push(finalWidth + "," + breadcrumbParams.height)
       points.push("0," + breadcrumbParams.height)
       if (i || typeof(d) != "string") {
         points.push(breadcrumbParams.tipWidth, "," + (breadcrumbParams.height / 2))

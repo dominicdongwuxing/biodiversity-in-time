@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
+import {sliderBottom} from "d3-simple-slider"
 import styles from "./ScrollBar.module.css";
 import * as d3 from "d3";
 import intervals from "../../dist/resources/intervalsPhanerozoic.json"
@@ -20,13 +21,14 @@ const GeoTimescale = ({ setGeologicalTime }) => {
   const { setMyaMain, setMyaRange, myaMain, myaRange } = useContext(GlobalStateContext)
   const ref = useRef()
   useEffect(() => {
-    const {width, height, tickLength, neighborWidth, fontSize, margins} = {
+    const {width, height, tickLength, neighborWidth, fontSize, margins, zoomDepth} = {
       width: 960,
       height: 125,
       tickLength: 5,
       neighborWidth: 15,
       fontSize: 9,
       margins: { bottom: 40 },
+      zoomDepth: 3
     };
 
     let hideSmallTicks = true;
@@ -52,6 +54,23 @@ const GeoTimescale = ({ setGeologicalTime }) => {
     // hold both cells(the bricks that show time periods) and ticks into g
     const g = svg.append("g");
     
+    // const mapSliderG = g.append("g").attr("transform",`translate(0,${10})`)
+    // const timeRange = [541,0]
+
+    // const slider = sliderBottom()
+    //   .min(timeRange[0])
+    //   .max(timeRange[1])
+    //   .step(10)
+    //   .width(541)
+    //   .tickFormat(d3.format("d"))
+    //   .ticks((timeRange[1] - timeRange[0]) / 10)
+    //   .default(200)
+    //   .on("onchange", (val) => {
+    //     console.log("changed")
+    //   });
+
+    //   mapSliderG.call(slider);
+
     // hold the cells in cellGroup
     const cellGroup = g.append("g").attr("id", "cells");
 
@@ -59,7 +78,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
       .selectAll("g")
       .data(root.descendants())
       .join("g")
-      .attr("transform", (d) => `translate(${d.x0},${d.y0})`);
+      .attr("transform", (d) => `translate(${d.x0},${d.y0 + 20})`);
 
     const rect = cell
       .append("rect")
@@ -77,8 +96,8 @@ const GeoTimescale = ({ setGeologicalTime }) => {
           // get the ancestors of the current segment
           const ancestorsDescending = focus.ancestors().reverse();       
           // find the ancestor on the zoom level and the level above
-          const ancestorZoomLevel = ancestorsDescending[3]
-          const ancestorZoomLevelParent = ancestorsDescending[2]
+          const ancestorZoomLevel = ancestorsDescending[zoomDepth]
+          const ancestorZoomLevelParent = ancestorsDescending[zoomDepth-1]
 
           // find out index of ancestor on zoom level among it's parent's children list
           const ancestorZoomLevelIndex = ancestorZoomLevelParent ? ancestorZoomLevelParent.children.indexOf(ancestorZoomLevel) : -1
@@ -94,8 +113,8 @@ const GeoTimescale = ({ setGeologicalTime }) => {
             // Highlight the ancestors
             .attr("fill-opacity", (d) => (ancestorsDescending.includes(d) ? 1.0 : 0.5))
             .attr("transform", (d) => { 
-              // only do the shrinking and expanding when focus depth is no less than 3
-              if (focus.depth >= 3){       
+              // only do the shrinking and expanding when focus depth is no less than zoom depth 
+              if (focus.depth >= zoomDepth){       
                 // find out the parent boundaries that don't change
                 const parentX0 = ancestorZoomLevelParent.x0
                 const parentX1 = ancestorZoomLevelParent.x1
@@ -141,8 +160,8 @@ const GeoTimescale = ({ setGeologicalTime }) => {
             .transition()
             .duration(200)  
             .attr("width", d => {
-              // only do the shrinking and expanding when focus depth is no less than 3
-              if (focus.depth >= 3){
+              // only do the shrinking and expanding when focus depth is no less than zoom depth 
+              if (focus.depth >= zoomDepth){
                 // if time depth is no less than ancestorZoomLevel depth, and it belongs to the sibling tree of the current ancestorZoomLevel
                 if (d.depth >= ancestorZoomLevel.depth && d.ancestors().includes(ancestorZoomLevelParent) && !d.ancestors().includes(ancestorZoomLevel)){ 
                   const newWidth = 0.1 * (d.x1 - d.x0)     
@@ -168,7 +187,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
             .duration(200)
             .attr("fill-opacity", (d) => {
               let width
-              if (focus.depth >= 3) {
+              if (focus.depth >= zoomDepth) {
                 
                 if (d.ancestors().includes(ancestorZoomLevelParent)) {
                   width = d.targetWidth ? d.targetWidth : d.x1 - d.x0
@@ -189,7 +208,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
     
               // Position Geologic time (root) label in the middle
               //if (d == root) return -d.target.x0 + width/2
-              if (focus.depth >= 3) {
+              if (focus.depth >= zoomDepth) {
                 if (d.ancestors().includes(ancestorZoomLevelParent)) {
                   const width = d.targetWidth ? d.targetWidth : d.x1 - d.x0
                   return width / 2;
@@ -205,7 +224,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
               const labelWidth = getTextWidth(d.data.name, font);
               const abbrev = d.data.abbr || d.data.name.charAt(0);
               let width
-              if (focus.depth >= 3) {
+              if (focus.depth >= zoomDepth) {
                 
                 if (d.ancestors().includes(ancestorZoomLevelParent)) {
                   width = d.targetWidth ? d.targetWidth : d.x1 - d.x0
@@ -222,7 +241,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
             .transition()
             .duration(200)
             .attr("opacity", (d) => {
-              if (focus && focus.depth >= 3) {
+              if (focus && focus.depth >= zoomDepth) {
                 if (d.ancestors.includes(ancestorZoomLevel)) {
                   return 1
                 } else if (d.ancestors.includes(ancestorZoomLevelParent) && !d.ancestors.includes(ancestorZoomLevel)) {
@@ -235,7 +254,7 @@ const GeoTimescale = ({ setGeologicalTime }) => {
               }
             })
             .attr("transform", (d) => {
-              if (focus && focus.depth >= 3) {
+              if (focus && focus.depth >= zoomDepth) {
                 if (d.ancestors.includes(ancestorZoomLevelParent)) {
                   return `translate(${d.targetX0}, 0)`
                 }
