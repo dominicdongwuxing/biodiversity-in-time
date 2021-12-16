@@ -9,8 +9,8 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 const Tectonics = ({ geojson, fossilData }) => {
   const ref = useRef();
-  const {myaRange, wikiRefRange} = useContext(GlobalStateContext)
-  const mapYear = Math.round(myaRange[1]-myaRange[0]/2)
+  const {myaRangeMap, wikiRefRange, myaValueMap, myaRangeTree} = useContext(GlobalStateContext)
+  const mapYear = myaValueMap
   useEffect(() => {
     // parse the map data   
     // const features = geojson.features.map((feature) => {
@@ -160,7 +160,7 @@ const Tectonics = ({ geojson, fossilData }) => {
   
   return (
     <>
-    <p>Eearth at {mapYear} million year{!mapYear && "s"} ago, viewing life existing from {myaRange[0]} to {myaRange[1]} million years ago</p>
+    <p>Eearth at {mapYear} million year{!mapYear && "s"} ago, viewing life existing from {myaRangeTree[0]} to {myaRangeTree[1]} million years ago</p>
     <svg
       ref={ref}
       style={{
@@ -177,7 +177,7 @@ const Tectonics = ({ geojson, fossilData }) => {
 export default function Map() {
   // const { data } = useQuery(MAP_AND_FOSSIL_QUERY, { variables: { mya: myaMain, minma: myaRange[0], maxma: myaRange[1], wikiRef: searchId ? searchId : searchName } });
   //const [data, setData] = useState({"getFossilsDuringMya":[]})
-  const {myaMain, myaRange, searchName, searchId} = useContext(GlobalStateContext)
+  const {myaValueMap, myaRangeMap, searchName, searchId, myaValueTree, myaRangeTree} = useContext(GlobalStateContext)
   const { data } = useQuery(ID_QUERY, { variables: { name: searchName } })
   const [mapData, setMapData] = useState(null)
   const [fossilData, setFossilData] = useState(null)
@@ -186,9 +186,9 @@ export default function Map() {
     // console.log("inside url: " + url)
     
     //const urlForMap = "./resources/tectonicData/reconstructed_" + myaMain + ".00Ma.geojson"
-    const urlForMap = "./resources/map/Global_coastlines_2015_v1_low_res_reconstructed_" + myaMain + ".geojson"
+    const urlForMap = "./resources/map/Global_coastlines_2015_v1_low_res_reconstructed_" + myaValueMap + ".geojson"
     //const urlForFossil = "./resources/reconstructedAggPbdbForDb/" + myaMain + "mya.json"
-    const urlForFossil = "./resources/reconstructedAggPbdbForDb/from" + myaRange[0] + "To" + myaRange[1] + "mean" + myaMain + "_reconstructed_" + myaMain + ".json"
+    const urlForFossil = "./resources/reconstructedAggPbdbForDb/from" + myaRangeTree[0] + "To" + myaRangeTree[1] + "mean" + myaValueTree + "_reconstructed_" + myaValueTree + ".json"
     axios.get(urlForMap).then((res) => {
       setMapData({"getMapAtMya" : res.data})
       // console.log("inside data is now: ", data)
@@ -221,7 +221,7 @@ export default function Map() {
     //   }
     // })
     
-  },[myaMain, searchName, searchId, myaRange, data])
+  },[myaValueMap, searchName, searchId, myaRangeMap, data])
 
   
   // console.log("outside  url: " + url)
@@ -230,7 +230,7 @@ export default function Map() {
   //const data = {"getMapAtMya" : mapData, "getFossilsDuringMya": []}
   return (
     <div className={styles.map}>
-      {myaMain > 410 ? 
+      {myaValueMap > 410 ? 
       "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
       mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilsDuringMyaByRoot ? (
         <Tectonics 

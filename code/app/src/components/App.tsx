@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "./Header";
 import Map from "./Map";
-import ScrollBar from "./ScrollBar";
+import TimeControl from "./TimeControl";
 import Tree from "./Tree";
 import Footer from "./Footer";
 import styles from "./App.module.css";
@@ -42,7 +42,7 @@ export default function App() {
       <Grid item sm={12}>
         <Card style={{height:"100%"}}>
           <CardContent>
-            <ScrollBar />
+            <TimeControl />
           </CardContent>
         </Card>
         
