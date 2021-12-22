@@ -14,7 +14,7 @@ const tickValues = [0]
 
 intervals.forEach(item => {
   if ([3,4,5].includes(item.level)) {
-    const mya = Math.floor((item.start + item.end ) / 2)
+    const mya = Math.round((item.start + item.end ) / 2)
     const name = item.name 
     const range = [item.start, item.end]
     if (!years[mya] || (years[mya] && years[mya].level < item.level)){
@@ -67,6 +67,8 @@ function TimeControlTable () {
 
     let hideSmallTicks = true;
 
+    let myaValueTreeInsideUseEffect = myaValueTree
+
     const font = `${fontSize}px sans-serif`;
 
     // when cell width is less than 14, then hide the label
@@ -111,13 +113,22 @@ function TimeControlTable () {
           .size(30)()
       )
       .on("onchange", (val) => {
-        const interval = root.descendants().find(i => i.data.name == years[val].name)
-        const path = ["Geologic Time", ...interval.ancestors().reverse().map(i => i.data.name).slice(1)]
-        makeBreadcrumb(geologicalBreadcrumb, path)
+        //console.log(val, myaValueTree)
+        if (parseInt(val) > myaValueTreeInsideUseEffect) {
+          //console.log(val)
+          sliderGeneratorMap.value(myaValueTreeInsideUseEffect)
+        } else {
+          const interval = root.descendants().find(i => i.data.name == years[val].name)
+          const path = ["Geologic Time", ...interval.ancestors().reverse().map(i => i.data.name).slice(1)]
+          makeBreadcrumb(geologicalBreadcrumb, path)
+        }
       })
       .on("end", (val) => {
-        setMyaRangeMap(years[val].range)
-        setMyaValueMap(val)
+        //console.log("end",myaValueTree)
+        if (parseInt(val) <= myaValueTreeInsideUseEffect) {
+          setMyaRangeMap(years[val].range)
+          setMyaValueMap(parseInt(val))
+        }
       })
     
     const sliderGeneratorTree = sliderBottom()
@@ -141,7 +152,11 @@ function TimeControlTable () {
       })
       .on("end", (val) => {
         setMyaRangeTree(years[val].range)
-        setMyaValueTree(val)
+        setMyaValueTree(parseInt(val))
+        setMyaRangeMap(years[val].range)
+        setMyaValueMap(parseInt(val))
+        myaValueTreeInsideUseEffect = parseInt(val)
+        sliderGeneratorMap.value(val)
       })
     
 
@@ -542,16 +557,17 @@ function TimeControlTable () {
       // disable focusing on Geological time (root) or top levels under Phanerozoic
       if (node == root || (ancestorPath.includes("Phanerozoic") && node.depth < 3)) return null
 
-      setMyaValueMap(Math.floor((node.data.end + node.data.start)/2))
+      setMyaValueMap(Math.round((node.data.end + node.data.start)/2))
       setMyaRangeMap([node.data.start , node.data.end])
-      setMyaValueTree(Math.floor((node.data.end + node.data.start)/2))
+      setMyaValueTree(Math.round((node.data.end + node.data.start)/2))
       setMyaRangeTree([node.data.start , node.data.end])
+      myaValueTreeInsideUseEffect = Math.round((node.data.end + node.data.start)/2)
       const geologicalTime = ["Geologic Time"].concat(ancestorPath.slice(1))
       const treeOfLifeTime = ["Tree of Life Time"].concat(ancestorPath.slice(1))
       makeBreadcrumb (geologicalBreadcrumb, geologicalTime)
       makeBreadcrumb (treeOfLifeBreadcrumb, treeOfLifeTime)
 
-      const newMya = Math.floor((node.data.start + node.data.end) / 2)
+      const newMya = Math.round((node.data.start + node.data.end) / 2)
       sliderGeneratorMap.value(newMya)
       sliderGeneratorTree.value(newMya)
       rect

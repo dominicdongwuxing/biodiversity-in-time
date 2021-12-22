@@ -1,46 +1,21 @@
 import { gql } from "@apollo/client";
 
-const ID_QUERY = gql`
-  query retrieveWikiIdByName ($name: String) {
-    getWikiIdByName(name: $name) 
-  }
-`;
-
-const MAP_AND_FOSSIL_QUERY = gql`
-  query retrieveMapAndFossils($maxma: Float, $minma: Float, $wikiRef: String) {
-  #   getMapAtMya(mya: $mya) {
-  #     mya
-  #     type
-  #     features {
-  #       type
-  #       properties {
-  #         name
-  #       }
-  #       geometry {
-  #         __typename
-  #         ... on MapGeometryMultiPolygon {
-  #           coordinatesMultiPolygon: coordinates
-  #         }
-  #         ... on MapGeometryPolygon {
-  #           coordinatesPolygon: coordinates
-  #         }
-  #       }
-  #     }
-  #   }
-
-    getFossilsDuringMyaByRoot (wikiRef: $wikiRef, minma: $minma, maxma: $maxma) {
-      coordinates
-      wikiRef
-    }
-  }
-`;
-
-const FOSSIL_QUERY = gql`
-  query retrieveFossilsDuringMya($minma: Float, $maxma: Float) {
+const FOSSILPOINT_QUERY = gql`
+  query retrieveFossilPoints($minma: Float, $maxma: Float) {
     getFossilsDuringMya(mya: $mya) {
       wikiRef
       lat
       lng
+    }
+  }
+`;
+
+const FOSSILLOCATION_QUERY = gql`
+  query retrieveFossilPoints($flatTree: [FlatTreeElementForSearch], $minma: Float, $maxma: Float, $mya: Int) {
+    getFossilLocationFromTreeWithMya (flatTree: $flatTree, minma: $minma, maxma: $maxma, mya: $mya) {
+      id
+      coordinate
+      uniqueName
     }
   }
 `;
@@ -67,13 +42,14 @@ const TREE_QUERY = gql`
         fossilCountIdentifiedToName
         count
         leaf
+        pathFromRoot
       }
     }
   }
 `;
 
 
-export {ID_QUERY, MAP_AND_FOSSIL_QUERY, FOSSIL_QUERY, TREE_QUERY }
+export {FOSSILPOINT_QUERY, FOSSILLOCATION_QUERY,TREE_QUERY }
 
 // query retrieveTreeFromWikiNameOrIdWithMya(
 //   $name: String

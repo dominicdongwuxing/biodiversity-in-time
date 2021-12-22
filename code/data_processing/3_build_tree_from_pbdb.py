@@ -246,3 +246,7 @@ tree.to_csv(os.path.join(PBDBDIR, "tree.csv"), index = False)
 with open(os.path.join(PBDBDIR, "tree.json"),"w") as f:
     json.dump(json.loads(tree.to_json(orient="records")),f)
 
+
+data["uniqueName"] = data["name"]
+for repetitive_name in repetitive_names:
+   data.loc[data["name"]==repetitive_name,"uniqueName"] = data.loc[data["name"]==repetitive_name,"pathFromRoot"]

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect } from "react";
 import styles from "./Tree.module.css";
 import { useQuery, gql } from "@apollo/client";
 import { GlobalStateContext } from "./GlobalStateContext";
@@ -15,6 +15,19 @@ export default function Tree() {
           query={TREE_QUERY}
         >
           {(loading, error, data) => {
+
+            let { setFlatTree, flatTree } = useContext(GlobalStateContext)
+            useEffect(()=> {
+              if (data && data.getFlatTreeByUniqueNameWithMya) {
+                flatTree = data.getFlatTreeByUniqueNameWithMya.treeNodes.map(
+                  treeNode => ({
+                    leaf: treeNode.leaf, 
+                    uniqueName: treeNode.uniqueName,
+                    pathFromRoot: treeNode.pathFromRoot}))
+                console.log(flatTree)
+              }
+              setFlatTree(flatTree)
+            },[data])
             return (
               <div className={styles.tree}>
                 <TreeSearchName />

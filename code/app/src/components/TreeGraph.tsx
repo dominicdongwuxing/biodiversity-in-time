@@ -4,7 +4,7 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 
 export default function TreeGraph({ data, pathFromRoot }) {
-  const { setSearchName, searchName } = useContext(GlobalStateContext)
+  const { setSearchName, searchName, flatTree, setFlatTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
   const ref = useRef(null)
   useEffect(() => {
 
@@ -49,21 +49,47 @@ export default function TreeGraph({ data, pathFromRoot }) {
     let colors = ["red","green","yellow","brown","cyan"]
     const firstColor = colors[0]
     const lastColor = colors[colors.length - 1]
+    let focusedNodesFromMap = []
     root.each((d) => {
+      if (nodesOnFocus.includes(d.data.uniqueName)){
+        const ancestors = d.ancestors().map(i => i.data.uniqueName)
+        ancestors.forEach(ancestor => {
+          if (!focusedNodesFromMap.includes(ancestor)){
+            focusedNodesFromMap.push(ancestor)
+          }
+        })
+      }
       // only assign color when d is not the root
       if (d.depth) {
         // if there are still colors left, then pick one to assign to the node
         // and remove this color from the color list
         if (colors.length) {
-          d.color = colors[0]
+          const currentColor = colors[0]
+          d.color = currentColor
+          console.log("flatTree in d3", flatTree)
+          const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
+          if (nodeInFlatTree) nodeInFlatTree.color = currentColor
           colors = colors.splice(1)
         } else { // if no color is left then find the color of its parent
           // but if the parent has no color assgined yet (in case it is depth 1 and colors 
           // are used up) then just use the last color 
-          d.color = d.ancestors()[1].color || lastColor
+          const currentColor = d.ancestors()[1].color || lastColor
+          d.color = currentColor 
+          const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
+          if (nodeInFlatTree) nodeInFlatTree.color = currentColor
         }
+      } else {
+        // assign blackcolor to points at root
+        const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
+        if (nodeInFlatTree) nodeInFlatTree.color = "black"
       }
     })
+
+    // renew the flatTree after adding the colors
+    setFlatTree(flatTree)
+
+    //
+
 
     // make a trail of breadcrumbs from Eukaryota to the current root
     const breadcrumbUpstream = svg
@@ -92,7 +118,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
         if (d.depth == 0) return backgroundColor
         return d.color
       })
-      .attr("opacity",0.6)
+      .attr("opacity", d => focusedNodesFromMap.includes(d.data.uniqueName) ? 1 : 0.6 )
       .attr("stroke","black")
       .attr("cursor", "pointer")
       .attr("stroke-width", 0.5)
@@ -104,7 +130,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
     path
       .on("mouseover", (e, focus) => {
         const ancestorsDescending = focus.ancestors().reverse()
-        
+        setNodesOnFocus([focus.data.uniqueName])
         path
           .attr("opacity", (d) => {
             return ancestorsDescending.includes(d) ? 1 : 0.6
@@ -112,6 +138,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
         makeBreadcrumb (breadcrumbDownstream, ancestorsDescending.slice(1))
       })
       .on("mouseout", () => {
+        setNodesOnFocus([""])
         path
           .attr("opacity", 0.6)
         makeBreadcrumb (breadcrumbDownstream, [])
@@ -250,7 +277,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
       return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
     }
 
-  },[data, searchName])
+  },[data, searchName, flatTree])
   return (
     <svg ref={ref} style={{
       width: "100%",

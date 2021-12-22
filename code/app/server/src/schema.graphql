@@ -1,29 +1,18 @@
 type Query {
-    getFossilsDuringMyaByRoot (
-        wikiRef: String,
-        minma: Float,
-        maxma: Float
-    ): [Fossil]
-
-    getWikiIdByName (
-        name: String
-    ): String
-
-    getMapAtMya (
-        mya: Int,
-    ): Map
-
-    getTreeFromWikiNameOrIdWithMya (
-        name: String, maxElement: Int, depth: Int, id: String, minma: Float, maxma: Float
-    ): Tree
-
     getFlatTreeByUniqueNameWithMya (
         uniqueName: String, minma: Float, maxma: Float, maxElement: Int, depth: Int
     ): FlatTree
 
-    test (
-        wikiRef: String
-    ): [Fossil]
+    getFossilLocationFromTreeWithMya (
+        flatTree: [FlatTreeElementForSearch], mya: Int, minma: Float, maxma: Float
+    ): [FossilLocation]
+}
+
+input FlatTreeElementForSearch {
+    leaf: Boolean!
+    uniqueName: String!
+    pathFromRoot: String!
+    color: String
 }
 
 type FlatTree {
@@ -46,63 +35,17 @@ type TreeNode {
     leaf: Boolean
 }
 
-type Fossil {
-    wikiRef: ID!
-    minma: Float!
-    maxma: Float!
-    coordinates: [[Float!]]
-}
-
-type Wiki {
-    name: String!
-    rank: String!
-    id: ID!
-    pathFromRootById: String!
-    pathFromRootByName: String!
-    pathFromRootByRank: String!
-    children: [String]
-    count: Int!
+type FossilPoint {
+    id: String!
+    uniqueName: String!
     maxma: Float!
     minma: Float!
+    pathFromRoot: String!
 }
 
-type Tree {
-    name: String!
-    rank: String!
-    id: ID!
-    count: Int!
-    pathFromRootByName: String
-    pathFromRootById: String
-    pathFromRootByRank: String
-    children: [Tree]
+type FossilLocation {
+    id: String!
+    mya: Int!
+    coordinate: [Float!]!
+    uniqueName: String
 }
-
-type MapGeometryPolygon {
-    type: String
-    coordinates: [[[Float]]] 
-}
-
-type MapGeometryMultiPolygon {
-    type: String
-    coordinates: [[[[Float]]]]
-}
-
-union MapGeometryUnion = MapGeometryPolygon | MapGeometryMultiPolygon
-
-type Map {
-    mya: Int,
-    type: String,
-    features: [MapFeature]
-}
-
-type MapFeature {
-    type: String
-    properties: MapProperty
-    geometry: MapGeometryUnion
-}
-
-type MapProperty {
-    name: String
-}
-
-
