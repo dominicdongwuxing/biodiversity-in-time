@@ -7,22 +7,19 @@ import intervals from "../../dist/resources/intervalsPhanerozoic.json"
 import { GlobalStateContext } from "./GlobalStateContext"
 import { margin } from "@mui/system";
 
-// type: {...mya(Int): {name (String), range: ([start, end])}}
+// type: [{year: Int, name: String, range: ([start, end])}]
 // !! need to fix the very recent years!
-const years = {}
+const smallestIntervals = []
 const tickValues = [0]
 
 intervals.forEach(item => {
-  if ([3,4,5].includes(item.level)) {
+  if (item.level == 5) {
     const mya = Math.round((item.start + item.end ) / 2)
     const name = item.name 
     const range = [item.start, item.end]
-    if (!years[mya] || (years[mya] && years[mya].level < item.level)){
-      years[mya] = {name: name, range: range}
-    }
+    smallestIntervals.push({mya: mya,name: name, range: range})
   }
-
-  if (item.level == 3){
+  if (item.level == 3 && item.start > 5){
     tickValues.push(item.start)
   }
 })
@@ -38,13 +35,8 @@ export default function TimeControl() {
 
 function TimeControlTable () {
   const { setMyaValueMap, 
-          setMyaRangeMap, 
           myaValueMap, 
-          myaRangeMap,
-          setMyaValueTree, 
           setMyaRangeTree, 
-          myaValueTree, 
-          myaRangeTree,
          } = useContext(GlobalStateContext)
   const bluePalette = ["#00163d","#08306b","#0a4a90", "#1864aa","#2f7ebc","#4b97c9"]
   const ref = useRef()
@@ -67,7 +59,7 @@ function TimeControlTable () {
 
     let hideSmallTicks = true;
 
-    let myaValueTreeInsideUseEffect = myaValueTree
+    let myaValueMapCurrent = myaValueMap
 
     const font = `${fontSize}px sans-serif`;
 
@@ -84,26 +76,22 @@ function TimeControlTable () {
 
 
     const svg = d3.select(ref.current)
-      .attr("viewBox", [0, 0, width, tableHeight + scrollbarHeight * 2 + breadcrumbParams.height + gap * 4 + margins.bottom + extraGap])
+      .attr("viewBox", [0, 0, width, tableHeight + scrollbarHeight + breadcrumbParams.height + gap * 3 + margins.bottom + extraGap])
       .style("font", `${fontSize}px sans-serif`);
     
     // hold both cells(the bricks that show time periods) and ticks into g
     const g = svg.append("g");
     
-    const mapSlider = g
+    const slider = g
       .append("g")
       .attr("transform",`translate(${padding},${offset})`)
-    
-    const treeSlider = g
-      .append("g")
-      .attr("transform",`translate(${padding},${gap + scrollbarHeight + gap + breadcrumbParams.height + offset})`)
-
-    const sliderGeneratorMap = sliderBottom()
+  
+    const sliderGenerator = sliderBottom()
       .min(541)
       .max(0)
       .width(width - padding * 2)
       .tickFormat(d3.format('.1f'))
-      .marks(Object.keys(years))
+      .marks(smallestIntervals.map(i => i.mya))
       .tickValues(tickValues)
       .default(myaValueMap)
       .handle(
@@ -113,55 +101,23 @@ function TimeControlTable () {
           .size(30)()
       )
       .on("onchange", (val) => {
-        //console.log(val, myaValueTree)
-        if (parseInt(val) > myaValueTreeInsideUseEffect) {
-          //console.log(val)
-          sliderGeneratorMap.value(myaValueTreeInsideUseEffect)
+        if (parseInt(val) > myaValueMapCurrent) {
+          sliderGenerator.value(myaValueMapCurrent)
         } else {
-          const interval = root.descendants().find(i => i.data.name == years[val].name)
+          const intervalName = smallestIntervals.find(i => i.mya == val).name
+          const interval = root.descendants().find(i => i.data.name == intervalName && i.height == 0)
           const path = ["Geologic Time", ...interval.ancestors().reverse().map(i => i.data.name).slice(1)]
           makeBreadcrumb(geologicalBreadcrumb, path)
         }
       })
       .on("end", (val) => {
-        //console.log("end",myaValueTree)
-        if (parseInt(val) <= myaValueTreeInsideUseEffect) {
-          setMyaRangeMap(years[val].range)
+        if (parseInt(val) <= myaValueMapCurrent) {
           setMyaValueMap(parseInt(val))
         }
       })
-    
-    const sliderGeneratorTree = sliderBottom()
-      .min(541)
-      .max(0)
-      .width(width - padding * 2)
-      .tickFormat(d3.format('.1f'))
-      .marks(Object.keys(years))
-      .tickValues(tickValues)
-      .default(myaValueTree)
-      .handle(
-        d3
-          .symbol()
-          .type(d3.symbolCircle)
-          .size(30)()
-      )
-      .on("onchange", (val) => {
-        const interval = root.descendants().find(i => i.data.name == years[val].name)
-        const path = ["Tree Of Life Time", ...interval.ancestors().reverse().map(i => i.data.name).slice(1)]
-        makeBreadcrumb(treeOfLifeBreadcrumb, path)
-      })
-      .on("end", (val) => {
-        setMyaRangeTree(years[val].range)
-        setMyaValueTree(parseInt(val))
-        setMyaRangeMap(years[val].range)
-        setMyaValueMap(parseInt(val))
-        myaValueTreeInsideUseEffect = parseInt(val)
-        sliderGeneratorMap.value(val)
-      })
-    
+  
 
-    mapSlider.call(sliderGeneratorMap)
-    treeSlider.call(sliderGeneratorTree)
+    slider.call(sliderGenerator)
 
     const geologicalBreadcrumb = g
       .append("g")
@@ -169,7 +125,7 @@ function TimeControlTable () {
     
     const treeOfLifeBreadcrumb = g
       .append("g")
-      .attr("transform",`translate(${padding},${gap + 2 * (scrollbarHeight + gap) + gap + breadcrumbParams.height})`)
+      .attr("transform",`translate(${padding},${gap + scrollbarHeight + gap + gap + breadcrumbParams.height})`)
     
     // makeBreadcrumb (geologicalBreadcrumb, geologicalTime)
     // makeBreadcrumb (treeOfLifeBreadcrumb, treeOfLifeTime)
@@ -192,7 +148,7 @@ function TimeControlTable () {
     const cellGroup = g
       .append("g")
       .attr("id", "cells")
-      .attr("transform",`translate(${padding},${gap + 2 * (scrollbarHeight + gap + breadcrumbParams.height) + gap + extraGap})`);
+      .attr("transform",`translate(${padding},${gap + scrollbarHeight + gap + 2 * breadcrumbParams.height + gap + extraGap})`);
 
     const cell = cellGroup
       .selectAll("g")
@@ -455,7 +411,7 @@ function TimeControlTable () {
     const ticksGroup = g
       .append("g")
       .attr("id", "ticks")
-      .attr("transform", `translate(${padding},${gap + 2 * (scrollbarHeight + gap + breadcrumbParams.height) + gap + extraGap + tableHeight - margins.bottom})`); // Move tick group down
+      .attr("transform", `translate(${padding},${gap + scrollbarHeight + gap + 2 * breadcrumbParams.height + gap + extraGap + tableHeight - margins.bottom})`); // Move tick group down
     
     const ticksData = makeTicksData(root)
     const tick = ticksGroup
@@ -556,20 +512,20 @@ function TimeControlTable () {
       const ancestorPath = node.ancestors().map(node => node.data.name).reverse()
       // disable focusing on Geological time (root) or top levels under Phanerozoic
       if (node == root || (ancestorPath.includes("Phanerozoic") && node.depth < 3)) return null
+      const middleMyaTree = Math.round((node.data.end + node.data.start)/2)
+      const mapInterval = smallestIntervals.find(interval => interval.range[0] >= middleMyaTree && interval.range[1] <= middleMyaTree) 
+      const middleMyaMap = mapInterval.mya
+      const mapIntervalName = mapInterval.name
 
-      setMyaValueMap(Math.round((node.data.end + node.data.start)/2))
-      setMyaRangeMap([node.data.start , node.data.end])
-      setMyaValueTree(Math.round((node.data.end + node.data.start)/2))
+      setMyaValueMap(middleMyaMap)
       setMyaRangeTree([node.data.start , node.data.end])
-      myaValueTreeInsideUseEffect = Math.round((node.data.end + node.data.start)/2)
-      const geologicalTime = ["Geologic Time"].concat(ancestorPath.slice(1))
+      myaValueMapCurrent = middleMyaMap
+      const geologicalTime = ["Geologic Time"].concat(root.descendants().find(i => i.data.name == mapIntervalName).ancestors().map(node => node.data.name).reverse().slice(1))
       const treeOfLifeTime = ["Tree of Life Time"].concat(ancestorPath.slice(1))
       makeBreadcrumb (geologicalBreadcrumb, geologicalTime)
       makeBreadcrumb (treeOfLifeBreadcrumb, treeOfLifeTime)
 
-      const newMya = Math.round((node.data.start + node.data.end) / 2)
-      sliderGeneratorMap.value(newMya)
-      sliderGeneratorTree.value(newMya)
+      sliderGenerator.value(middleMyaMap)
       rect
         .attr("fill", d => {
           return d == node ? "black" : bluePalette[d.depth]
