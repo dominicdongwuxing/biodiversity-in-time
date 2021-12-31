@@ -43,6 +43,7 @@ const TREE_QUERY = gql`
         count
         leaf
         pathFromRoot
+        fossils
       }
     }
   }

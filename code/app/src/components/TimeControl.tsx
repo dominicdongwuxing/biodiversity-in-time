@@ -24,7 +24,6 @@ intervals.forEach(item => {
   }
 })
 
-
 export default function TimeControl() {
   return (
     <div id="timeControl" className={styles.timeControl}>

@@ -41,7 +41,8 @@ mongoose
       //   console.log("indexes:", indexes);
       // }).catch(console.error);
       
-      //FossilLocation.count({}, (err, count) => console.log(`Number: ${count}`))
+      // console.log(await FossilLocation.countDocuments({mya: 1}))
+
       server
           .listen()
           .then(({ url }) =>

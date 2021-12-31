@@ -23,7 +23,8 @@ export default function Tree() {
                   treeNode => ({
                     leaf: treeNode.leaf, 
                     uniqueName: treeNode.uniqueName,
-                    pathFromRoot: treeNode.pathFromRoot}))
+                    pathFromRoot: treeNode.pathFromRoot,
+                    fossils: treeNode.fossils}))
                 console.log(flatTree)
               }
               setFlatTree(flatTree)

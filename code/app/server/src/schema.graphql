@@ -13,6 +13,7 @@ input FlatTreeElementForSearch {
     uniqueName: String!
     pathFromRoot: String!
     color: String
+    fossils: [String]
 }
 
 type FlatTree {
@@ -33,6 +34,7 @@ type TreeNode {
     minma: Float!
     children: [String]
     leaf: Boolean
+    fossils: [String]
 }
 
 type FossilPoint {

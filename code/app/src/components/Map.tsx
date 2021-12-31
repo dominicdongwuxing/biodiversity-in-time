@@ -17,7 +17,6 @@ const Tectonics = ({ geojson, fossilData }) => {
     // parse the fossil data
     let count = 0
     let fossilArray = []
-    if (fossilData.length) console.log("have fossil Data")
     fossilData.forEach(fossilLocation => {
         count++
         fossilArray.push({coordinate: fossilLocation.coordinate, id: fossilLocation.id, uniqueName: fossilLocation.uniqueName})
@@ -83,7 +82,6 @@ const Tectonics = ({ geojson, fossilData }) => {
       })
       //.on("mouseout", (e,d) => setNodesOnFocus([""])) 
       
-      console.log(nodesOnFocus)
   },[geojson, fossilData, flatTree, nodesOnFocus]);
   
   return (
@@ -117,7 +115,6 @@ export default function Map() {
   return (
     <DataFetcher query={FOSSILLOCATION_QUERY}>
       {(loading, err, fossilData) => {
-        console.log(`year ${myaValueMap}`)
         return (
           <div className={styles.map}>
             {myaValueMap > 410 ? 

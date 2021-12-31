@@ -4,7 +4,8 @@ type flatTree = {
     leaf: boolean, 
     uniqueName: string,
     pathFromRoot: string
-    color: string
+    color: string,
+    fossils: string[]
 } []
 
 interface GlobalState {
@@ -39,10 +40,10 @@ function GlobalStateProvider (props) {
     const [wikiRefRange, setWikiRefRange] = useState([])
     const [myaValueMap, setMyaValueMap] = useState(Math.floor(0.0117/2));
     const [myaRangeMap, setMyaRangeMap] = useState([0.0117,0]);
-    // const [myaValueTree, setMyaValueTree] = useState(Math.floor(0.0117/2));
-    // const [myaRangeTree, setMyaRangeTree] = useState([0.0117,0]);
-    const [myaValueTree, setMyaValueTree] = useState(26);
-    const [myaRangeTree, setMyaRangeTree] = useState([28.1,23.03]);
+    const [myaValueTree, setMyaValueTree] = useState(Math.floor(0.0117/2));
+    const [myaRangeTree, setMyaRangeTree] = useState([0.0117,0]);
+    //const [myaValueTree, setMyaValueTree] = useState(26);
+    //const [myaRangeTree, setMyaRangeTree] = useState([28.1,23.03]);
     const [searchDepth, setSearchDepth] = useState(2);
     const [searchMaxElement, setSearchMaxElement] = useState(2);
     const [flatTree, setFlatTree] = useState([])

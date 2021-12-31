@@ -39,7 +39,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
     root.sum(d => d.leaf ? d.count : d.fossilCountIdentifiedToName)
 
     partitionLayout(root)
-
+    console.log(root)
     const svg = d3.select(ref.current)
       .attr("width", width)
       .attr("height", height)
@@ -66,7 +66,6 @@ export default function TreeGraph({ data, pathFromRoot }) {
         if (colors.length) {
           const currentColor = colors[0]
           d.color = currentColor
-          console.log("flatTree in d3", flatTree)
           const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
           if (nodeInFlatTree) nodeInFlatTree.color = currentColor
           colors = colors.splice(1)
