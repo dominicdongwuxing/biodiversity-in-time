@@ -23,16 +23,16 @@ export default function App() {
       </Grid>
 
 
-        <Grid item sm={8} >
-          <Card style={{height:"525px"}}>
+        <Grid item sm={7} >
+          <Card style={{height:"425px"}}>
             <CardContent>
               <Map />              
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item sm={4} >
-          <Card style={{height: "525px"}}>
+        <Grid item sm={5} >
+          <Card style={{height: "425px"}}>
             <CardContent>
               <Tree/>          
             </CardContent>

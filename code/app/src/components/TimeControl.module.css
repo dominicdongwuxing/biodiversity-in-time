@@ -1,3 +1,10 @@
 .timeControl {
     composes: show-border from "../index.module.css";
 }
+.slider text{
+    height: 20px;
+    font-size: 20px;
+    color:red;
+}
+
+

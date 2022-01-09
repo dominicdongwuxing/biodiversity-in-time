@@ -18,6 +18,17 @@ export default function TreeSearchName () {
     return (
         <form onSubmit={handleSubmit}>
             <TextField
+            InputLabelProps={{
+              style: {
+                fontSize: "12px",
+                top: "-5px"
+              },
+            }}
+            InputProps={{
+              style: {
+                height: "35px",
+              },
+            }}
             variant="filled"
             value={searchNameBuffer}
             size="small"
@@ -29,6 +40,7 @@ export default function TreeSearchName () {
 
             <Button
             className={useTreeStyles().root}
+            style={{ maxHeight: "35px"}}
             size="small"
             variant="contained"
             type="submit"

@@ -9,13 +9,13 @@ export default function TreeGraph({ data, pathFromRoot }) {
   useEffect(() => {
 
     const {height, width, margins, radius, backgroundColor, fontSize, breadcrumbParams} = {
-      height: 380,
+      height: 315,
       width: 350,
       margins: { top: 20, right: 30, bottom: 30, left: 40 },
-      radius: 100,
+      radius: 90,
       backgroundColor: "white",
       fontSize: "0.5em",
-      breadcrumbParams: {width: 55, tipWidth: 10, height: 20, padding: 5, gap: 2, fontSize: "0.5em"}
+      breadcrumbParams: {width: 90, tipWidth: 4, height: 18, gap: 1, fontSize: 12}
     };
 
     const partitionLayout = d3.partition().size([2*Math.PI, radius])
@@ -39,14 +39,18 @@ export default function TreeGraph({ data, pathFromRoot }) {
     root.sum(d => d.leaf ? d.count : d.fossilCountIdentifiedToName)
 
     partitionLayout(root)
-    console.log(root)
+    //console.log(root)
     const svg = d3.select(ref.current)
       .attr("width", width)
       .attr("height", height)
       //.attr("viewBox", [0, 0, width, width])
     
-   
-    let colors = ["red","green","yellow","brown","cyan"]
+    // red: #9E2E24 #fc1443
+    // yellow: #E2AF42 #96890f
+    // green: #4d814b #0b7821
+    // purple: #7f4b81 #c717eb
+    // cyan: #68aba1 #066066
+    let colors = ["#fc1443","#0b7821","#c717eb","#3cc9a1","#d6c415"]
     const firstColor = colors[0]
     const lastColor = colors[colors.length - 1]
     let focusedNodesFromMap = []
@@ -88,7 +92,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
     setFlatTree(flatTree)
 
     //
-
+    svg.selectAll("g").remove()
 
     // make a trail of breadcrumbs from Eukaryota to the current root
     const breadcrumbUpstream = svg
@@ -105,7 +109,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
 
     const arc = svg
       .append("g")
-      .attr("transform", `translate(${width/2},${height/2})`)
+      .attr("transform", `translate(${width/2},${height/2 + breadcrumbParams.height})`)
 
     const path = arc
       .selectAll("path")
@@ -114,7 +118,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
       .attr("d", arcGenerator)
       .attr("id", d => d.data.uniqueName)
       .attr("fill", d => {
-        if (d.depth == 0) return backgroundColor
+        if (d.depth == 0) return "black"
         return d.color
       })
       .attr("opacity", d => focusedNodesFromMap.includes(d.data.uniqueName) ? 1 : 0.6 )
@@ -132,17 +136,17 @@ export default function TreeGraph({ data, pathFromRoot }) {
         setNodesOnFocus([focus.data.uniqueName])
         path
           .attr("opacity", (d) => {
-            return ancestorsDescending.includes(d) ? 1 : 0.6
+            return ancestorsDescending.includes(d) ? 1 : 0.5
           })
         makeBreadcrumb (breadcrumbDownstream, ancestorsDescending.slice(1))
       })
       .on("mouseout", () => {
-        setNodesOnFocus([""])
+        setNodesOnFocus([])
         path
           .attr("opacity", 0.6)
         makeBreadcrumb (breadcrumbDownstream, [])
       })
-      .exit().remove()
+      
     
     path
       .append("title")
@@ -173,7 +177,12 @@ export default function TreeGraph({ data, pathFromRoot }) {
         const y = d.y1 + 0.05 * d.y1//(d.y0 + d.y1) / 2 
         return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`
       })
-      .text(d => d.data.uniqueName);
+      .text(d => {
+        const nameList = d.data.uniqueName.split(",")[d.data.uniqueName.split(",").length-1].split(" ")
+        if (nameList.length === 1) return nameList[0] 
+        else if (nameList.length === 2) return nameList[0].charAt(0).toUpperCase() + ". " + nameList[1]
+        else if(nameList.length === 3) return nameList[0].charAt(0).toUpperCase() + ". " + nameList[1] + nameList[2]
+      });
       
     function labelVisible(d) {
       
@@ -244,13 +253,25 @@ export default function TreeGraph({ data, pathFromRoot }) {
         .attr("fill-opacity", 1)
         .attr("font-size",breadcrumbParams.fontSize)
         .attr("font-weight", 800)
-        .text(d => typeof(d) == "string" ? d : d.data.uniqueName.slice(d.data.uniqueName.lastIndexOf(",") + 1))
+        .text(d => {
+          let name
+          if (typeof(d) == "string") {
+            name = d
+          } else {
+            const fullName = d.data.uniqueName.slice(d.data.uniqueName.lastIndexOf(",") + 1)
+            const nameList = fullName.split(" ")
+            if (nameList.length === 1) return nameList[0] 
+            else if (nameList.length === 2) name = nameList[0].charAt(0).toUpperCase() + ". " + nameList[1]
+            else if(nameList.length === 3) name = nameList[0].charAt(0).toUpperCase() + ". " + nameList[1] + nameList[2]
+
+            
+          }
+          return name 
+        })
         .on("click", (e,d) => {
           setSearchName(typeof(d) == "string" ? d : d.data.uniqueName)
         })
         .attr("cursor","pointer")
-
-        breadcrumb.exit().remove()
     }
 
 

@@ -51,9 +51,9 @@ function TimeControlTable () {
       fontSize: 9,
       margins: { bottom: 40 },
       zoomDepth: 3,
-      scrollbarHeight: 40,
-      gap: 4,
-      breadcrumbParams: {width: 100, tipWidth: 15, height: 15, gap: 2, fontSize: 9}
+      scrollbarHeight: 10,
+      gap: 10,
+      breadcrumbParams: {width: 65, tipWidth: 4, height: 12, gap: 1, fontSize: 8}
     };
 
     let hideSmallTicks = true;
@@ -83,7 +83,7 @@ function TimeControlTable () {
     
     const slider = g
       .append("g")
-      .attr("transform",`translate(${padding},${offset})`)
+      .attr("transform",`translate(${padding},${offset + breadcrumbParams.height + gap})`)
   
     const sliderGenerator = sliderBottom()
       .min(541)
@@ -120,11 +120,11 @@ function TimeControlTable () {
 
     const geologicalBreadcrumb = g
       .append("g")
-      .attr("transform",`translate(${padding},${gap + scrollbarHeight + gap})`)
+      .attr("transform",`translate(${padding},${offset})`)
     
     const treeOfLifeBreadcrumb = g
       .append("g")
-      .attr("transform",`translate(${padding},${gap + scrollbarHeight + gap + gap + breadcrumbParams.height})`)
+      .attr("transform",`translate(${width*7/12},${offset})`)
     
     // makeBreadcrumb (geologicalBreadcrumb, geologicalTime)
     // makeBreadcrumb (treeOfLifeBreadcrumb, treeOfLifeTime)
@@ -610,7 +610,10 @@ function TimeControlTable () {
   
   },[])
   return (
-    <svg ref={ref}></svg>
+    <div className={styles.timeControl}>
+       <svg ref={ref}></svg>
+    </div>
+   
   )
 }
 

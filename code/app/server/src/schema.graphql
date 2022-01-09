@@ -49,5 +49,5 @@ type FossilLocation {
     id: String!
     mya: Int!
     coordinate: [Float!]!
-    uniqueName: String
+    uniqueName: String!
 }

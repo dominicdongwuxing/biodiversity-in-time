@@ -15,7 +15,6 @@ export default function Tree() {
           query={TREE_QUERY}
         >
           {(loading, error, data) => {
-
             let { setFlatTree, flatTree } = useContext(GlobalStateContext)
             useEffect(()=> {
               if (data && data.getFlatTreeByUniqueNameWithMya) {
@@ -25,9 +24,12 @@ export default function Tree() {
                     uniqueName: treeNode.uniqueName,
                     pathFromRoot: treeNode.pathFromRoot,
                     fossils: treeNode.fossils}))
-                console.log(flatTree)
+                //console.log(flatTree)
+                setFlatTree(flatTree)
+              } else if (!loading && !data?.getFlatTreeByUniqueNameWithMya) {
+                console.log("data is",data)
+                setFlatTree([])
               }
-              setFlatTree(flatTree)
             },[data])
             return (
               <div className={styles.tree}>

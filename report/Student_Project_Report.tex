@@ -5,19 +5,24 @@
 \usepackage{helvet}   % sets sans serif font
 
 \usepackage{amsmath,amssymb,amsthm}
-\usepackage{geometry}
- \geometry{
- a4paper,
- total={170mm,257mm},
- left=20mm,
- top=20mm,
- }
+
 \usepackage{graphicx}
 \usepackage{subfigure}  
 \usepackage{fancybox} % for shadowed or double bordered boxes
 \usepackage{fancyhdr}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{rotating}
 
-\DeclareGraphicsExtensions{.pdf, .jpg}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+\DeclareGraphicsExtensions{.pdf, .jpg, .png}
+\DeclareOldFontCommand{\sf}{\normalfont\sffamily}{\mathsf}
 
 %% macros
 \input{include/math}
@@ -37,9 +42,24 @@
 \widowpenalty=10000
 \clubpenalty=10000
 
-%\author{Hans Muster}
-%\title{Blockwise Hierarchical Data Decompositions}
-%\date{Fall Semester 2011}
+\newcommand{\todo}[1]{}
+\renewcommand{\todo}[1]{{\color{red} TODO: {#1}}}
+
+
+\lstdefinelanguage{JavaScript2}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, for, forEach},
+  keywordstyle=\color{orange}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{darkgray}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=false,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{purple}\ttfamily,
+  stringstyle=\color{ForestGreen}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
+}
 
 \begin{document}
 
@@ -52,21 +72,24 @@
 
 	\vspace{0.5cm}
 	\Huge
-	{\bf \textsf{A visualization of biodiversity through time}}
+	{\textbf{A visualization of biodiversity through time\\ }}
 
-
+	\vfill \vfill \vfill
+	%\begin{center}
+	%\includegraphics*[width=0.8\textwidth]{images/title.jpg}
+    %\end{center}
 	\vfill
-	\Large
-	Master Thesis \\\\
-	\large
+	\sf \Large
+	Master Thesis \\
 	\today \\[0.5cm]
+	\large
 	by Wuxing Dong, 18-946-038
 
 	\vfill \vfill \vfill
 	\begin{minipage}[b]{0.5\textwidth}
 	Supervisors: \\
 	Prof. Dr. Renato Pajarola \\
-	Dr. Gaudenz Halter \\
+	Gaudenz Halter \\
 	\end{minipage}
 	%
 	\begin{minipage}[b]{0.5\textwidth} \raggedleft
@@ -78,15 +101,14 @@
 	\vfill
 	\hrule
 	\vspace{0.5cm}
-	\includegraphics*[width=0.3\textwidth]{figures/uzh_logo} \hfill
-	\includegraphics*[width=0.3\textwidth]{figures/vmml_logo}
+	\includegraphics*[width=0.3\textwidth]{figures/cover/uzh_logo} \hfill
+	\includegraphics*[width=0.3\textwidth]{figures/cover/vmml_logo}
 \end{titlepage}
 %%
 
 %=====================================================================
 \include{abstract}
 %=====================================================================
-
 
 \tableofcontents
 
@@ -97,337 +119,259 @@
 \chapter{Introduction} \label{chp:introduction}
 %=====================================================================
 
-In this scientific, technical report skeleton we outline the structure and formatting rules and guidelines to follow for a written project, Bachelor or Master thesis report. In Chapter~\ref{chp:structure} we describe the basic structure and sections of such a report, and in Chapters~\ref{chp:formatting} and~\ref{chp:one} we give guidelines for a consistent typesetting and formatting of the text.
+\section{Effective visualization of data} \label{sec:one}
+In the time of the information age, the Internet has become a primary source to educate ourselves about the world. It is therefore a great opportunity for the scientific community to take advantage of the web and create high quality products to communicate their findings and ideas to the non-experts and general public. Textbook-styled verbal explanations can be rigorous, however, they easily become tedious and are already made available by school and college education. Videos are based on visual learning, quick to absorb, yet there is no engagement with the viewers. An interactive data visualization can provide an excellent way for users to understand scientific concepts. New knowledge is conveyed by direct visual impact that easily draw attention, and insights can be formed by actively exploring the data and observing the response of the presentation due to the users' own actions. This learn-by-doing strategy can consolidate the new knowledge. \\
+
+Although graphics plays a major role to deliver scientific messages, there is a lack of formal theory on producing good graphics, and domain experts tend to rely on practical experiences that are guided by certain design principles. Increasing amount of studies have focused on concluding such principles. Chen and colleagues have summarized that three main aspects to pay attention to in a visualization project are its contents, the relevance in the context of the larger whole as well as the forms and aesthetics (construction). Similarly, McCandless argued that a good visualization requires integrity of information, interestingness of story (concept), usefulness of goal and beauty of the visual form.\\
+
+Before embarking on the production of a visualization, one should note the characteristics of human visual perception to improve the design strategies in practice. Cognitive psychological studies aimed at examining human visual attention by exposing users to certain visual processing tasks. The results of those studies suggested some guidelines for more effective visualization. When the visual features of a certain type of data is expected or previously known, the accuracy and speed of visual perception is drastically improved. Therefore, a visual feature should be assigned to the same data dimension, or type of data. It is also important to note that attention is limited and selective, therefore the amount and diversity of information should be kept within the limits of cognitive load. When many categories of data are present, compromises are needed to retain graphics complexity and only demonstrate a few number of categories at a time. \\
+
+Through early years of research on how images are analyzed visually, it has been found that detailed vision is only achievable by actively focusing on small portion of the visual field. However, a few visual features, such as colors and curvatures, are subjected to preattentive processing, which can be effortlessly and rapidly detected by low-level visual processes. Colors is thus a powerful method in graphics. It can encode extra layers of information, and serves a leading factor to make a visualization memorable. Three major schemes for using colors are sequential, diverging and qualitative. A sequential scheme relates increasing value of the data to the intensity of the color, while using only one or two hues. In diverging scheme, two extremes are shown by two sequential schemes, and the middle or neutral value corresponds to a white or neutral color. The qualitative scheme uses a variety of distinguishable colors to represent data belonging to distinct categories. It is a good practice to choose color schemes that are distinguishable enough, such that minimal information is lost when converted into a gray scale. In addition, when a range of colors are used together, reducing the opacity of certain or all colors avoids overwhelming visual impact to the viewers. \\
+
+Design principles have also been examined and summarized by different studies. The design process should be guided by the core messages to deliver. It is important to first prioritize what information to show, envision the final result, and then choose appropriate geometries that fulfill the objectives. Geometries are the forms in which data is illustrated, and the majority of them can be categorized into amounts, compositions, distributions or relationships. Often, different geometries can be considered on the same data, however, the most efficient geometry should be of high data-ink ratio, which is the ratio between the amount of ink allocated on the actual data to the total amount of ink used in a figure. While a high data-ink ratio indicates high efficiency, it is also important for a visualization to be simple, self-explanatory  and straight to the points, such that the viewers are not overwhelmed with too much information. \\
+
+
+\section{Background on biodiversity and tectonic change} \label{sec: two}
+The data this thesis chooses to visualize is biodiversity through earth history. Considering various pressing environmental issues nowadays, it is important to raise the awareness of the general public on how different forms of life came to exist and change during the course of earth history. Climate change has become a non-negligible factor influencing on our daily life and the future of human society. Recently, the world sees increasing amount of extreme weather conditions, causing significant losses in human lives and properties. The ecosystem is also under threat of a mass extinction event, after which 90\% of all species are expected to disappear, and its leading cause is considered to be human activity. 
+By understanding the history of life through simple and interesting visualizations, viewers could appreciate the inseparable relationship with our environment, and be more promoted to act in a more environmentally-friendly and sustainable manner.
+
+\subsection{Biodiversity as a result of evolution} \label{subsec: one}
+\begin{figure}[h]
+	\centering
+	\subfigure[John Gould's sketches of the various beak shapes of the Galapagos finches as a result of evolution. ]{\includegraphics[width=0.45\textwidth]{figures/introduction/finches}\label{fig:finches}} 
+	\hfill
+	\subfigure[Biodiversity during Phanerozoic experiences non linear change with mass extinction events. ]{\includegraphics[width=0.45\textwidth]{figures/introduction/phanerozoic_biodiversity}\label{fig:phanerozoic_biodiversity}} 
+	\label{fig:evolution}
+\end{figure}
+Current views on the process of species formation is based on modern evolution theory originated from Darwin's work. To summarize briefly, all forms of life are argued to share a common ancestor, which diversified over the course of evolution to form the current tree of life. An organism's genomic information is encoded in DNA or RNA, which is replicated over generations. However, recombination and random mutation events occur during the replication process, resulting in genetic variations, which in turn causes difference in phenotype, the observable traits of organisms. Individuals with traits that are more suitable to their particular environment are more likely to survive and pass their genes to their offspring, comparing to those that are poorly adapted to the environment. This process is termed natural selection. A classic example of evolution is the adaptive radiation of finches on the Galapagos islands. The beak shapes of the finches on different islands diversified to specialize on obtaining the dominant type of food on different islands. Over generations, species evolve as a consequence of the change in the prevalence of advantageous genes. Finally, a new species is formed during the process of speciation. It occurs when enough genetic variations are accumulated between the original population and the descendant population, such that organisms from the two groups are not capable of producing fertile offspring, namely, the two groups have reproductive isolation. \\
+
+It is believed that life emerged from 3.5 billion years ago. The past 540 million years ago (the Phanerozoic Eon) sees rapid development and diversification of life. Throughout evolutionary history, there are records of drastic changes in biodiversity occurring in a relatively short period of time. Radiations are rapid increase in biodiversity. An example is the Cambrian explosion, during which most phylums of multi-cellular organisms appeared. On the contrary, biodiversity experiences rapid decline during mass extinction periods. There is evidence of five mass extinction periods, one of which occurred in Cretaceous and Tertiary, when the dinasours were exterminated and mammals thrived due to their selective advantage given by their fur in the cooling environments. These periods of radiation or extinction are caused by special events, plate motions, as well as change in climate, such as temperature and oxygen level. \\
+
+\subsection{Tectonic shift as a driver of biodiversity change} \label{subsec: two}
+The earth crust is composed of a number of tectonic plates undergoing constant changes. The hear generated from the interior of the planet causes the movement of the plates, as a result, earth appears very differently throughout millions of years of history. The plate motion results in new landscapes and new continents, affecting the inhabitants of lives. For instance, the current continents are thought to belong to one super continent called Pangaea, and gradually drifted away from each other since 175 million years ago. \\
+
+As the continents separated, populations from the same species are geographically isolated into their particular environments that is created from the plate motion. Since organisms are under constant selective pressure from the environment, new species are formed in the newly created environments. An example is the distribution of ratite as a result of tectonic movement. 
+
+\section{Source of data} \label{sec:three}
+\emph{The fossil}\\
+The biodiversity of ancient time periods is represented by fossil records. For this purpose, we use paleodb, which contains 1.3 million occurrences of fossil records. Each record has its unique ID, identified taxonomy, estimated maximal and minimal time (in million years) to today, and their coordinates. \\
+
+\noindent \emph{The tree}\\
+All identified species are classified in taxonomy, following the hierarchy of domain, kingdom, phylum, class, order, family, genus and species. Therefore, it can be naturally organized into a tree structure. Conveniently, for each fossil record in PBDB dataset, the names on each rank of the taxonomy is available. The highest taxonomy rank in the PBDB dataset is kingdom, namely the kingdom of Animalia (animal) and Plantae (plants). Since the two kingdoms are under the domain of Eukaryota, a rooted tree of life can be generated from the taxonomy information of all fossil record.\\
+
+\noindent \emph{The map}\\
+The geological information is provided by Matthew and colleagues, who traced the coastlines of the continents from 410 million years ago until the current world. 
+
+\section{Aim of the thesis}
+This thesis aims at building a web application that visualizes the change in biodiversity through the course of earth history. In the final product, users can view a customizable tree of life during a selected time period under a selected taxonomy. In the meantime, the fossil records belonging to the given tree of life is shown on the map, whose coastlines correspond to that of the selected epoch in ancient time. 
+
+\section{Thesis structure}
+Chapter one introduces the topic of data visualization and domain specific background information, and it claims the goal of the thesis. Chapter two analyzes some related work, indicating what could be learned and improved for the visualization to be built. Chapter three outlines the problems to be solved at each stage for building the web application. Chapter four discuses the technical solutions for data processing and web development stage, respectively. In chapter five, the implementation methods for data processing, backend and frontend are listed. Chapter six reports the result of the product. Chapter seven concludes the project and suggests future work.
 
 
 %=====================================================================
-\chapter{Report Structure} \label{chp:structure}
+\chapter{Related work} \label{chp:related_work}
 %=====================================================================
 
-A clear organization of a report typically encloses the inner main technical part(s) by an introduction and related work section at the beginning, as well as a discussion and/or conclusion section at the end. The inner parts must include the precise problem statement, a detailed description of the technical solution (e.g. mathematical models, data structures and algorithms), implementation details if applicable, and experimental results. A typical outline of a scientific report can look like this:
+There already exists an abundance of visualizations on the Internet regarding to tree of life as well as plate motion. This section selects several related work and discusses their inspirations for designing our own visualization on this topic. 
 
-\begin{itemize}
-	\item Introduction
-		\begin{itemize}
-		\item Visualization of biodiversity data for general public
-		\item Current gap in biodiversity visualization 
-		\item Aim of the thesis
-		\item Thesis structure
-		\end{itemize}
+\section{Tree-based visualizations on biodiversity}
+OneZoom (\url{https://www.onezoom.org/}, Fig.\ref{fig:OneZoom}) visualizes all known living things in a fractal tree, and it is targeted for both professionals and the masses. Users can zoom into or out of different levels of the tree by scrolling, and can search for a particular location in the tree by its name. 
 
-	\item Current biodiversity visualization and problems
-
-	\item Problem statement
-		\begin{itemize}
-		\item Need tree data
-		\item Need fossil data
-		\item Need map data and transfer the location
-		\end{itemize}
-
-	\item Technical solution
-		\begin{itemize}
-		\item Data processing stage
-			\begin{itemize}
-			\item building of tree from PBDB data
-			\item building of tree from Wiki data
-			\item reconstructing fossil point positions 
-			\end{itemize}
-		\item Web development stage
-			\begin{itemize}
-			\item Data queries for tree, and for fossil points and locations
-			\item Visualization of tree, computation of arc angles
-			\end{itemize}
-		\end{itemize}
-
-	\item Implementation
-		\begin{itemize}
-		\item Data processing stage stacks
-		\item Web development stage stacks
-		\end{itemize}
-
-	\item Results
-		\begin{itemize}
-		\item Data analysis
-			\begin{itemize}
-			\item PBDB tree data
-			\item PBDB fossil data
-			\item Wiki species tree data
-			\end{itemize}
-		\item Data visualization 
-			\begin{itemize}
-			\item Time selector component
-				\begin{itemize}
-				\item Stand-alone functionality
-				\item Interactive functionality with map and tree
-				\end{itemize}
-			\item Map component
-				\begin{itemize}
-				\item Stand-alone functionality
-				\item Interactive functionality with tree
-				\end{itemize}
-			\item Tree component
-				\begin{itemize}
-				\item Stand-alone functionality
-				\item Interactive functionality with map
-				\end{itemize}
-			\end{itemize}
-\end{itemize}
-
-\item Conclusion and discussion
-\end{itemize}
-
-\paragraph{Introduction}
-The introduction is a crucial part of your report and sets the stage as well as motivates the work you have completed. It briefly introduces the problem, emphasizes its importance and shows to the reader what you did in your work. That is, you show the reader that your problem is fundamental and that it needs to be solved as it fills a gap in the known literature and prior work.
-
-The introduction starts by addressing the problem in general and points the reader in the direction how you want to solve your problem / research question. As a metaphor, John Swales developed a three-stage model for research introductions: 
-
-\begin{description}
-\item[Move 1:] Establish a territory (claim centrality of topic)
-\item[Move 2:] Establish a niche (indicate gap)
-\item[move 3:] Occupy the niche (outline purpose and indicate research structure/methods).
-\end{description}
-
-You may follow that model while writing the introduction. In the first part of the introduction or in a separate section, you are expected to mention and organize supporting literature where you outline the {\em state of the art} of your research question.
-
-At the end of the introduction you may include a short summary of the structure of the rest of the paper. The introduction together with the conclusion should give a complete short version of your work and what you have achieved.
-
-\paragraph{Related work}
-After the introduction there follows the related work section. Try to classify the related methods in the literature with respect to the problems and solutions in your work. Establish the position of your work with respect to those competing on the same turf. Summarize the core contributions of the most important related prior solutions within the context of your work: if different from yours, clearly indicate the limitations that your solution improves upon; if similar to yours, state its advantage over other methods and thus indirectly justify your method. At the end, it should be clear why a new solution is required to solve the same problem and how your method is different from other related work.
-
-You should know your literature well in order to find the missing link, or the most important unsolved problem, understand your contribution to the field, place your contributions in the midst of other works, and to sell your work.
-
-Select references carefully and organize them into related groups. Within one topic you can organize references from old (first seminal) paper to newest achievements, and if too many related solutions exist, restrict to the last few most important papers if necessary.
-
-\paragraph{Problem statement}
-
-The technical sections introduce and motivate the proposed solution in the light of the problem, which requires a precise problem statement together with any assumptions and requirements. Where algorithmic or mathematical descriptions are not appropriate, other technical and implementation problems can be stated that are to be solved in this work.
-
-\paragraph{Technical solution}
-
-One or more sections should be directed towards the detailed description of the proposed solution, including technical details about the used data structures, algorithms and mathematical methods. The technical description should allow the resourceful and interested reader to reproduce and verify your work, together with the implementation information given in a later section.
-
-This is the most important part of the report that should answer every little technical question that arises in the reader's mind. Your algorithm might be a puzzle with many pieces which are described in a linear order in the report -- and many such orders may be possible. A good order to describe the different components of your solution is one that allows to clearly explain one component after another based exclusively on what the reader has already seen in any previous sections, thus minimizing any forward references.
-
-This core part of the report should be organized into coherent subsections, giving an overview and introducing formalism first. Following an overview of the necessary steps of the entire method, each step can then be described elaborately in each subsection.
-
-Note that implementation details should be avoided as much as possible, and the focus should be on the formal and algorithmic solution; the implementation section is specifically targeted to explain programming details.
-
-\paragraph{Implementation}
-
-The implementation section focuses on the programming problems and details such as the organization of the source code, the dependencies of the different modules etc.
-
-\paragraph{Experimental results}
-
-The evaluation discusses the proposed and competing solutions in the light of the initially stated problem requirements and limitations. This typically involves some sort of experimental evaluation which leads to some type of qualitative or quantitative results.
-
-Quantitative results include observed numbers indicating performance timings (speed) or accuracy measures of the given implementation and test datasets. If possible, statistical tests and analysis should be given, or where applicable formal proofs. Meaningful and informative numerical results must be complete and unambiguous. Explain in detail how the evaluation has been designed, as well as the experimental setup and test cases. This includes accurate description of the test data (type, properties, size etc.) as well as the test setup (e.g. view settings, screen resolution etc.) and the measured variables (frame rate, throughput, accuracy etc.).
-
-Qualitative results may be reported if clear quantitative measures are not feasible or applicable. Qualitative results clearly show the features and functionality of the completed work, indicating if and how they are novel or different from prior work. Qualitative results are especially suitable if something {\em new} has been achieved that no-one has done before in the same way.
-
-Essentially, the goal of the experimental results is to convince the reader by numbers, tests and images (and maybe user studies), giving some sort of proof why the proposed solution is good, different and/or better than other solutions.
-
-\paragraph{Conclusion and discussion}
-
-Puts the results in perspective, discussing it in relationship to other related work. Indicate possible (side-)effects and eventual limitations due to the evaluation. State the {\em take home message} of the paper that the reader should remember and provide an outlook on possible future work that extends the given solution or fixes specific limitations. Close with a brief description (that is different from the Abstract) of the proposed solution.
-
-Summarize your main findings in one or maximum two pages. Try to keep yourself short and clear. Give a short discussion about your results where you focus on what your findings mean. E.g., show how your results and interpretations agree with the original question and with other published work  or if there are any possible practical applications for your work. At the end, give hints on further improvements or development directions / areas. 
-
-
-%=====================================================================
-\chapter{Formatting and Typsetting} \label{chp:formatting}
-%=====================================================================
-
-The main text area should have a margin of 2cm on both sides, and the main text should have a top and bottom margin of about 3cm each.
-
-The main body text is typeset in 11pt Times font (serif font family). Text body is one-column, justified and single-spaced. First line of a paragraph is generally indented with about 0.8cm, however, first paragraph after any section heading may also be non-indented.
-
-%Lore feum quisciliqui ting eugait ullandignim zzrit iriustrud doluptat volum il il iustin utet, sum dolore tat volobor autpat alisim quipis nit iure vendrerit eugait ing et ad magnim amconse min ulla corper in heniat accum am dipit lutatuero od minismo orercipis ad tie veraesectet ipit lum incil dolor augiam dolorpe ciliquis at.
-
-
-%% add your chapters here %%
-%=====================================================================
-\chapter{Chapter Title} \label{chp:one}
-%=====================================================================
-
-
-%-------------------------------------------------------------------------------------------------------------------------
-\section{Section Title} \label{sec:one}
-%-------------------------------------------------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------------------------------------------------
-\subsection{Subsection Title}
-
-
-%-------------------------------------------------------------------------------------------------------------------------
-\section{Formatting} \label{sec:format}
-%-------------------------------------------------------------------------------------------------------------------------
-
-Section headings have nested numbering and are typeset in sans-serif bold font type, e.g. Helvetica or Arial.  Sizes range from 18pt for main sections down to at least one point larger than the main body text size. Place some vertical space before and after section headings.
-
-List elements are indented and formated similar to main body text. Leave up to one line of space before and after any numbered or bulleted list.
-
-\begin{enumerate}
-\item Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper 
-\item Nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit
-\item Dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent dolore eu feugiat nulla facilisis at vero eros et accumsan
-\end{enumerate}
-
-%-------------------------------------------------------------------------------------------------------------------------
-\subsection{Figures and Cross-References}
-
-Figures are centered and {\em placed in the text flow always after} they are referenced by the text and move with the text. If formatting constraints are difficult, figures are placed at the top of the next possible new page. Figures are continually numbered.
-
-Cross-references to numbered items such as sections and figures are capitalized as in the following examples. In Section~\ref{sec:format} we provide a brief summary of text formatting instruction and Figure~\ref{fig:vmml} shows our group logo. A Figure can  be divided into subfigures as illustrated in Figure~\ref{fig:vmml_uni}.
-
-%% example figures %%
-\begin{figure}[htp]
- \centering
- \includegraphics[width=0.5\textwidth]{figures/vmml_logo}
- \caption{Example figure with caption text.}
- \label{fig:vmml}
+\begin{figure}[h]
+	\centering
+	\subfigure[The overview of OneZoom's tree from root. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/onezoom_overview}\label{fig:OneZoom_a}} 
+	\hfill
+	\subfigure[The view on OneZoom's tree when zoomed onto mammals. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/onezoom_mammal}\label{fig:OneZoom_b}} 
+	\caption{Tree of life implementation in OneZoom. }
+	\label{fig:OneZoom}
 \end{figure}
 
-\begin{figure}[htp]
- \centering
-\subfigure[vmml logo]{\includegraphics[width=0.3\textwidth]{figures/vmml_logo}} \hfill
-\subfigure[uzh logo]{\includegraphics[width=0.3\textwidth]{figures/uzh_logo}}
- \caption{Example subfigure with caption referencing (a) the VMML and (b) the UZH logos.}
- \label{fig:vmml_uni}
+The fractal design gives the tree a nice appearance, with leaves and nodes resembling the leaves and branches of an actual tree. General information such as pictures or earliest time of a node is also well packed in the interactive image. There is a reset button to return to the root, and a drop down list that provides links to the nodes along the path to root from the current position. These functions are convenient for navigation and similar functionality should be implemented in this thesis. It is claimed that all categorized organisms, which has a total amount of over two million, are included in the tree. Each species in the tree structure are incorporated with a phylogenetic classification, indicating that for a particular species represented by a leaf to reach the root, it visits all of the nodes representing each of its ancestor throughout the evolutionary history. Although how a certain organism evolved from the common ancestor of all life can be rigorously inspected, from the user experience's point of view, the tree is extremely deep. Apart from manually searching for a name, navigating to a desired location in this deep tree is mainly achieved by scrolling and dragging the item of interest to the center of the screen. This makes it difficult for viewers to relocate to a different section of the tree, or to gain an overview of where the current node or leaf sits in the entire tree of life. To reach the root (\ref{fig:OneZoom_a}) from mammal (\ref{fig:OneZoom_b}) while viewing its path, users need to scroll through all upper levels of the similar-looking spiral structures of the tree, which appears to be confusing. A similar tree of life is Lifemap (\url{http://lifemap.univ-lyon1.fr/explore.html}), which ameliorates the navigation difficulty by highlighting the ancestry path from root to an entry (Fig\ref{fig:lifemap}). However, due to the sheer depth of the tree, users still need to travel deep into the tree by scrolling. Rather than demonstrating the exact ancestral paths, the purpose of the tree for this project is to organize each species such that biodiversity can be viewed in an intuitive way. As a consequence, all entries can be organized in only the main taxonomic ranks, limiting the tree's depth to be eight and thus simplifying the navigation process. In addition, to avoid scrolling and dragging, the tree can take a fixed position, while where a node or leaf locates can be shown in a clickable breadcrumb structure that provides an overview of the whole tree. \\
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{figures/related_work/lifemap}
+	\caption{Lifemap enables a "path from root" functionality that highlights the ancestry path from \textit{Homo sapiens} to the root. }
+	\label{fig:lifemap}
 \end{figure}
 
+A much simplified version of tree of life is Evogeneao (\url{https://www.evogeneao.com/en/explore/tree-of-life-explorer}), which is intended for school education. As shown in Fig\ref{fig:evogeneao}, all species are grouped into clearly colored groups, which gives the viewers a direct and memorable visual impact. A similar design could be adapted in this project. With the tree of life arranged in a half circle that is labeled with time and a few iconic events, users could get a view of how life radiated from the common ancestor into great diversity, and how this process is affected by special events on the planet. Since only a small subset of all organisms are shown, the tree is small and can be entirely shown, thus always giving the audience an overview. However, this web application provides little possibility of exploration due to its limited options for interaction, as the main functionality is to show the common ancestor of two selected items (Fig\ref{fig:evogeneao_b}).
 
-%-------------------------------------------------------------------------------------------------------------------------
-\subsection{Mathematical Expressions}
+\begin{figure}[h]
+	\centering
+	\subfigure[The overview of Evogeneao's tree. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/evogeneao_overview}\label{fig:evogeneao_a}} 
+	\hfill
+	\subfigure[The ancestral relationship between human and songbird. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/evogeneao_relationship}\label{fig:evogeneao_b}} 
+	\caption{Tree of life implementation in iTOL. }
+	\label{fig:iTOL}
+\end{figure}
 
-Mathematical expressions should follow a consistent set of rules and formatting as indicated in our {\tt math.tex} style file. A few guidelines that are useful are given below, use them if possible (but adjust as necessary to make formulas clear).
+Finally, there are a wide variety of tree of life visualized for computational biologists. Such visualizations provide rich functionalities for bioinformatic analysis that are well beyond the need of general public and often take efforts to use. An example is iTOL (\url{https://itol.embl.de/itol.cgi},Fig\ref{fig:iTOL}). The design of arranging all leaves on the edge of a circle and all nodes in its interior utilizes space effectively, therefore can be adapted in our implementation. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.5\textwidth]{figures/related_work/iTOL}
+	\caption{Tree of life in iTOL. }
+	\label{fig:iTOL}
+\end{figure}
+
+\section{Visualizations on tectonic shift}
+\begin{figure}[h]
+	\centering
+	\subfigure[Tectonic shift visualized in Ancient Earth. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/ancient_earth}\label{fig:ancient_earth}} 
+	\hfill
+	\subfigure[Tectonic shift visualized in Earth Viewer. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/earth_viewer}\label{fig:earth_viewer}} 
+	\caption{Example visualizations on tectonic shift. }
+	\label{fig:tectonic_shift}
+\end{figure}
+Current project involves visualizing plate motions in various time period, since biodiversity information is shown on the world map during the select time period of interest. Two typical tectonic shift visualizations are Ancient Earth (\url{https://dinosaurpictures.org/ancient-earth#240}, Fig\ref{fig:ancient_earth}) and Earth Viewer (\url{https://www.biointeractive.org/classroom-resources/earthviewer}, Fig\ref{fig:earth_viewer}). Both of them show the coastlines of the continents at a select time point on a three-dimensional globe. Ancient Earth allows users to pick a particular time point from a list of options and search for the ancient location of a city. Earth Viewer provides more detailed information on geological time, and selectable time points are incremented at every five million years on the scroll bar. Time periods are organized in a hierarchical structure with names, which can be adapted in this project for easy navigation. When clicking on a time period, instead of directing the user to the selection, a pop-up window containing a brief introduction of the time period appears, which is counter-intuitive. An improvement is to show the earth at the middle of the selected time period upon clicking.
+
+%=====================================================================
+\chapter{Problem statement} \label{chp:problem_statement}
+%=====================================================================
+The data visualization project is divided into several sub-problems as follows.
 
 \begin{itemize}
-\item use (lower-case) italic letters for normal (scalar) variables such as $x$ or $t$
-\item prefer $i$ and $j$ as index variables and $m$ and $n$ to denote number of elements or iterations
-\item use for example other letters such as $a$, $b$ and $c$ for constants
-\item use lower-case bold italic to denote vectors such as $\vec{u}$ or $\vec{v}$
-\item use upper-case bold italic letters such as $\mat{M}$ or $\mat{N}$ for sets and matrices
-\item use upper- or lower-case italic letters such as $f()$ or $G()$ to denote functions
-\item use regular plain font and decimal point to denote explicit constants such as $2$, $100.12$
+	\item \textbf{Data processing}
+	\begin{itemize}
+		\item Process the PBDB dataset to extract fossil records 
+		\item Extract a tree of life from the taxonomy information of the fossil record 
+		\item Trace the coordinates of each fossil record to ancient time
+	\end{itemize} 
+	\item \textbf{Database setup}: store the fossil data, coordinate data and the taxonomy data into a database
+	\item \textbf{Back-end building}: enable data queries from the database upon users' request from the front-end 
+	\item \textbf{Front-end building}: visualize interactive components for users to explore biodiversity through deep time
+	\begin{itemize}
+		\item A time component that lists ancient epochs that users can select
+		\item A tree component that shows the tree of life constructed by the fossil records found in the selected time period, under the selected taxonomy. 
+		\item A map component that shows the shape of the continents in the selected time period, and the locations of the fossil records that constitutes the tree of life in the above component.    
+	\end{itemize} 
+\end{itemize} 
+
+%=====================================================================
+\chapter{Technical solution} \label{chp:technical_solution}
+%=====================================================================
+\section{Overview}\label{sec:tec_overview}
+This section explains the technical solutions to the problems stated in chapter \ref{chp:problem_statement}. To summarize, the project is divided into data processing in section \ref{sec:tec_data_processing}, database setup in section \ref{sec:tec_database_setup}, back-end development in section \ref{sec:tec_backend} and front-end development in section \ref{sec:tec_frontend}.
+
+\section{Data processing} \label{sec:tec_data_processing}
+\subsection{Fossil data parsing and processing} \label{subsec:fossil_data_processing}
+PBDB dataset is used for both fossil data and tree data. The raw data consists of two csv files that contain 1240202 animal fossil records and 105918 plant fossil records, respectively. Since the two files share the same data attributes, the data is concatenated into one file. Only the attributes that are relevant to this project are kept, which is listed below.\\
+
+\noindent Extracted attributes in the PBDB dataset:
+\begin{itemize}
+	\item \textit{occurrence\_no}: a unique ID code for a fossil record
+	\item \textit{accepted\_name}: the accepted name of a fossil record
+	\item \textit{accepted\_rank}: the taxonomic rank in which the accepted\_name belongs to 
+	\item \textit{phylum}: the phylum name of the fossil record
+	\item \textit{class}: the class name of the fossil record
+	\item \textit{order}: the order name of the fossil record
+	\item \textit{family}: the family name of the fossil record
+	\item \textit{genus}: the genus name of the fossil record
+	\item \textit{max\_ma}: the oldest estimated time of the fossil record, in million years
+	\item \textit{min\_ma}: the earliest estimated time of the fossil record, in million years
+	\item \textit{lng}: the longitude of the fossil record's found location 
+	\item \textit{lat}: the latitude of the fossil record's found location 
+	
 \end{itemize}
 
-Mathematical equations that are important or are referenced should be laid out as a separate special-equation paragraph with consecutive numbering to the right as below:
+In addition, there are four additional attributes are appended to the current data frame, for the construction of tree of life in the next step. \\
 
-%% example equation  %%
-\begin{equation}
-E = m \cdot c^2
-\label{eq:einstein}
-\end{equation}
+\noindent Computed attributes added to the PBDB data frame:
+\begin{itemize}
+	\item \textit{kingdom}: the kingdom name of the fossil record
+	\item \textit{path\_from\_root}: a comma separated string indicating the taxonomic path from a fossil record's name to its root
+	\item \textit{name}: the taxon name of the fossil record on the lowest taxonomic rank
+	\item \textit{unique\_name}: the unique name of the fossil record
 
-%-------------------------------------------------------------------------------------------------------------------------
-\subsection{Pseudo Code}
+\end{itemize}
 
-%% example pseudo code %%
-\lstinputlisting[language=c++,label=example]{pseudocode/example_pcode.txt}
-\vspace{10mm}
 
-%-------------------------------------------------------------------------------------------------------------------------
-\subsection{FIXME}
-You can use the command \verb!\FIXME{}! in order to mark sections in the text, which need to be edited and fixed. E.g. \FIXME{check reference XY}.
+Firstly, the kingdom of Animalia and Plantae is assigned to each fossil record, depending on whether it is originated from the animal or plant file, respectively. The domain name is not required, since all records are either an animal or a plant, both of which reside in the domain of Eukaryota. \\
+
+The attribute \emph{path\_from\_root} is a comma separated string of taxonomic names in the order of the highest taxonomic rank (domain) to the lowest taxonomic rank with an available name. Note that the dataset does not have an attribute named \emph{species}. Instead, when the species or subspecies name of a record is available, the record would have the attribute \emph{accepted\_rank} labeled as \emph{species} or \emph{subspecies}, and the name is found in the attribute \emph{accepted\_name}. For each fossil record, we iterate from the highest rank, domain, to the lowest rank, species, while appending the name on each rank level to the \emph{path\_from\_root} string. The process terminates when encountering an empty field, or when reaching to the species level. As a consequence, when a record is missing a name on a certain taxonomic rank, its \emph{path\_from\_root} only describes up to the rank above the missing rank to prevent ambiguity of a path, even though the record may have names available below the missing rank. Extra knowledge in taxonomy is needed to retrieve the missing names. Therefore, this challenge is beyond the scope of the current project. \\
+
+The attribute \emph{name} is the name on the lowest rank from \emph{path\_from\_root}, namely, the string after the last comma. This attribute is required to generate \emph{unique\_name}, which serves as an unique identifier of an entry on the to-be-constructed tree of life. The value of \emph{unique\_name} is equivalent to \emph{name}, when \emph{name} is unique. Otherwise, it uses the value of \emph{path\_from\_root}.
+
+\subsection{Generation of tree from taxonomy} \label{subsec:tree_generation}
+The fossil records can be organized in a tree of life that is computed using the taxonomic information from the processed PBDB dataset. The resulted flattened tree structure has the following attribute:
+
+\begin{itemize}
+	\item \textit{unique\_name}: the unique name of a node or leaf in the tree
+	\item \textit{path\_from\_root}: a comma separated string indicating the taxonomic path from a node's or leaf's name to its root
+	\item \textit{parent}: the unique name of the entry's parent
+	\item \textit{children}: a list of the unique names of the entry's children
+\end{itemize}
+
+The tree data contains all nodes and leaves of the tree of life formed by the taxonomy of the fossil records. We initialize the tree data frame by extracting all the unique \emph{path\_from\_root} values from the processed fossil data from section \ref{subsec:fossil_data_processing}. However, there are more nodes to include in the tree. For each entry in the tree represented by its \emph{path\_from\_root}, we must also include each of the upstream ancestor in the tree. For instance, when the item "a,b,c,d" is included, its ancestors "a,b,c", "a,b" and "a" are also present in the tree. Therefore, the next step is to iterate through each of the unique \emph{path\_from\_root} and append the additional nodes. \\
+
+The next steps are to append the \emph{unique\_name}, \emph{parent} and \emph{children} values for each \emph{path\_from\_root}. Similar to section \ref{subsec:fossil_data_processing}, we compute \emph{unique\_name} from \emph{path\_from\_root}, by firstly extracting \emph{name}, the name on the lowest rank, and assign either \emph{name} to \emph{unique\_name} if \emph{name} is unique, or assign \emph{path\_from\_root} to \emph{unique\_name} if otherwise. \\
+
+The attribute \emph{parent} can be obtained from slicing the \emph{path\_from\_root} from start to its last comma (the \emph{path\_from\_root} value of its parent), and assigning the corresponding \emph{unique\_name} value to \emph{parent}. Lastly, we iterate through each \emph{unique\_name} and append the list of \emph{unique\_name} values of all the items whose \emph{parent} equals the current \emph{unique\_name} in each iteration.
+
+\subsection{Conversion of modern coordinates to ancient coordinates} \label{subsec:coordinate_conversion}
+To convert coastlines and fossil locations to ancient time, we use the model proposed by Matthew. \\
+
+Geological time period data is hierarchical. The hierarchy contains five layers, with the top most layer Phanerozoic. A time period in a deeper layer is shorter. The ancient year that the coordinates are translated into is the middle value rounded to the integer, between the start and end years of the smallest time period, i.e., layer five. 
+
+\section{Database setup} \label{sec:tec_database_setup}
+
+
+\section{Back-end development} \label{sec:tec_backend}
+
+
+\section{Front-end development} \label{sec:tec_frontend}
 
 
 %=====================================================================
-\chapter{Pages and Bibliography}
+\chapter{Implementation} \label{chp:implementation}
+%=====================================================================
+\section{Code structure} \label{sec:implementation_code_structure}
+\section{Data process stacks}\label{sec:implementation_data_processing}
+\section{Web development stacks}\label{sec:implementation_web_development}
+
+%=====================================================================
+\chapter{Results} \label{chp:results}
+%=====================================================================
+\section{Data analysis} \label{sec:result_data_analysis}
+\subsection{fossil data} \label{subsec:data_analysis_fossil}
+\subsection{tree data} \label{subsec:data_analysis_tree}
+
+\section{Data visualization} \label{sec:result_data_visualization}
+\subsection{Time selector component} \label{subsec:data_visualization_time}
+\subsection{Map component} \label{subsec:data_visualization_map}
+\subsection{Tree component} \label{subsec:data_visualization_component}
+%=====================================================================
+\chapter{Conclusion} \label{chp:discussion_conclusion}
 %=====================================================================
 
 
-%-------------------------------------------------------------------------------------------------------------------------
-\section{Cover and Abstract}
-%-------------------------------------------------------------------------------------------------------------------------
 
-Title of thesis, author, affiliation, date and any other administrative information should be placed on a separate cover page (see first page).
+\section{Limitations and Future Work}
 
-Main title of work should be typeset in large sans-serif bold font type. Title is to be followed by author and affiliation. At the bottom, separated group affiliation is set.
+%=====================================================================
+\chapter*{Acknowledgements}
+%=====================================================================
 
-Abstract follows on separate page after cover page and before the table-of-content page(s).
-
-
-%-------------------------------------------------------------------------------------------------------------------------
-\section{TOC}
-%-------------------------------------------------------------------------------------------------------------------------
-
-The table-of-content (TOC) contains all Section and (Sub-)Sub Section headings and their corresponding pages and is listed on separate pages before the first section. It has its own heading typeset as a section heading without numbering.
-
-
-%-------------------------------------------------------------------------------------------------------------------------
-\section{Bibliography References}
-%-------------------------------------------------------------------------------------------------------------------------
-
-The bibliography with list of references is placed on a new page at the end of the document, titled ``References'' or ``Bibliography'' and typeset similar to the main section headings but without numbering. Bibliography entries should follow standard IEEE or ACM proceedings or transaction journal formatting styles, and be referenced by last name abbreviation and year such as \cite{Pajarola:07} and \cite{GSSP:10}, or by number as for [1].
-
-%-------------------------------------------------------------------------------------------------------------------------
-\subsection{Formatting References}
-
-Bibliography entries should be clean, accurate and consistent. Thus for the entries in the bibliography follow the following fundamental rules:
-
-\begin{itemize}
-\item Have complete entries, including full author names, full venue name (conference or journal), pages and year, and with volume, issue and month for journal articles.
-\item Use consistent venue description (name the same conference/journal in the same way).
-\item Use compact {\em inproceedings} booktitle for conferences without year, e.g. "Proceedings IEEE Visualization" instead of "8th Int. Conference on Visualization (VIS'08), IEEE 2008".
-\item Do not use separate organization field if clear from the venue title, and usually no publisher, month and address for conferences.
-\item Keep entries concise, avoid unnecessary or duplicate information such as conference location or duplicated association/organization data etc.
-\item Use capitalized titles in the (BibTeX) references database.
-\end{itemize}
-
-\noindent
-Example bad BibTeX entry:
-
-\begin{verbatim}
-@ inproceedings{as78439729asf,
-  Title = {Tile-based LOD for the Parallel Age},
-  Author = {Niski, Krzysztof and Cohen, J.~D.},
-  Booktitle = {Proceedings IEEE Visualization Conference (IEEE Vis'10)},
-  Volume = {13},
-  Pages = {1352},
-  Organization = {IEEE},
-  Series = {IEEE TVCG journal},
-  Publisher = {Computer Society Press},
-}
-\end{verbatim}
-
-\noindent
-Resulting in a not very nice reference:
-
-\smallskip
-\noindent
-[NC]  Krzysztof Niski and J.蔇. Cohen. Tile-based lod for the parallel age. In {\em Proceedings IEEE Visualization Conference (IEEE Vis�10)}, volume�13 of {\em IEEE TVCG journal}, page 1352. IEEE, Computer Society Press.
-
-\bigskip
-\noindent
-Corresponding clean and consistent BibTeX entry:
-
-\begin{verbatim}
-@article{NC:07,
-  Title = {Tile-based {LOD} for the Parallel Age},
-  Author = {Niski, Krzysztof and Cohen, Jonathan~D.},
-  Journal = {IEEE Transactions on Visualization and Computer Graphics},
-  Month = {November/December},
-  Volume = {13},
-  Number = {6},
-  Pages = {1352--1359},
-  Year = {2007}
-}
-\end{verbatim}
-
-\noindent
-Resulting in a nice reference:
-
-\smallskip
-\noindent
-[NC07]  Krzysztof Niski and Jonathan蔇. Cohen. Tile-based LOD for the parallel age. {\em IEEE Transactions on Visualization and Computer Graphics}, 13(6):1352�1359, November/December 2007.
-
-
-%%=====================================================================
-%\chapter{Conclusion} \label{chp:conclusion}
-%%=====================================================================
-%
-%Summarize your main findings in one or maximum two pages. Try to keep yourself short and clear. Give a short discussion about your results where you focus on what your findings mean. E.g., show how your results and interpretations agree with the original question and with other published work  or if there are any possible practical applications for your work. At the end, give hints on further improvements or development directions / areas. 
 
 \bibliographystyle{alpha}
 \bibliography{references}
+
+\listoffigures
+\listoftables
+%=====================================================================
+\appendix
+\chapter{Appendix}
+The appendix of this thesis is stored on a DVD which is attached to the end of the printed document. It includes the follow items: 
+\begin{enumerate}
+    \item \textbf{code/} The full application code. 
+    \item \textbf{report/} The complete report as latex source
+    \item \textbf{Masterarbeit.pdf} This report in its digital version
+    \item{Abstract.txt} The abstract to this thesis in English
+    \item {Zusfsg.txt} The abstract to this thesis in German
+\end{enumerate}
+
+%=====================================================================
 \end{document}
+

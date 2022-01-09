@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react"
 import { useQuery } from "@apollo/client";
 import { GlobalStateContext } from "./GlobalStateContext";
 
+
 export default function DataFetcher (props) {
     // use passed query and variables to get data and show loading message or props.children
     const {searchName, myaRangeTree, searchMaxElement, searchDepth, flatTree, myaValueMap} = useContext(GlobalStateContext)
@@ -14,8 +15,10 @@ export default function DataFetcher (props) {
         flatTree: flatTree,
         mya: myaValueMap,
       }
-    const { loading, error, data } = useQuery(props.query, { variables: variables})
-    
+    const { loading, error, data } = useQuery(props.query, 
+        {   variables: variables,
+        })
+    //console.log(`at mya ${myaValueMap}`,data)
     return (
         <div>
             {props.children(loading, error, data)}

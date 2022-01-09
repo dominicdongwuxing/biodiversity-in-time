@@ -16,6 +16,7 @@ const FOSSILLOCATION_QUERY = gql`
       id
       coordinate
       uniqueName
+      mya
     }
   }
 `;

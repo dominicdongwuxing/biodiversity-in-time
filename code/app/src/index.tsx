@@ -30,13 +30,23 @@ import { GlobalStateProvider } from "components/GlobalStateContext";
 //   },
 // });
 
+//import { InMemoryCache, defaultDataIdFromObject } from 'apollo-cache-inmemory';
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    FossilLocation: {
+      keyFields: ["id","mya"]
+    }
+  }
+});
+
 const httpLink = createHttpLink({
   uri: "http://localhost:4000",
 });
 
 const client = new ApolloClient({
   link: httpLink,
-  cache: new InMemoryCache(),
+  cache: cache,
 });
 
 ReactDOM.render(

@@ -123,7 +123,8 @@ const getFossilLocationFromTreeWithMya  = async (parent, args, context, info) =>
         return {
             id: i.id,
             coordinate: i.coordinate,
-            uniqueName: idToUniqueName[i.id]
+            uniqueName: idToUniqueName[i.id],
+            mya: args.mya
         }
     })
     return locations

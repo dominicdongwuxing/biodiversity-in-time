@@ -21,7 +21,7 @@ const Tectonics = ({ geojson, fossilData }) => {
         count++
         fossilArray.push({coordinate: fossilLocation.coordinate, id: fossilLocation.id, uniqueName: fossilLocation.uniqueName})
     })
-    console.log(`There are ${count} fossil points to render`)
+    //console.log(`There are ${count} fossil points to render`)
 
     const projection = d3.geoEquirectangular()//.scale(110);
 
@@ -50,7 +50,7 @@ const Tectonics = ({ geojson, fossilData }) => {
       .data(features)
       .join("path")
       .attr("d", geoGenerator)
-      .attr("fill","#cecece")
+      .attr("fill","#e8ebeb")
       .attr("stroke","black")
       .attr("stroke-width","0.2px")
 
@@ -63,7 +63,7 @@ const Tectonics = ({ geojson, fossilData }) => {
       .append("circle")
       .attr("cx", (d) => projection(d.coordinate)[0])
       .attr("cy", (d) => projection(d.coordinate)[1])
-      .attr("r", "2px")
+      .attr("r", "5px")
       .attr("fill", (d) => {
         // const colors = d3.scaleOrdinal().domain(wikiRefRange).range(["#800000","#191970","#006400","#9acd32","#ff0000","#ff8c00","#ffd700","#00ff00","#ba55d3","#00fa9a","#00ffff","#0000ff","#ff00ff","#1e90ff","#fa8072","#dda0dd"])
         // const pathArr = d.pathFromRootById.split(",").slice(1)
@@ -75,7 +75,17 @@ const Tectonics = ({ geojson, fossilData }) => {
 
         return flatTree.find(item => item.uniqueName === d.uniqueName).color
       })
-      .attr("fill-opacity", d => nodesOnFocus.includes(d.uniqueName) ? 1 : 0.2)
+      .attr("fill-opacity", d => {
+        if (!nodesOnFocus.length) {
+          return 0.2
+        } else {
+          if (nodesOnFocus.includes(d.uniqueName)) {
+            return 1
+          } else {
+            return 0
+          }
+        }
+      })
       .on("mouseover", (e,d) => {
         //setNodesOnFocus([d.uniqueName])
         console.log("fossil id: ",d.id, "uniqueName:", d.uniqueName)
@@ -86,14 +96,14 @@ const Tectonics = ({ geojson, fossilData }) => {
   
   return (
     <>
-    <p>Earth at {mapYear} million year{mapYear > 0 && "s"} ago, viewing life existing from {myaRangeTree[0]} to {myaRangeTree[1]} million years ago</p>
+    {/* <p>Earth at {mapYear} million year{mapYear > 0 && "s"} ago, viewing life existing from {myaRangeTree[0]} to {myaRangeTree[1]} million years ago</p> */}
     <svg
       ref={ref}
       style={{
-        height: "500px",
+        height: "400px",
         width: "100%",
         margin: "0px",
-        border: "1px solid black"
+        //border: "1px solid black"
       }}
     ></svg>
     </>
@@ -102,8 +112,6 @@ const Tectonics = ({ geojson, fossilData }) => {
 
 export default function Map() {
   const {myaValueMap, searchName, myaRangeTree, flatTree} = useContext(GlobalStateContext)
-  //const { data: fossilData } = useQuery(FOSSILLOCATION_QUERY, { variables: { mya: myaValueMap, minma: myaRangeTree[1], maxma: myaRangeTree[0], flatTree: flatTree } });
-  //const fossilData = {getFossilLocationFromTreeWithMya: []}
   const [mapData, setMapData] = useState(null)
   useEffect(() => {
     const urlForMap = "./resources/newMap/Global_coastlines_2015_v1_low_res_reconstructed_" + myaValueMap + "Ma.geojson"
@@ -115,14 +123,17 @@ export default function Map() {
   return (
     <DataFetcher query={FOSSILLOCATION_QUERY}>
       {(loading, err, fossilData) => {
+        // if (loading) {
+        //   return "Loading fossils on map..."
+        // }
         return (
           <div className={styles.map}>
             {myaValueMap > 410 ? 
             "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
             mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilLocationFromTreeWithMya ? (
               <Tectonics 
-              geojson={mapData.getMapAtMya} 
-              fossilData={fossilData.getFossilLocationFromTreeWithMya} 
+                geojson={mapData.getMapAtMya} 
+                fossilData={fossilData.getFossilLocationFromTreeWithMya} 
               />
             ) : mapData && mapData.getMapAtMya ? (
               <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />

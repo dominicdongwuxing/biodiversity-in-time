@@ -41,7 +41,7 @@ export default function TreeGraphCustomize ({data }) {
         <div>
             <FormControl>
             <Select
-                style={{margin: "5px"}}
+                style={{margin: "5px", maxHeight: "25px"}}
                 value={searchMaxElement}
                 size="small"
                 onChange={(event) => {
@@ -55,7 +55,7 @@ export default function TreeGraphCustomize ({data }) {
 
             <FormControl>
             <Select
-                style={{margin: "5px"}}
+                style={{margin: "5px", maxHeight: "25px"}}
                 value={searchDepth}
                 size="small"
                 onChange={(event) => {
@@ -68,9 +68,9 @@ export default function TreeGraphCustomize ({data }) {
             </FormControl>
         
 
-            {data?.getFlatTreeByUniqueNameWithMya.name !== "Biota" ? (
+            {data?.getFlatTreeByUniqueNameWithMya.pathFromRoot !== "Eukaryota" ? (
                 <Button 
-                style={{margin: "5px"}}
+                style={{margin: "5px", maxHeight: "25px"}}
                 variant="contained" 
                 size="small" 
                 onClick={handleBackToTop} 
@@ -98,7 +98,7 @@ function BackToPrevious ({ data, searchDepth, handleBackToPrevious }) {
         const displayName = uniqueName.split(",").reverse()[0]
         return (
           <Button
-            style={{margin: "5px"}}
+            style={{margin: "5px", maxHeight: "25px"}}
             variant="contained"
             size="small"
             onClick={handleBackToPrevious}
