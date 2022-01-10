@@ -1,6 +1,6 @@
 # Biodiversity visualization 
 
-This is my master thesis project on visualizing biodiversity through time. This web application allow users to select a time period of interest through the evolutionary history to view the tree of life and the fossils located on the ancient world map during the selected time period, and also track how the fossil locations shift as the continents drift along with time. The fossils are from the PBDB database, which contains 1.3 million occurrences of animals and plants; the tectonic motion is modeled by this paper, which traces the coastline changes from 410 million years ago to today. The web application yet to be finished and deployed, but some screenshots showing the current progress are shown below. 
+This is my master thesis project on visualizing biodiversity through time. This web application allow users to select a time period of interest through the evolutionary history to view the tree of life and the fossils located on the ancient world map during the selected time period, and also track how the fossil locations shift as the continents drift along with time. The fossils are from the Paleobiology Database, which contains 1.3 million occurrences of animals and plants; the tectonic motion is modeled by this paper (https://www.sciencedirect.com/science/article/pii/S0921818116302417), which traces the coastline changes from 410 million years ago to today. The web application yet to be finished and deployed, but some screenshots showing the current progress are shown below. 
 
 ## General overview
 
