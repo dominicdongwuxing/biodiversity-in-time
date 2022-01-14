@@ -24,7 +24,7 @@ const getFlatTreeByUniqueNameWithMya = async (parent, args, context, info) => {
             maxma: {$gte: args.minma} })
 
         const fossilCountIdentifiedToName = await FossilPoint.countDocuments({
-            uniqueName: input.uniqueName, 
+            pathFromRoot: input.pathFromRoot, 
             minma: {$lte: args.maxma}, 
             maxma: {$gte: args.minma} })
         //if (input.uniqueName === "Mammalia") console.log(`Mammalia, from ${args.maxma} to ${args.minma} fossilUnderName ${fossilCountIdentifiedToName}`)
@@ -35,6 +35,7 @@ const getFlatTreeByUniqueNameWithMya = async (parent, args, context, info) => {
     const getChildren = async (inputRoot) => {
         let children = await TreeNode.find({
             parent: inputRoot.uniqueName,
+            //pathFromRoot: {$regex: `^${inputRoot.pathFromRoot},[^,]+$`},
             minma: {$lte: args.maxma}, 
             maxma: {$gte: args.minma}})
 

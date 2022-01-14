@@ -36,8 +36,9 @@ export default function TreeGraph({ data, pathFromRoot }) {
     // i.e, all fossil count on this node and below (if it has children but just not shown)
     // but when it is a node, then use the fossil count identified to this node
     // to avoid double counting!
-    root.sum(d => d.leaf ? d.count : d.fossilCountIdentifiedToName)
 
+    root.sum(d => d.leaf ? d.count : d.fossilCountIdentifiedToName)
+    
     partitionLayout(root)
     //console.log(root)
     const svg = d3.select(ref.current)

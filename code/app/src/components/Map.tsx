@@ -65,14 +65,6 @@ const Tectonics = ({ geojson, fossilData }) => {
       .attr("cy", (d) => projection(d.coordinate)[1])
       .attr("r", "5px")
       .attr("fill", (d) => {
-        // const colors = d3.scaleOrdinal().domain(wikiRefRange).range(["#800000","#191970","#006400","#9acd32","#ff0000","#ff8c00","#ffd700","#00ff00","#ba55d3","#00fa9a","#00ffff","#0000ff","#ff00ff","#1e90ff","#fa8072","#dda0dd"])
-        // const pathArr = d.pathFromRootById.split(",").slice(1)
-        // for (let id of pathArr) {
-        //   if (wikiRefRange.includes(id)){
-        //     return colors(id)
-        //   }
-        // }
-
         return flatTree.find(item => item.uniqueName === d.uniqueName).color
       })
       .attr("fill-opacity", d => {

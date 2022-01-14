@@ -75,9 +75,9 @@
 	{\textbf{A visualization of biodiversity through time\\ }}
 
 	\vfill \vfill \vfill
-	%\begin{center}
-	%\includegraphics*[width=0.8\textwidth]{images/title.jpg}
-    %\end{center}
+	\begin{center}
+	\includegraphics*[width=0.8\textwidth]{figures/cover/cover}
+    \end{center}
 	\vfill
 	\sf \Large
 	Master Thesis \\
@@ -203,8 +203,8 @@ A much simplified version of tree of life is Evogeneao (\url{https://www.evogene
 	\subfigure[The overview of Evogeneao's tree. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/evogeneao_overview}\label{fig:evogeneao_a}} 
 	\hfill
 	\subfigure[The ancestral relationship between human and songbird. ]{\includegraphics[width=0.45\textwidth]{figures/related_work/evogeneao_relationship}\label{fig:evogeneao_b}} 
-	\caption{Tree of life implementation in iTOL. }
-	\label{fig:iTOL}
+	\caption{Tree of life implementation in Evogeneao. }
+	\label{fig:evogeneao}
 \end{figure}
 
 Finally, there are a wide variety of tree of life visualized for computational biologists. Such visualizations provide rich functionalities for bioinformatic analysis that are well beyond the need of general public and often take efforts to use. An example is iTOL (\url{https://itol.embl.de/itol.cgi},Fig\ref{fig:iTOL}). The design of arranging all leaves on the edge of a circle and all nodes in its interior utilizes space effectively, therefore can be adapted in our implementation. 
@@ -253,11 +253,20 @@ The data visualization project is divided into several sub-problems as follows.
 \chapter{Technical solution} \label{chp:technical_solution}
 %=====================================================================
 \section{Overview}\label{sec:tec_overview}
-This section explains the technical solutions to the problems stated in chapter \ref{chp:problem_statement}. To summarize, the project is divided into data processing in section \ref{sec:tec_data_processing}, database setup in section \ref{sec:tec_database_setup}, back-end development in section \ref{sec:tec_backend} and front-end development in section \ref{sec:tec_frontend}.
+This section explains the technical solutions to the problems stated in chapter \ref{chp:problem_statement}. To summarize, the project is divided into data processing in section \ref{sec:tec_data_processing}, database setup in section \ref{sec:tec_database_setup}, back-end development in section \ref{sec:tec_backend} and front-end development in section \ref{sec:tec_frontend}, and the workflow of the project follows the same order. 
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{figures/technical_solution/architecture}
+	\caption{An overview of the architecture solution for the project. The user interface consists of a map, a tree and a time table. The global states store tree and time parameters that are customized by users, and the current tree nodes attached with fossil ID sent from database. The back-end resolves queries on tree, fossil locations and map, before sending data back to front-end, where the data is visualized. }
+	\label{fig:architecture}
+\end{figure}
+
+Diagram \ref{fig:architecture} proposes a structure of the designed visualization system. The front-end of the web application has a user interface and global states section that stores variables accessible to the components of the user interface. The back-end stores data either in database or as static files, and it responds to the data requests by the front-end, by sending data back to global states section for storage, or directly to the user interface for visualization. Map, tree and time control are the three components that users can view and interact with. The time control panel allows users to select a time period to either view the tree of life, or track the fossil location change due to plate motion. The \emph{time parameters} from global states section listen to user-induced changes in the time control panel, and triggers request of map data, tree data (together with tree parameters stored in global states) or fossil location data (together with fossil ID information stored in global states). The map component receives 1, coastline boundary data in GeoJSON format and 2, fossil location data in database at back-end, to render world map and fossils in a selected time period. The tree component shows the tree of life stored in global states. When users customize the tree view, the tree parameters are updated, and new data on tree nodes with attached fossil IDs is queried from the database. The data is returned to the tree and fossil ID storage in global states, which in turn sends only the tree information to the tree component to be rendered as the new tree. 
 
 \section{Data processing} \label{sec:tec_data_processing}
-\subsection{Fossil data parsing and processing} \label{subsec:fossil_data_processing}
-PBDB dataset is used for both fossil data and tree data. The raw data consists of two csv files that contain 1240202 animal fossil records and 105918 plant fossil records, respectively. Since the two files share the same data attributes, the data is concatenated into one file. Only the attributes that are relevant to this project are kept, which is listed below.\\
+\subsection{Raw data parsing} \label{subsec:raw_data_parsing}
+The data source for fossil records and the tree of life is provided by Paleobiology Database (PBDB). The raw data consists of two csv files that contain 1240202 animal fossil records and 105918 plant fossil records, respectively. Since the two files share the same data attributes, the data is concatenated into one file. Only the attributes that are relevant to this project are parsed, which are listed below.\\
 
 \noindent Extracted attributes in the PBDB dataset:
 \begin{itemize}
@@ -276,33 +285,73 @@ PBDB dataset is used for both fossil data and tree data. The raw data consists o
 	
 \end{itemize}
 
-In addition, there are four additional attributes are appended to the current data frame, for the construction of tree of life in the next step. \\
+In addition, we append a new attribute to the dataset to keep note of which one of the two files a fossil record is originated from: 
 
-\noindent Computed attributes added to the PBDB data frame:
 \begin{itemize}
-	\item \textit{kingdom}: the kingdom name of the fossil record
-	\item \textit{path\_from\_root}: a comma separated string indicating the taxonomic path from a fossil record's name to its root
-	\item \textit{name}: the taxon name of the fossil record on the lowest taxonomic rank
-	\item \textit{unique\_name}: the unique name of the fossil record
+	\item \textit{kingdom}: the kingdom name of the fossil record	
+\end{itemize}
 
+The kingdom of Animalia and Plantae is assigned to each fossil record, depending on whether it is from the animal or plant file, respectively. \\
+
+By observing the available attributes in the raw data, we can determine how it can be used for an interactive visualization. The biodiversity of a given time period is represented by 1, a dynamic tree of life formed by the fossil records during that time period, and 2, the locations of the fossils on a world map of that time period. The \emph{occurrence\_no} uniquely identifies a fossil record. The \emph{max\_ma} and \emph{min\_ma} together describe during which time period(s) the organism was alive. The \emph{lat} and \emph{lng} are required to calculate the location of a record during an ancient time period. Most importantly, a tree of life is needed to host each fossil record on a specific node. To generate a tree structure, information on parent-child relationship is essential. This relationship is represented in the names on each of the taxonomic ranks, in the descending order of \emph{domain}, \emph{kingdom}, \emph{phylum}, \emph{class}, \emph{order}, \emph{family}, \emph{genus}, \emph{species}. The raw data lacks information on \emph{domain} and \emph{species}. However, since all records are either animals or plants, they all belong to the common domain of Eukaryota. When the value of \emph{accepted\_rank} is species, the species name is found in \emph{accepted\_name}. Therefore, the raw data has sufficient information to construct a tree of life with the eight above-mentioned taxonomic ranks as its levels.
+
+The datasets on fossils and tree are created from this parsed raw data. In the next steps, we first prepare the dataset that contains all fossil points, since the tree dataset is created based on it. 
+
+\subsection{Fossil point dataset preparation}
+\label{subsec: fossil_preparation}
+There are two datasets on fossil records. This section produces \emph{fossil point}, the dataset on the taxonomy and the range of age for each record, and sub-section \ref{subsec:coordinate_conversion} produces \emph{fossil location}, the dataset that stores the coordinates of each fossil record on various time periods in history. \\
+
+The purpose of \emph{fossil point} dataset is to accurately describe a given fossil record in relation to the tree of life, without considering its location at a given time period. The parsed raw data already provides \emph{occurrence\_no}, a unique ID code, as well as \emph{max\_ma} and \emph{max\_ma}, which indicate its range of age in million years. However, one more attribute is required to describe its taxonomy, such that it can be attached to a particular node in the tree of life to be constructed in the next step. This attribute is essentially the unique identifier of a node in the tree of life, and will also serve as the link between the fossil point dataset and the tree dataset. Although it is natural to consider \emph{accepted\_name} and \emph{accepted\_rank} in the parsed raw data for this purpose, they cannot be used for the following reasons. Firstly, \emph{accepted\_name} and \emph{accepted\_rank} does not correlate well with the names on the taxonomic ranks, as some \emph{accepted\_rank} does not belong to any of the eight ranks that will be used in the tree of life. As a consequence, some fossil records cannot be assigned to the tree, since the \emph{accepted\_name} values corresponding to the \emph{accepted\_rank} will not be found in the tree. Secondly, the \emph{accepted\_rank} and \emph{accepted\_name} attributes are not unique. For instance, the genus "Banksia" is both an animal taxonomy and a plant taxonomy. In such cases, fossil records can be associated to a incorrect branch if only these two pieces of information is used. Thirdly, many names in the taxonomic ranks are missing. This leads to ambiguity when attaching a particular fossil to the tree of life, when there exists a rank above the \emph{accepted\_rank} with missing names. An example is shown below.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|}
+		\hline
+		occurrence\_no &  accepted\_name & accepted\_rank & kingdom &	phylum & class & order & family & genus & ... \\ \hline
+		3285 &  Tetradium & genus & Plantae & Rhodophyta & NaN & NaN & NaN & Tetradium & ... \\ \hline
+	\end{tabular}
+	\caption{An example row of parsed raw data with missing information.}
+	\label{tab:missing_information}
+\end{table}
+
+With only the \emph{accepted\_name} "Tetradium" on the \emph{accepted\_rank} "genus", we are uncertain about which class, order or family to associate this fossil record to under the phylum of "Rhodophyta". Extra knowledge in taxonomy is needed to retrieve the missing names on the path from "Rhodophyta" to "Tetradium" and this challenge is beyond the scope of the current project. The current solution only attaches the fossil record "3285" to the phylum of "Rhodophyta" and ignores its taxonomy below the phylum level. \\
+
+To solve these three issues and provide a method for uniquely identifying a fossil record to the tree without ambiguity, the attributes \emph{path\_from\_root} and \emph{rank} are introduced. 
+
+\begin{itemize}
+	\item \textit{path\_from\_root}: a comma separated string indicating the path from the root Eukaryota to the name on lowest possible taxonomic rank with no missing names in between
+	\item \textit{rank}: the lowest taxonomic rank of \textit{path\_from\_root}
+\end{itemize}
+
+Since a path begins from the common root Eukaryota and terminates when reaching the lowest rank level "species", or encountering a missing name, the example in Table \ref{tab:missing_information} has "Eukaryota, Plantae, Rhodophyta" as \emph{path\_from\_root} and "phylum" as \emph{rank}. All names in \emph{path\_from\_root} are guaranteed to be present in the tree, since the names are taken from the same taxonomy information that is used to construct the tree. The path from the common root Eukaryota describes the exact location of a node in the tree, which serves as the node's unique identifier. In addition, the fossils associated to the subtree under a certain taxonomy can be easily obtained by string matching this path using regular expression. \\
+
+To calculate \emph{path\_from\_root} and \emph{rank}, the following attributes are used:  \emph{domain}, \emph{kingdom}, \emph{phylum}, \emph{class}, \emph{order}, \emph{family}, \emph{genus}, \emph{accepted\_name}, \emph{accepted\_rank}. Instead of iterating over each row in the parsed raw data, we first aggregate the rows when those values are identical and then perform the iteration, before joining the result with the original data (similar to an "inner join" operation in SQL), in order to avoid repetitive computation. \\
+
+At each iteration process on the aggregated data, we initialize the \emph{path\_from\_root} as "Eukaryota" and visit each taxonomic rank from \emph{kingdom} to \emph{genus}, while appending a comma and the name on each rank to the end of the string and updating the current rank. The iteration terminates at the first missing name, when both \emph{path\_from\_root} and \emph{rank} are those of the missing name's parent. After visiting \emph{genus}, the iteration finishes when the \emph{accepted\_rank} is "genus". Otherwise, the \emph{accepted\_rank} is "species" or "subspecies". Under this circumstance, we append the value of \emph{accepted\_name} to \emph{path\_from\_root}, update \emph{rank} to be the value of \emph{accepted\_rank}, and terminate the iteration. The name in the path after genus can thus be either a species or a subspecies, which is acceptable, since a subspecies name already includes the species name (\emph{i.e.}, the species name of the subspecies "Argopecten circularis impostor" is "Argopecten circularis"). \\
+
+It is important to note that the columns \emph{path\_from\_root} and \emph{rank} are precursors to the tree dataset, since they represent all nodes with at least one fossil record attached. The unique values of the two columns are used for further processing in sub-section \ref{subsec:tree_preparation}. In the meantime, the aggregated data with \emph{path\_from\_root} appended are joined with parsed raw data, such that every fossil record has a path. Finally, the \emph{fossil point} dataset is generated, by extracting the following attributes: 
+
+\begin{itemize}
+	\item \textit{occurrence\_no}
+	\item \textit{path\_from\_root}
+	\item \textit{max\_ma}
+	\item \textit{min\_ma}
 \end{itemize}
 
 
-Firstly, the kingdom of Animalia and Plantae is assigned to each fossil record, depending on whether it is originated from the animal or plant file, respectively. The domain name is not required, since all records are either an animal or a plant, both of which reside in the domain of Eukaryota. \\
-
-The attribute \emph{path\_from\_root} is a comma separated string of taxonomic names in the order of the highest taxonomic rank (domain) to the lowest taxonomic rank with an available name. Note that the dataset does not have an attribute named \emph{species}. Instead, when the species or subspecies name of a record is available, the record would have the attribute \emph{accepted\_rank} labeled as \emph{species} or \emph{subspecies}, and the name is found in the attribute \emph{accepted\_name}. For each fossil record, we iterate from the highest rank, domain, to the lowest rank, species, while appending the name on each rank level to the \emph{path\_from\_root} string. The process terminates when encountering an empty field, or when reaching to the species level. As a consequence, when a record is missing a name on a certain taxonomic rank, its \emph{path\_from\_root} only describes up to the rank above the missing rank to prevent ambiguity of a path, even though the record may have names available below the missing rank. Extra knowledge in taxonomy is needed to retrieve the missing names. Therefore, this challenge is beyond the scope of the current project. \\
-
-The attribute \emph{name} is the name on the lowest rank from \emph{path\_from\_root}, namely, the string after the last comma. This attribute is required to generate \emph{unique\_name}, which serves as an unique identifier of an entry on the to-be-constructed tree of life. The value of \emph{unique\_name} is equivalent to \emph{name}, when \emph{name} is unique. Otherwise, it uses the value of \emph{path\_from\_root}.
-
-\subsection{Generation of tree from taxonomy} \label{subsec:tree_generation}
-The fossil records can be organized in a tree of life that is computed using the taxonomic information from the processed PBDB dataset. The resulted flattened tree structure has the following attribute:
+\subsection{Tree dataset preparation} \label{subsec:tree_preparation}
+The purpose of the tree dataset is to describe every node on the tree of life that can also be easily searched. The following attributes are computed: \\
 
 \begin{itemize}
-	\item \textit{unique\_name}: the unique name of a node or leaf in the tree
-	\item \textit{path\_from\_root}: a comma separated string indicating the taxonomic path from a node's or leaf's name to its root
-	\item \textit{parent}: the unique name of the entry's parent
-	\item \textit{children}: a list of the unique names of the entry's children
+	\item \textit{path\_from\_root}: a comma separated string indicating the path from the root Eukaryota to the name on lowest possible taxonomic rank with no missing names in between
+	\item \textit{parent}: the \textit{path\_from\_root} of its parent
+	\item \textit{name}: the name of the node
+	\item \textit{is\_leaf}: a boolean value that indicates if the node is a leaf node
+	\item \textit{max\_ma}: the earliest age in million years of the fossils in the subtree of this node
+	\item \textit{min\_ma}: the latest age in million years of the fossils in the subtree of this node
 \end{itemize}
+
+For each node, we need a unique identifier, which is provided by \emph{path\_from\_root} as discussed in the above sub-section \ref{subsec: fossil_preparation}. The last \emph{name} of the path is also extracted as an attribute, enabling a more convenient node search when users type a name in the search bar. The node's parent attribute allows searching for all children of a given node. The \emph{is\_leaf} attribute indicates directly whether or not a node has children without searching for them. Lastly, \emph{max\_ma} and \emph{min\_ma} provide a quick way to tell if a node is present during a given time period without searching for fossils attached to its subtree. \\
 
 The tree data contains all nodes and leaves of the tree of life formed by the taxonomy of the fossil records. We initialize the tree data frame by extracting all the unique \emph{path\_from\_root} values from the processed fossil data from section \ref{subsec:fossil_data_processing}. However, there are more nodes to include in the tree. For each entry in the tree represented by its \emph{path\_from\_root}, we must also include each of the upstream ancestor in the tree. For instance, when the item "a,b,c,d" is included, its ancestors "a,b,c", "a,b" and "a" are also present in the tree. Therefore, the next step is to iterate through each of the unique \emph{path\_from\_root} and append the additional nodes. \\
 
@@ -316,13 +365,17 @@ To convert coastlines and fossil locations to ancient time, we use the model pro
 Geological time period data is hierarchical. The hierarchy contains five layers, with the top most layer Phanerozoic. A time period in a deeper layer is shorter. The ancient year that the coordinates are translated into is the middle value rounded to the integer, between the start and end years of the smallest time period, i.e., layer five. 
 
 \section{Database setup} \label{sec:tec_database_setup}
-
-
+The data is stored in a MongoDB database. As shown in above, the fossil data are split into two collections, FossilPoint and FossilLocation. FossilPoint stores the ID, uniqueName,pathFromRoot, maxma and minma of the fossil records. FossilLocation stores the ID, a time point and its coordinate at that time point. The tree data is stored in one collection, TreeNode, containing the uniqueName, pathFromRoot, parent and hasChildren.
+ 
 \section{Back-end development} \label{sec:tec_backend}
-
+The back-end is mainly responsible for processing the data queries requested by user actions from the front-end. There are two main queries to carry out: get a tree with fossil IDs attached to each node, and get the fossil locations of the fossil IDs at a given time in history. 
 
 \section{Front-end development} \label{sec:tec_frontend}
+The map is rendered from static files.\\
 
+The fossil locations are rendered from the results of the fossil location query. \\
+
+The tree is rendered from the tree that is retrieved from the back-end and stored in the global state. 
 
 %=====================================================================
 \chapter{Implementation} \label{chp:implementation}
