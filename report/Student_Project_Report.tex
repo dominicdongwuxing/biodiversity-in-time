@@ -362,7 +362,7 @@ Finally, we calculate the \emph{max\_ma} and \emph{min\_ma} values for each node
 \subsection{Geospatial transformation of map and fossil data} \label{subsec:geospatial_transformation}
 Apart from the tree, a major component of the visualization is a world map responsive to time selection, on which the locations of the fossils are also shown. Therefore, given a geological timescale, we need to calculate the world maps in all time periods. For each fossil point, its coordinates during those time periods are also calculated and stored in the \emph{fossil\_location} dataset. \\
 
-The timescale data is provided by PBDB. Similar to the tree of life, it is also hierarchical, with five layers in total. The highest layer Phanerozoic ranges from 541 million years ago to present time, and the intervals on the fifth layer often spans only several million years. Nevertheless, plates move constantly, such that the location of a given point at the end of a time interval varies from the location at the start of the interval, even if this interval is in the fifth layer of the timescale.  Our solution is to represent the geology of a time period using the middle value of a certain fifth-layer interval. When the user select a time interval in the fifth layer, the coordinates are transformed to that of the interval's middle time point rounded to an integer. When a higher-layer time interval is selected, we first find the fifth-layer in which the middle value of the selected interval falls into, before transforming the coordinates to the integer time point in the middle of that fifth-layer interval. 
+The timescale data is provided by PBDB. Similar to the tree of life, it is also hierarchical, with five layers in total. The highest layer Phanerozoic ranges from 541 million years ago to present time, and the intervals on the fifth layer often spans only several million years. Nevertheless, plates move constantly, such that the location of a given point at the end of a time interval varies from the location at the start of the interval, even if this interval is in the fifth layer of the timescale.  Our solution is to represent the geology of a time period using the middle value of a certain fifth-layer interval. When the user select a time interval in the fifth layer, the coordinates are transformed to that of the interval's middle time point rounded to an integer. When a higher-layer time interval is selected, we first find the fifth-layer in which the middle value of the selected interval falls into, before transforming the coordinates to the integer time point in the middle of that fifth-layer interval. \\
 
 Both the global plate boundaries of modern day and the model to transform a modern location to an ancient one are provided by Matthew \emph{et al.} \cite{matthews2016global}. In this paper, they proposed a high-resolution model on the movement of plates from late Paleozoic (410 million years ago) to modern day. The boundaries of plates that form the coastlines of a world map, as well as the fossil points belonging to their respective plates, can thus be transformed to a desired time point no earlier than 410 million years ago. In the parsed raw PBDB data from sub-section \ref{subsec:raw_data_parsing}, we extract the \emph{lat} and \emph{lng} attributes as the modern coordinate of a fossil point, and \emph{occurrence\_no} as the ID for each fossil point. For each time point, the model transforms both the modern plate boundaries and the modern locations of each fossil record to their ancient coordinates. Finally, the map data is stored as GeoJSON files, and the ancient locations of each fossil point is stored in the \emph{fossil\_location} dataset with the following attributes: \\
 
@@ -389,21 +389,59 @@ An entity relationship is shown in Figure \ref{fig:er}. \emph{FossilLocation} is
 	\caption{An entity relationship diagram of the database.}
 	\label{fig:er}
 \end{figure}
-\section{Back-end development} \label{sec:tec_backend}
-The back-end is mainly responsible for processing the data queries requested by user actions from the front-end. There are two main queries to carry out: get a tree with fossil IDs attached to each node, and get the fossil locations of the fossil IDs at a given time in history. 
+
+\section{Back-end query processing} \label{sec:tec_backend}
+The back-end is responsible for processing the data queries requested by user actions, and sending the result to the front-end. How the queries are resolved is addressed in this sub-section. There are two main queries to carry out: 1, given a time range and tree parameters, obtain a tree of life with fossil IDs attached to each node, and 2, obtain the locations of the fossil records given their IDs and a time point. \\
+
+The first query returns a fossil-attached tree under a requested root node. The following parameters are passed to the database: 
+\begin{itemize}
+	\item \textit{pathFromRoot}: the unique identifier of the root node
+	\item \textit{name}: the root node's name
+	\item \textit{maxma}: the start of the selected time period
+	\item \textit{minma}: the end of the selected time period
+	\item \textit{maxElement}: the maximum number of siblings to retrieve
+	\item \textit{depth}: the number of tree layers to retrieve 
+\end{itemize}
+
+The resulted tree should be rooted by the requested node, with a depth no greater than the parameter \emph{depth}. The number of children under each node is no greater than number of \emph{maxElement}. The IDs of fossils that exist during the time period is also attached to each node. The returned tree has the following attributes:  
+
+\begin{itemize}
+	\item \textit{pathFromRoot}: the unique identifier of the node
+	\item \textit{name}: the node's name
+	\item \textit{parent}: the \textit{pathFromRoot} value of its parent
+	\item \textit{isLeaf}: a boolean value indicating if the node is a leaf node in the returned tree
+	\item \textit{fossils}: the IDs of fossil records existing during the requested time period that either are attached to this node (if the node is not a lead node) or belong to the node's subtree (if the node is a lead node)
+\end{itemize}
+
+To retrieve the tree, we first find the requested root node by searching for its name in \emph{TreeNode}. The \emph{parent} value of the root node is set to null, since although it may have a parent in the complete tree of life, it is the root with respect to the tree to be returned. The fossil IDs attached to the root node is also appended. We then recursively search for its children and append the nodes to the result, until reaching the requested depth, or encountering nodes with no children left. When processing the children of a certain node during the recursion, we check the \emph{isLeaf} value in the following way. If this node has no children, then it is certain a leaf. However, if the node is on the maximum depth, then it is a leaf node with respect to the tree under construction, whether or not it has children in the complete tree of life. When it is a leaf node, we search for the IDs of all fossils belonging to its subtree. This can be easily performed with string matching the \emph{pathFromRoot} of the fossil records using regular expression, since all desired fossils' paths beigin with the \emph{pathFromRoot} of the current node. When the node is not a leaf node, we only attach fossils that are strictly associated with this node, by exact string matching of \emph{pathFromRoot} between this node and the fossil records. To improve efficiency, the sibling nodes are filtered before continuing to the next recursion level. A count value is assigned to each sibling node, which is the number of fossil records in \emph{FossilPoint} belonging to its subtree that is present during the time period. Then the siblings are ranked in descending order, and the top \emph{maxElement} number of siblings are kept. \\
+
+The second query receives a time point of interest and an array of nodes in the current tree, which is a result of the first query. However, only the relevant fields are passed: 
+\begin{itemize}
+	\item \textit{name}: the node's name
+	\item \textit{fossils}: the IDs of fossils attached to the node (if it is a lead node) or its subtree (if it is not a leaf node)
+\end{itemize}
+
+From \emph{FossilLocation}, we retrieve the fossils' coordinates by their IDs and time point, and organize the result in the following manner:
+
+\begin{itemize}
+	\item \textit{id}: the fossil record's ID
+	\item \textit{coordinate}: the fossil location at the time point, in the form of [latitude, longitude]
+	\item \textit{name}: the name to which the fossil record is associated in the current tree
+	\item \textit{mya}: the requested time point 
+\end{itemize}
 
 \section{Front-end development} \label{sec:tec_frontend}
-The map is rendered from static files.\\
+\subsection{The global states}\label{subsec:tec_frontend_global_states}
+\subsection{The user interface: time control component}\label{subsec:tec_frontend_time}
+\subsection{The user interface: tree component}\label{subsec:tec_frontend_tree}
+\subsection{The user interface: map component}\label{subsec:tec_frontend_map}
 
-The fossil locations are rendered from the results of the fossil location query. \\
-
-The tree is rendered from the tree that is retrieved from the back-end and stored in the global state. 
 
 %=====================================================================
 \chapter{Implementation} \label{chp:implementation}
 %=====================================================================
 \section{Code structure} \label{sec:implementation_code_structure}
-\section{Data process stacks}\label{sec:implementation_data_processing}
+\section{Data processing stacks}\label{sec:implementation_data_processing}
 \section{Web development stacks}\label{sec:implementation_web_development}
 
 %=====================================================================
@@ -435,18 +473,6 @@ The tree is rendered from the tree that is retrieved from the back-end and store
 
 \listoffigures
 \listoftables
-%=====================================================================
-\appendix
-\chapter{Appendix}
-The appendix of this thesis is stored on a DVD which is attached to the end of the printed document. It includes the follow items: 
-\begin{enumerate}
-    \item \textbf{code/} The full application code. 
-    \item \textbf{report/} The complete report as latex source
-    \item \textbf{Masterarbeit.pdf} This report in its digital version
-    \item{Abstract.txt} The abstract to this thesis in English
-    \item {Zusfsg.txt} The abstract to this thesis in German
-\end{enumerate}
-
 %=====================================================================
 \end{document}
 

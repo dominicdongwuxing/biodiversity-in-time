@@ -3,8 +3,9 @@ import * as d3 from "d3"
 import { GlobalStateContext } from "./GlobalStateContext";
 
 
-export default function TreeGraph({ data, pathFromRoot }) {
-  const { setSearchName, searchName, flatTree, setFlatTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
+export default function TreeGraph() {
+  const { setSearchName, searchName, currentTree, setCurrentTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
+
   const ref = useRef(null)
   useEffect(() => {
 
@@ -27,70 +28,38 @@ export default function TreeGraph({ data, pathFromRoot }) {
       .outerRadius(d => d.y1)
     
     const root = d3.stratify()
-      .id(d => d.uniqueName)
+      .id(d => d.pathFromRoot)
       .parentId(d => d.parent)
-      (data);
+      (currentTree);
 
     // when doing the roll up, note that if the node is a leaf of the to-be-visualized tree,
     // then use the total count,
     // i.e, all fossil count on this node and below (if it has children but just not shown)
     // but when it is a node, then use the fossil count identified to this node
     // to avoid double counting!
+    root.sum(d => d.fossils.length)
 
-    root.sum(d => d.leaf ? d.count : d.fossilCountIdentifiedToName)
-    
     partitionLayout(root)
-    //console.log(root)
+
     const svg = d3.select(ref.current)
       .attr("width", width)
       .attr("height", height)
       //.attr("viewBox", [0, 0, width, width])
     
-    // red: #9E2E24 #fc1443
-    // yellow: #E2AF42 #96890f
-    // green: #4d814b #0b7821
-    // purple: #7f4b81 #c717eb
-    // cyan: #68aba1 #066066
-    let colors = ["#fc1443","#0b7821","#c717eb","#3cc9a1","#d6c415"]
-    const firstColor = colors[0]
-    const lastColor = colors[colors.length - 1]
     let focusedNodesFromMap = []
     root.each((d) => {
-      if (nodesOnFocus.includes(d.data.uniqueName)){
-        const ancestors = d.ancestors().map(i => i.data.uniqueName)
+      if (nodesOnFocus.includes(d.data.pathFromRoot)){
+        const ancestors = d.ancestors().map(i => i.data.pathFromRoot)
         ancestors.forEach(ancestor => {
           if (!focusedNodesFromMap.includes(ancestor)){
             focusedNodesFromMap.push(ancestor)
           }
         })
       }
-      // only assign color when d is not the root
-      if (d.depth) {
-        // if there are still colors left, then pick one to assign to the node
-        // and remove this color from the color list
-        if (colors.length) {
-          const currentColor = colors[0]
-          d.color = currentColor
-          const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
-          if (nodeInFlatTree) nodeInFlatTree.color = currentColor
-          colors = colors.splice(1)
-        } else { // if no color is left then find the color of its parent
-          // but if the parent has no color assgined yet (in case it is depth 1 and colors 
-          // are used up) then just use the last color 
-          const currentColor = d.ancestors()[1].color || lastColor
-          d.color = currentColor 
-          const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
-          if (nodeInFlatTree) nodeInFlatTree.color = currentColor
-        }
-      } else {
-        // assign blackcolor to points at root
-        const nodeInFlatTree = flatTree.find(item => item.uniqueName === d.data.uniqueName)
-        if (nodeInFlatTree) nodeInFlatTree.color = "black"
-      }
     })
 
     // renew the flatTree after adding the colors
-    setFlatTree(flatTree)
+    setCurrentTree(currentTree)
 
     //
     svg.selectAll("g").remove()
@@ -99,6 +68,8 @@ export default function TreeGraph({ data, pathFromRoot }) {
     const breadcrumbUpstream = svg
       .append("g")
       .attr("transform", `translate(0,${breadcrumbParams.gap})`)
+    
+    const pathFromRoot = currentTree.find(node => node.parent === null).pathFromRoot
     makeBreadcrumb (breadcrumbUpstream, pathFromRoot.split(","))
     
 
@@ -117,24 +88,19 @@ export default function TreeGraph({ data, pathFromRoot }) {
       .data(root.descendants())
       .join("path")
       .attr("d", arcGenerator)
-      .attr("id", d => d.data.uniqueName)
-      .attr("fill", d => {
-        if (d.depth == 0) return "black"
-        return d.color
-      })
-      .attr("opacity", d => focusedNodesFromMap.includes(d.data.uniqueName) ? 1 : 0.6 )
+      .attr("id", d => d.data.pathFromRoot)
+      .attr("fill", d => d.data.color)
+      .attr("opacity", d => focusedNodesFromMap.includes(d.data.pathFromRoot) ? 1 : 0.6 )
       .attr("stroke","black")
       .attr("cursor", "pointer")
       .attr("stroke-width", 0.5)
       .on("click", (e, d) => {
-        //d3.select(ref.current).remove("g")
-
-        setSearchName(d.data.uniqueName)})
+        setSearchName(d.data.name)})
 
     path
       .on("mouseover", (e, focus) => {
         const ancestorsDescending = focus.ancestors().reverse()
-        setNodesOnFocus([focus.data.uniqueName])
+        setNodesOnFocus([focus.data.pathFromRoot])
         path
           .attr("opacity", (d) => {
             return ancestorsDescending.includes(d) ? 1 : 0.5
@@ -151,13 +117,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
     
     path
       .append("title")
-      .text(d => {
-        // in case the unique name is a long name (pathFromRoot) due to repetition
-        // break the potential long name in a list and just show the last name
-        // i.e., the name on the lowest level
-        const nameList = d.data.uniqueName.split(",")
-        return nameList[nameList.length - 1]
-      })
+      .text(d => d.data.name)
     
   
     const labelOuterCircle = arc
@@ -178,16 +138,18 @@ export default function TreeGraph({ data, pathFromRoot }) {
         const y = d.y1 + 0.05 * d.y1//(d.y0 + d.y1) / 2 
         return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`
       })
-      .text(d => {
-        const nameList = d.data.uniqueName.split(",")[d.data.uniqueName.split(",").length-1].split(" ")
-        if (nameList.length === 1) return nameList[0] 
-        else if (nameList.length === 2) return nameList[0].charAt(0).toUpperCase() + ". " + nameList[1]
-        else if(nameList.length === 3) return nameList[0].charAt(0).toUpperCase() + ". " + nameList[1] + nameList[2]
-      });
-      
+      .text(getName);
+    
+    function getName(d) {
+      const nameList = d.data.name.split(" ")
+      if (nameList.length === 1) return nameList[0] 
+      else if (nameList.length === 2) return nameList[0].charAt(0).toUpperCase() + ". " + nameList[1]
+      else if(nameList.length === 3) return nameList[0].charAt(0).toUpperCase() + ". " + nameList[1] + nameList[2]
+    }
+
     function labelVisible(d) {
-      
-      const enoughLength = getTextWidth(d.data.uniqueName, fontSize) + d.y1 < width / 2
+      const name = getName(d)
+      const enoughLength = getTextWidth(name, fontSize) + d.y1 < width / 2
       const enoughWidth = d.x1 - d.x0 > 0.05
       return enoughWidth && enoughLength ? 1 : 0
     }
@@ -212,8 +174,8 @@ export default function TreeGraph({ data, pathFromRoot }) {
       let finalWidth = breadcrumbParams.width
       // if the name is a species/subspecies then it should have a gap 
       let name
-      if (typeof(d) != "string" && d.data.uniqueName.split(" ").length > 1) {
-        name = d.data.uniqueName.slice(d.data.uniqueName.lastIndexOf(",")+1)
+      if (typeof(d) != "string" && d.data.pathFromRoot.split(" ").length > 1) {
+        name = d.data.pathFromRoot.slice(d.data.pathFromRoot.lastIndexOf(",")+1)
         finalWidth = 2 * breadcrumbParams.gap + getTextWidth(name, breadcrumbParams.fontSize)
       } else if (typeof(d) == "string" && d.split(" ").length > 1) {
         name = d.slice(d.lastIndexOf(",")+1)
@@ -229,12 +191,12 @@ export default function TreeGraph({ data, pathFromRoot }) {
         .data(pathList)
         .join("polygon")
         .attr("points", breadcrumbPoints)
-        .attr("fill",d => typeof(d) == "string" ? "black" : d.color)
+        .attr("fill",d => typeof(d) == "string" ? "black" : d.data.color)
         .attr("transform", (d, i) => {
           return `translate(${i * (breadcrumbParams.width + breadcrumbParams.gap)},0)`
         })
         .on("click", (e,d) => {
-          const text = typeof(d) == "string" ? d : d.data.uniqueName
+          const text = typeof(d) == "string" ? d : d.data.pathFromRoot
           setSearchName(text)
         })
         .attr("cursor","pointer")
@@ -259,7 +221,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
           if (typeof(d) == "string") {
             name = d
           } else {
-            const fullName = d.data.uniqueName.slice(d.data.uniqueName.lastIndexOf(",") + 1)
+            const fullName = d.data.pathFromRoot.slice(d.data.pathFromRoot.lastIndexOf(",") + 1)
             const nameList = fullName.split(" ")
             if (nameList.length === 1) return nameList[0] 
             else if (nameList.length === 2) name = nameList[0].charAt(0).toUpperCase() + ". " + nameList[1]
@@ -270,7 +232,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
           return name 
         })
         .on("click", (e,d) => {
-          setSearchName(typeof(d) == "string" ? d : d.data.uniqueName)
+          setSearchName(typeof(d) == "string" ? d : d.data.pathFromRoot)
         })
         .attr("cursor","pointer")
     }
@@ -298,7 +260,7 @@ export default function TreeGraph({ data, pathFromRoot }) {
       return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
     }
 
-  },[data, searchName, flatTree])
+  },[searchName, currentTree])
   return (
     <svg ref={ref} style={{
       width: "100%",

@@ -93,5 +93,8 @@ pbdb_parsed_processed = pbdb_parsed.merge(pbdb_aggregated)
 pbdb_parsed_processed.to_csv(os.path.join(PBDBDIR, "pbdb_parsed_processed.csv"), index = False)
 
 # extract the necessary attributes to create fossil point dataset on individual record
+fossils = pbdb_parsed_processed[["occurrence_no","path_from_root","max_ma","min_ma"]]
+
+# also save the whole file
 with open(os.path.join(PBDBDIR, "fossils.json"),"w") as f:
-    json.dump(json.loads(pbdb_parsed_processed[["occurrence_no","path_from_root","max_ma","min_ma"]].to_json(orient="records")),f)
+    json.dump(json.loads(fossils.to_json(orient="records")),f)

@@ -1,9 +1,10 @@
 const { TreeNode, FossilPoint, FossilLocation } = require("../models")
 const {performance} = require("perf_hooks")
 
-const getFlatTreeByUniqueNameWithMya = async (parent, args, context, info) => {
+const getTreeWithFossils = async (parent, args, context, info) => {
     const start = performance.now()
 
+    // rank the siblings with number of fossils in each node's subtree and take the top args.maxElement 
     const sortAndTrimChildren = (children) => {
         children = children.filter(i => i.count)
         return children.sort((a,b)=>{
@@ -17,66 +18,64 @@ const getFlatTreeByUniqueNameWithMya = async (parent, args, context, info) => {
         }).slice(0,args.maxElement)
     }
 
-    const getCounts = async (input) => {
-        const count = await FossilPoint.countDocuments({
-            pathFromRoot: {$regex: `^${input.pathFromRoot}`}, 
-            minma: {$lte: args.maxma}, 
-            maxma: {$gte: args.minma} })
-
-        const fossilCountIdentifiedToName = await FossilPoint.countDocuments({
-            pathFromRoot: input.pathFromRoot, 
-            minma: {$lte: args.maxma}, 
-            maxma: {$gte: args.minma} })
-        //if (input.uniqueName === "Mammalia") console.log(`Mammalia, from ${args.maxma} to ${args.minma} fossilUnderName ${fossilCountIdentifiedToName}`)
-        
-        return {count, fossilCountIdentifiedToName}
-    }
-
+    // get the top args.maxElement number of children of a node with fossils attached to the subtree during the time period
     const getChildren = async (inputRoot) => {
         let children = await TreeNode.find({
-            parent: inputRoot.uniqueName,
-            //pathFromRoot: {$regex: `^${inputRoot.pathFromRoot},[^,]+$`},
+            parent: inputRoot.pathFromRoot,
             minma: {$lte: args.maxma}, 
             maxma: {$gte: args.minma}})
 
         for (let child of children) {
-            const {count, fossilCountIdentifiedToName} = await getCounts(child)
-            child.count = count
-            child.fossilCountIdentifiedToName = fossilCountIdentifiedToName
+            // calculate the relative depth with respect to the result tree's root
+            const depth = child.pathFromRoot.split(",").length - rootDepth
+            // if the node is already a leaf node, or it reaches the requested depth, then it is a lead node
+            // for the current tree to be returned
+            child.isLeaf = (child.isLeaf || depth == args.depth) ? true : false
+            if (child.isLeaf) {
+                // if the node is leaf node for the result tree, then we find fossils under its subtree
+                // i.e. the fossils with pathFromRoot that starts from the node's pathFromRoot
+                child.fossils = await FossilPoint.find({
+                    pathFromRoot: {$regex: `^${child.pathFromRoot}`}, 
+                    minma: {$lte: args.maxma}, 
+                    maxma: {$gte: args.minma} }).then(res => res.map(i => i.id)) 
+                // the count on fossils in its subtree is just the length of fossils 
+                child.count = child.fossils.length
+            } else {
+                // if the node is not leaf node for the result tree, then we find fossils attached to this node
+                // i.e. the fossils with pathFromRoot that equals the node's pathFromRoot
+                child.fossils = await FossilPoint.find({
+                    pathFromRoot: child.pathFromRoot, 
+                    minma: {$lte: args.maxma}, 
+                    maxma: {$gte: args.minma} }).then(res => res.map(i => i.id))
+                // we still need to count the number of fossils belonging to its subtree
+                child.count = await FossilPoint.countDocuments({
+                    pathFromRoot: {$regex: `^${child.pathFromRoot}`}, 
+                    minma: {$lte: args.maxma}, 
+                    maxma: {$gte: args.minma} })
+            }
         }
-
+        // only take the top children ranked by number of fossils during the time period attachde to its subtree
         children = sortAndTrimChildren(children)
 
-        // append fossil point information to each tree node
-        for (let child of children) {
-            child.fossil = await FossilPoint.find({
-                uniqueName: child.uniqueName, 
-                minma: {$lte: args.maxma}, 
-                maxma: {$gte: args.minma} })
-        }
         return children
     }
 
     const buildTree = async(currentRoot) => {
+        // if the node has no fossils (then it's the root node), then get fossils attached to it
+        // in the same way as in getChildren
+        if (!currentRoot.fossils) {
+            currentRoot.fossils = await FossilPoint.find({
+            pathFromRoot: currentRoot.pathFromRoot, 
+            minma: {$lte: args.maxma}, 
+            maxma: {$gte: args.minma} }).then(res => res.map(i => i.id))
+        }
+        // add this node to the flat tree
+        treeNodes.push(currentRoot)
+        // calculate the relative depth with respect to the result tree's root
         const depth = currentRoot.pathFromRoot.split(",").length - rootDepth
-        //console.log("Checking Depth at", depth)
-        if (depth <= args.depth) {
-            currentRoot.leaf = (currentRoot.children[0].length == 2 || depth == args.depth) ? true : false
-            // also add fossil points
-            currentRoot.fossils = currentRoot.leaf ? 
-                await FossilPoint.find({
-                    pathFromRoot: {$regex: `^${currentRoot.pathFromRoot}`}, 
-                    minma: {$lte: args.maxma}, 
-                    maxma: {$gte: args.minma} }).then(res => res.map(i => i.id)) : 
-                
-                await FossilPoint.find({
-                    uniqueName: currentRoot.uniqueName, 
-                    minma: {$lte: args.maxma}, 
-                    maxma: {$gte: args.minma} }).then(res => res.map(i => i.id))
-
-
-            treeNodes.push(currentRoot)
-            //const children = await TreeNode.find({parent: currentRoot.uniqueName, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(sortAndTrimChildren)
+        // recursively build flat tree by visiting its children
+        // if the current relative depth is still less than the requested depth
+        if (depth < args.depth) {
             const children = await getChildren(currentRoot)
             for (let child of children) {
                 await buildTree (child)
@@ -84,37 +83,34 @@ const getFlatTreeByUniqueNameWithMya = async (parent, args, context, info) => {
         }
     }
     
+    // init the flat tree to be returned
     const treeNodes = []
-    let root
-    const uniqueName = args.uniqueName.charAt(0).toUpperCase() + args.uniqueName.slice(1)
-    root = await TreeNode.find({uniqueName: uniqueName, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => res[0])
+
+    // capitalize the name 
+    const name = args.name.charAt(0).toUpperCase() + args.name.slice(1)
+
+    // find the root by its name
+    const root = await TreeNode.find({name: name, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => res[0])
     
-    // if unique name cannot be found then it is one of the repetitive names and the unique name is the pathFromRoot
-    if (!root) {
-        // then just take the first one one of the repetitive names as root
-        // NEED FIX HERE! 
-        root = await TreeNode.find({name: args.uniqueName, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => res[0])
-    }
+    // although the root may have parent in the tree of life, with respect to the result tree, it should have no parent
     root.parent = null
+    // compute the depth of root with respect to Eukaryota, the common root
     const rootDepth = root.pathFromRoot.split(",").length
-    const {count, fossilCountIdentifiedToName} = await getCounts(root)
-    root.count = count
-    root.fossilCountIdentifiedToName = fossilCountIdentifiedToName
-    console.log(root.count,root.fossilCountIdentifiedToName)
     await buildTree(root)
     const end = performance.now()
     console.log("time in ms: ", end - start)
-    //console.log(treeNodes)
-    return {pathFromRoot: root.pathFromRoot, treeNodes: treeNodes}
+    return treeNodes
 }
-const getFossilLocationFromTreeWithMya  = async (parent, args, context, info) => {
+const getFossilLocations  = async (parent, args, context, info) => {
     //return []
-    console.log(`mya: ${args.mya}, minma: ${args.minma}, maxma: ${args.maxma}, flatTree: ${args.flatTree.map(i => i.uniqueName)}`)
-    let idToUniqueName = {}
+    //console.log(`mya: ${args.mya}, minma: ${args.minma}, maxma: ${args.maxma}, flatTree: ${args.flatTree.map(i => i.uniqueName)}`)
+    // create a id to name look up object
+    let idToName = {}
+    // extract all IDs in a list
     const allFossilIds = []
-    args.flatTree.forEach(item => {
+    args.tree.forEach(item => {
         item.fossils.forEach(fossilId => {
-            idToUniqueName[fossilId] = item.uniqueName
+            idToName[fossilId] = item.Name
             allFossilIds.push(fossilId)
         })
     })
@@ -124,7 +120,7 @@ const getFossilLocationFromTreeWithMya  = async (parent, args, context, info) =>
         return {
             id: i.id,
             coordinate: i.coordinate,
-            uniqueName: idToUniqueName[i.id],
+            name: idToName[i.id],
             mya: args.mya
         }
     })
@@ -169,8 +165,8 @@ const getFossilLocationFromTreeWithMya  = async (parent, args, context, info) =>
 
 
 module.exports = {
-    getFlatTreeByUniqueNameWithMya,
-    getFossilLocationFromTreeWithMya
+    getTreeWithFossils,
+    getFossilLocations
 }
 
 

@@ -1,8 +1,9 @@
 import React, {useState} from "react"
 
-type flatTree = {
-    leaf: boolean, 
-    uniqueName: string,
+type currentTree = {
+    isLeaf: boolean, 
+    name: string,
+    parent: string,
     pathFromRoot: string
     color: string,
     fossils: string[]
@@ -27,8 +28,8 @@ interface GlobalState {
     setSearchDepth: (value: number) => void;
     searchMaxElement: number;
     setSearchMaxElement: (value: number) => void;
-    flatTree: flatTree;
-    setFlatTree: (value: flatTree) => void;
+    currentTree: currentTree;
+    setCurrentTree: (value: currentTree) => void;
     nodesOnFocus: string[];
     setNodesOnFocus: (value: string[]) => void;
 }
@@ -36,7 +37,7 @@ interface GlobalState {
 const GlobalStateContext = React.createContext<Partial<GlobalState>>({})
 
 function GlobalStateProvider (props) {
-    const [searchName, setSearchName] = useState("Mammalia");
+    const [searchName, setSearchName] = useState("Primates");
     const [wikiRefRange, setWikiRefRange] = useState([])
     const [myaValueMap, setMyaValueMap] = useState(Math.floor(0.0117/2));
     const [myaRangeMap, setMyaRangeMap] = useState([0.0117,0]);
@@ -46,7 +47,7 @@ function GlobalStateProvider (props) {
     //const [myaRangeTree, setMyaRangeTree] = useState([28.1,23.03]);
     const [searchDepth, setSearchDepth] = useState(2);
     const [searchMaxElement, setSearchMaxElement] = useState(2);
-    const [flatTree, setFlatTree] = useState([])
+    const [currentTree, setCurrentTree] = useState([])
     const [nodesOnFocus, setNodesOnFocus] = useState([])
 
     return (
@@ -59,7 +60,7 @@ function GlobalStateProvider (props) {
             myaRangeTree, setMyaRangeTree,
             searchDepth, setSearchDepth,
             searchMaxElement, setSearchMaxElement,
-            flatTree, setFlatTree,
+            currentTree, setCurrentTree,
             nodesOnFocus, setNodesOnFocus
             }}
         >

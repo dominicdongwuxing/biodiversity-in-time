@@ -3,13 +3,13 @@ import styles from "./Map.module.css";
 import * as d3 from "d3";
 import axios from "axios"
 import { useQuery } from "@apollo/client";
-import {FOSSILPOINT_QUERY, FOSSILLOCATION_QUERY} from "./Queries"
+import {FOSSILLOCATION_QUERY} from "./Queries"
 import { GlobalStateContext } from "./GlobalStateContext";
 import DataFetcher from "./DataFetcher";
 
 const Tectonics = ({ geojson, fossilData }) => {
   const ref = useRef();
-  const {myaValueMap, myaRangeTree, flatTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
+  const {myaValueMap, myaRangeTree, currentTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
   const mapYear = myaValueMap
   useEffect(() => {
 
@@ -65,7 +65,7 @@ const Tectonics = ({ geojson, fossilData }) => {
       .attr("cy", (d) => projection(d.coordinate)[1])
       .attr("r", "5px")
       .attr("fill", (d) => {
-        return flatTree.find(item => item.uniqueName === d.uniqueName).color
+        return currentTree.find(item => item.pathFromRoot === d.pathFromRoot).color
       })
       .attr("fill-opacity", d => {
         if (!nodesOnFocus.length) {
@@ -84,7 +84,7 @@ const Tectonics = ({ geojson, fossilData }) => {
       })
       //.on("mouseout", (e,d) => setNodesOnFocus([""])) 
       
-  },[geojson, fossilData, flatTree, nodesOnFocus]);
+  },[geojson, fossilData, currentTree, nodesOnFocus]);
   
   return (
     <>
@@ -103,7 +103,7 @@ const Tectonics = ({ geojson, fossilData }) => {
 };
 
 export default function Map() {
-  const {myaValueMap, searchName, myaRangeTree, flatTree} = useContext(GlobalStateContext)
+  const {myaValueMap, searchName, myaRangeTree, currentTree} = useContext(GlobalStateContext)
   const [mapData, setMapData] = useState(null)
   useEffect(() => {
     const urlForMap = "./resources/newMap/Global_coastlines_2015_v1_low_res_reconstructed_" + myaValueMap + "Ma.geojson"
@@ -118,14 +118,15 @@ export default function Map() {
         // if (loading) {
         //   return "Loading fossils on map..."
         // }
+        //console.log(fossilData)
         return (
           <div className={styles.map}>
             {myaValueMap > 410 ? 
             "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
-            mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilLocationFromTreeWithMya ? (
+            mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilLocations ? (
               <Tectonics 
                 geojson={mapData.getMapAtMya} 
-                fossilData={fossilData.getFossilLocationFromTreeWithMya} 
+                fossilData={fossilData.getFossilLocations} 
               />
             ) : mapData && mapData.getMapAtMya ? (
               <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />

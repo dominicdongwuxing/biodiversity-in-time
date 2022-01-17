@@ -27,8 +27,8 @@ export default function TreeGraphCustomize ({data }) {
       };
     
       const handleBackToPrevious = () => {
-        if (data && data.getFlatTreeByUniqueNameWithMya) {
-          const path = data.getFlatTreeByUniqueNameWithMya.pathFromRoot.split(",")
+        if (data && data.getTreeWithFossils) {
+          const path = data.getTreeWithFossils.find(i => i.parent === null).pathFromRoot.split(",")
           if (path.length < searchDepth) {
             setSearchName("Eukaryota");
           } else {
@@ -48,7 +48,7 @@ export default function TreeGraphCustomize ({data }) {
                 setSearchMaxElement(event.target.value as number);
                 }}
             >
-                {makeOptions(Array.from({ length: 20 }, (_, i) => i + 1))}
+                {makeOptions(Array.from({ length: 10 }, (_, i) => i + 1))}
             </Select>
             <FormHelperText>max item</FormHelperText>
             </FormControl>
@@ -68,7 +68,7 @@ export default function TreeGraphCustomize ({data }) {
             </FormControl>
         
 
-            {data?.getFlatTreeByUniqueNameWithMya.pathFromRoot !== "Eukaryota" ? (
+            {data?.getTreeWithFossils.find(i => i.parent === null).pathFromRoot !== "Eukaryota" ? (
                 <Button 
                 style={{margin: "5px", maxHeight: "25px"}}
                 variant="contained" 
@@ -80,7 +80,7 @@ export default function TreeGraphCustomize ({data }) {
             ) : null}
             {data ? (
                 <BackToPrevious
-                data={data.getFlatTreeByUniqueNameWithMya}
+                data={data.getTreeWithFossils}
                 handleBackToPrevious={handleBackToPrevious}
                 searchDepth={searchDepth}
                 />
@@ -91,11 +91,9 @@ export default function TreeGraphCustomize ({data }) {
 
 function BackToPrevious ({ data, searchDepth, handleBackToPrevious }) {
     if (data) {
-      const path = data.pathFromRoot.split(",");
+      const path = data.find(i => i.parent === null).pathFromRoot.split(",");
       if (path.length > searchDepth + 1) {
-        // in case unique name is a path, just show the name on lowest level
-        const uniqueName = path[path.length - searchDepth - 1]
-        const displayName = uniqueName.split(",").reverse()[0]
+        const displayName = path[path.length - searchDepth - 1]
         return (
           <Button
             style={{margin: "5px", maxHeight: "25px"}}

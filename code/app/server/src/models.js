@@ -3,21 +3,15 @@ const { Schema } = mongoose
 
 const TreeNodeSchema = new Schema({
     name: {type: String,required: true, index: true},
-    uniqueName: {type: String, required: true, index: true},
-    rank: {type: String,required: true},
     pathFromRoot: {type: String,required: true, index: true},
-    wikiRef: {type: String},
     parent: {type: String, index: true},
-    count: {type: Number,required: true},
     maxma: {type: Number,required: true},
     minma: {type: Number,required: true},
-    fossilCountIdentifiedToName: {type: Number, required: true},
-    children: {type: [String]}
+    isLeaf: {type: Boolean, required: true}
 })
 
 const FossilPointSchema = new Schema({
     id: {type: String, required: true, index: true},
-    uniqueName: {type: String, required: true, index: true},
     pathFromRoot: {type: String,required: true, index: true},
     maxma: {type: Number,required: true},
     minma: {type: Number,required: true}
@@ -30,7 +24,7 @@ const FossilLocationSchema = new Schema({
 })
 
 const TreeNode = mongoose.model("TreeNode", TreeNodeSchema)
-TreeNode.collection.createIndex({pathFromRoot: 1, parent: 1, uniqueName: 1})
+TreeNode.collection.createIndex({pathFromRoot: 1, parent: 1, name: 1})
 
 const FossilPoint = mongoose.model("FossilPoint", FossilPointSchema)
 FossilPoint.collection.createIndex({id: 1, uniqueName: 1})

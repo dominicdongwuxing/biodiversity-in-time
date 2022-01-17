@@ -30,9 +30,11 @@ mongoose
 
       //TreeNode.collection.drop()
       //console.log("A random tree node is: " + await TreeNode.findOne())
-
+      //console.log(await TreeNode.countDocuments({}))
+      
       //FossilPoint.collection.drop()
       //console.log("A random fossil point is: " + await FossilPoint.findOne())
+      //console.log(await FossilPoint.countDocuments())
 
       //FossilLocation.collection.drop()
       //console.log("A random fossil location is: " + await FossilLocation.findOne())

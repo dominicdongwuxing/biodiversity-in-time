@@ -38,27 +38,65 @@ db.once("open", () => {
 
   
   async function insert() {
-    // const treeNodes = require("../../../../dataset/pbdb/tree.json")
-    // try {
-    //   await TreeNode.insertMany(treeNodes).then(()=>{console.log("All tree nodes inserted")})
-    // } catch (err) {
-    //   console.error(err)
-    // } 
+    // insert tree data
+    const treeData = JSON.parse(fs.readFileSync(pbdbDir + "tree.json")).map(node => {
+      const rename = {
+        pathFromRoot: node["path_from_root"],
+        name: node["name"],
+        parent: node["parent"],
+        maxma: node["max_ma"],
+        minma: node["min_ma"],
+        isLeaf: node["is_leaf"]
+      }
+      return rename
+    })
 
+    try {
+      await TreeNode.insertMany(treeData).then(()=>{console.log("All tree nodes inserted")})
+    } catch (err) {
+      console.error(err)
+    } 
+
+    // insert fossil point data
+    const fossilPointData = JSON.parse(fs.readFileSync(pbdbDir + "fossils.json")).map(node => {
+      const rename = {
+        pathFromRoot: node["path_from_root"],
+        maxma: node["max_ma"],
+        minma: node["min_ma"],
+        id: node["occurrence_no"]
+      }
+      return rename
+    })
+    // break into size of 200000 for each insertion
+    const bulkSize = 200000
+    const splits = Math.ceil(fossilPointData.length / bulkSize)
+    for (let i = 0; i < splits; i++) {
+      const dataSplit = fossilPointData.slice(i*bulkSize, (i+1)*bulkSize)
+      try {
+        await FossilPoint.insertMany(dataSplit).then(()=>{console.log(`All fossil points inserted ${i+1} out of ${splits}`)})
+      } catch (err) {
+        console.error(err)
+      } 
+    }
+
+    // insert fossil location data
+    // insert the fossil data by taxon names, since they are split into three main parts
     const taxonNames = ["ArthropodaBrachiopodaChordata","Mollusca","rest"]
     for (let taxonName of taxonNames) {
+      // iterate through all years and insert for each year
       for (let year of years) {
         const dataDir = pbdbDir + "geojsonReconstruction/" + taxonName + "/"
         const fileName = `${dataDir}${taxonName}_reconstructed_${year}Ma.json`
         const data = JSON.parse(fs.readFileSync(fileName)).features.map(record => {
-            const alteredRecord = {
+            const fieldExtration = {
                 id: record.properties.id,
                 mya: year,
                 coordinate: record.geometry.coordinates
             }
-            return alteredRecord
+            return fieldExtration
         })
         console.log(`${taxonName} year ${year} has data length: ${data.length}`)
+        // break into size of 200000 for each insertion
         const bulkSize = 200000
         const splits = Math.ceil(data.length / bulkSize)
         for (let i = 0; i < splits; i++) {

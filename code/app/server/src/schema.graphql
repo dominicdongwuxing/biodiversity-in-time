@@ -1,45 +1,28 @@
 type Query {
-    getFlatTreeByUniqueNameWithMya (
-        uniqueName: String, minma: Float, maxma: Float, maxElement: Int, depth: Int
-    ): FlatTree
+    getTreeWithFossils (
+        name: String, minma: Float, maxma: Float, maxElement: Int, depth: Int
+    ): [TreeNode]
 
-    getFossilLocationFromTreeWithMya (
-        flatTree: [FlatTreeElementForSearch], mya: Int, minma: Float, maxma: Float
+    getFossilLocations (
+        tree: [TreeNodeInput], mya: Int
     ): [FossilLocation]
 }
 
-input FlatTreeElementForSearch {
-    leaf: Boolean!
-    uniqueName: String!
-    pathFromRoot: String!
-    color: String
+input TreeNodeInput {
+    name: String
     fossils: [String]
-}
-
-type FlatTree {
-    pathFromRoot: String!
-    treeNodes: [TreeNode]
 }
 
 type TreeNode {
     name: String!
-    uniqueName: String!
-    rank: String!
     pathFromRoot: String!
-    wikiRef: String
     parent: String
-    count: Int!
-    fossilCountIdentifiedToName: Int!
-    maxma: Float!
-    minma: Float!
-    children: [String]
-    leaf: Boolean
     fossils: [String]
+    isLeaf: Boolean!
 }
 
 type FossilPoint {
     id: String!
-    uniqueName: String!
     maxma: Float!
     minma: Float!
     pathFromRoot: String!
@@ -49,5 +32,5 @@ type FossilLocation {
     id: String!
     mya: Int!
     coordinate: [Float!]!
-    uniqueName: String!
+    name: String!
 }
