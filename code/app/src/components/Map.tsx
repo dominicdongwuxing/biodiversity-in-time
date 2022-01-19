@@ -1,15 +1,18 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import styles from "./Map.module.css";
 import * as d3 from "d3";
+import * as lasso from "d3-lasso"
 import axios from "axios"
 import { useQuery } from "@apollo/client";
 import {FOSSILLOCATION_QUERY} from "./Queries"
 import { GlobalStateContext } from "./GlobalStateContext";
 import DataFetcher from "./DataFetcher";
 
+
+
 const Tectonics = ({ geojson, fossilData }) => {
   const ref = useRef();
-  const {myaValueMap, myaRangeTree, currentTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
+  const {myaValueMap, myaRangeTree, currentTree, treeFocusNode, setNodesOnFocus } = useContext(GlobalStateContext)
   const mapYear = myaValueMap
   useEffect(() => {
 
@@ -19,7 +22,7 @@ const Tectonics = ({ geojson, fossilData }) => {
     let fossilArray = []
     fossilData.forEach(fossilLocation => {
         count++
-        fossilArray.push({coordinate: fossilLocation.coordinate, id: fossilLocation.id, uniqueName: fossilLocation.uniqueName})
+        fossilArray.push({coordinate: fossilLocation.coordinate, id: fossilLocation.id, pathFromRoot: fossilLocation.pathFromRoot})
     })
     //console.log(`There are ${count} fossil points to render`)
 
@@ -54,7 +57,13 @@ const Tectonics = ({ geojson, fossilData }) => {
       .attr("stroke","black")
       .attr("stroke-width","0.2px")
 
-    
+
+    // first build a name to color look up from currentTree
+    const pathToColor = {}
+    currentTree.forEach(node => {
+      pathToColor[node.pathFromRoot] = node.color
+    })
+
     const fossilPoints = d3.select(ref.current)
       .select("g")
       .selectAll("circle")
@@ -64,14 +73,12 @@ const Tectonics = ({ geojson, fossilData }) => {
       .attr("cx", (d) => projection(d.coordinate)[0])
       .attr("cy", (d) => projection(d.coordinate)[1])
       .attr("r", "5px")
-      .attr("fill", (d) => {
-        return currentTree.find(item => item.pathFromRoot === d.pathFromRoot).color
-      })
+      .attr("fill", (d) => pathToColor[d.pathFromRoot])
       .attr("fill-opacity", d => {
-        if (!nodesOnFocus.length) {
+        if (!treeFocusNode.length) {
           return 0.2
         } else {
-          if (nodesOnFocus.includes(d.uniqueName)) {
+          if (treeFocusNode === d.pathFromRoot) {
             return 1
           } else {
             return 0
@@ -79,12 +86,62 @@ const Tectonics = ({ geojson, fossilData }) => {
         }
       })
       .on("mouseover", (e,d) => {
-        //setNodesOnFocus([d.uniqueName])
-        console.log("fossil id: ",d.id, "uniqueName:", d.uniqueName)
+        setNodesOnFocus([d.pathFromRoot])
+        //console.log("fossil id: ",d.id, "name:", d.pathFromRoot.split(",")[d.pathFromRoot.split(",").length-1])
       })
-      //.on("mouseout", (e,d) => setNodesOnFocus([""])) 
+      .on("mouseout", (e,d) => setNodesOnFocus([])) 
+    
+
+      //console.log(d3.lasso())
+      function lasso_start () {
+        lasso.items()
+            .attr("r",3.5) // reset size
+            .classed("not_possible",true)
+            .classed("selected",false);
+      };
+
+      function lasso_draw () {
       
-  },[geojson, fossilData, currentTree, nodesOnFocus]);
+          // Style the possible dots
+          lasso.possibleItems()
+              .classed("not_possible",false)
+              .classed("possible",true);
+
+          // Style the not possible dot
+          lasso.notPossibleItems()
+              .classed("not_possible",true)
+              .classed("possible",false);
+      };
+
+      function lasso_end () {
+          // Reset the color of all dots
+          lasso.items()
+              .classed("not_possible",false)
+              .classed("possible",false);
+
+          // Style the selected dots
+          lasso.selectedItems()
+              .classed("selected",true)
+              .attr("r",7);
+
+          // Reset the style of the not selected dots
+          lasso.notSelectedItems()
+              .attr("r",3.5);
+
+      };
+      
+      // const lasso = d3.lasso()
+      //     .closePathSelect(true)
+      //     .closePathDistance(100)
+      //     .items(fossilPoints)
+      //     .targetArea(ref.current)
+      //     .on("start",lasso_start)
+      //     .on("draw",lasso_draw)
+      //     .on("end",lasso_end);
+      
+      // d3.select(ref.current).call(lasso);
+      
+  },[geojson, fossilData, currentTree, treeFocusNode]);
   
   return (
     <>
@@ -108,7 +165,7 @@ export default function Map() {
   useEffect(() => {
     const urlForMap = "./resources/newMap/Global_coastlines_2015_v1_low_res_reconstructed_" + myaValueMap + "Ma.geojson"
     axios.get(urlForMap).then((res) => {
-      setMapData({"getMapAtMya" : res.data})
+      setMapData(res.data)
      })
   },[myaValueMap])
 
@@ -118,18 +175,17 @@ export default function Map() {
         // if (loading) {
         //   return "Loading fossils on map..."
         // }
-        //console.log(fossilData)
         return (
           <div className={styles.map}>
             {myaValueMap > 410 ? 
             "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
-            mapData && mapData.getMapAtMya && fossilData && fossilData.getFossilLocations ? (
+            mapData && fossilData ? (
               <Tectonics 
-                geojson={mapData.getMapAtMya} 
+                geojson={mapData} 
                 fossilData={fossilData.getFossilLocations} 
               />
-            ) : mapData && mapData.getMapAtMya ? (
-              <Tectonics geojson={mapData.getMapAtMya} fossilData={[]} />
+            ) : mapData ? (
+              <Tectonics geojson={mapData} fossilData={[]} />
             ) : "Loading map..."}
           </div>
         )

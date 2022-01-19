@@ -84,7 +84,7 @@ function TimeControlTable () {
     const slider = g
       .append("g")
       .attr("transform",`translate(${padding},${offset + breadcrumbParams.height + gap})`)
-  
+
     const sliderGenerator = sliderBottom()
       .min(541)
       .max(0)
@@ -383,7 +383,7 @@ function TimeControlTable () {
       const sequence = d
         .ancestors()
         .map((d) => d.data.name)
-        .reverse();
+        .reverse().slice(1);
   
       return `${sequence.join(" > ")}`;
     });

@@ -6,7 +6,7 @@ const FOSSILLOCATION_QUERY = gql`
     getFossilLocations (tree: $tree, mya: $mya) {
       id
       coordinate
-      name
+      pathFromRoot
       mya
     }
   }

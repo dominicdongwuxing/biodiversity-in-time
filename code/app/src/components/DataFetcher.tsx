@@ -12,7 +12,7 @@ export default function DataFetcher (props) {
         variables = {
             tree: currentTree.map(node => {
                 return {
-                    name: node.name,
+                    pathFromRoot: node.pathFromRoot,
                     fossils: node.fossils
                 }
             }),
@@ -29,9 +29,9 @@ export default function DataFetcher (props) {
     }
 
     const { loading, error, data } = useQuery(props.query, { variables: variables })
-    if (queryName == "retrieveLocations") {
-        console.log(variables, data)
-    }
+    // if (queryName == "retrieveLocations") {
+    //     console.log(variables, data)
+    // }
     //console.log(`at mya ${myaValueMap}`,data)
     return (
         <div>

@@ -105,12 +105,12 @@ const getFossilLocations  = async (parent, args, context, info) => {
     //return []
     //console.log(`mya: ${args.mya}, minma: ${args.minma}, maxma: ${args.maxma}, flatTree: ${args.flatTree.map(i => i.uniqueName)}`)
     // create a id to name look up object
-    let idToName = {}
+    let idToPath = {}
     // extract all IDs in a list
     const allFossilIds = []
-    args.tree.forEach(item => {
-        item.fossils.forEach(fossilId => {
-            idToName[fossilId] = item.Name
+    args.tree.forEach(node => {
+        node.fossils.forEach(fossilId => {
+            idToPath[fossilId] = node.pathFromRoot
             allFossilIds.push(fossilId)
         })
     })
@@ -120,7 +120,7 @@ const getFossilLocations  = async (parent, args, context, info) => {
         return {
             id: i.id,
             coordinate: i.coordinate,
-            name: idToName[i.id],
+            pathFromRoot: idToPath[i.id],
             mya: args.mya
         }
     })

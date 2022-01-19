@@ -18,9 +18,9 @@ export default function Tree() {
           {(loading, error, data) => {
             let { setCurrentTree, currentTree } = useContext(GlobalStateContext)
             useEffect(()=> {
-              if (data && data.getTreeWithFossils) {
+              // if there is data returned
+              if (data) {
                 let currentTree = []
-                //console.log(currentTree)
                 // compute colors here with d3! 
                 const root = d3.stratify()
                   .id(d => d.pathFromRoot)
@@ -55,19 +55,69 @@ export default function Tree() {
                   currentTree.push({...d.data, color: currentColor})
                 })
                 setCurrentTree(currentTree)
-                //console.log(currentTree)
-              } else if (!loading && !data?.getFlatTreeByUniqueNameWithMya) {
-                console.log("data is",data)
+              } else {
+                // then it's loading, then we set currentTree to be empty
+                // the dependency array only has to listen to data, 
+                // so if the data doesn't exist after loading, the component doesn't need to rerender
+                // and the currentTree is still empty
                 setCurrentTree([])
               }
-            },[data])
+            },[data]) 
+
+            // if the query hasn't returned, so it's loading
+            if (loading) {
+              return (
+                  <div className={styles.tree}>
+                    <TreeSearchName />
+                    <p>Data is loading...</p>  
+                    <TreeGraphCustomize 
+                      data={data} />
+                </div>
+                )
+            // if the query is not loading, and there is something in the current tree
+            } else if (currentTree.length){
+              return (
+                <div className={styles.tree}>
+                  <TreeSearchName />
+                    <TreeGraph />                  
+                    <br></br>
+                  <TreeGraphCustomize 
+                    data={data} />
+              </div>
+              )
+            // if the query is not loading, there is no current tree, but there is data 
+            // that means the data is being processed in the frontend to get current tree
+            // as long as the tree graph's concern, it's still loading
+            } else if (data) {
+              return (
+                <div className={styles.tree}>
+                  <TreeSearchName />
+                  <p>Data is loading...</p>  
+                  <TreeGraphCustomize 
+                    data={data} />
+              </div>
+              )
+            } else {
+              // if the query is not loading and no current tree and no data, that means nothing has been returned from query
+              return (
+                <div className={styles.tree}>
+                  <TreeSearchName />
+                  <p>This taxon doesn't exist in the time period, pleast try a new search :)</p>
+                  <TreeGraphCustomize 
+                    data={data} />
+              </div>
+              )
+            }
             return (
               <div className={styles.tree}>
                 <TreeSearchName />
-
+                {/* render tree when there is something in currentTree,
+                when it's loading or when it's done loading, there is data, 
+                but there is nothing in the currentTree yet, then also
+                show it is loading, otherwise show the taxon doesn't exist*/}
                 {loading ? "Data is loading..." : currentTree.length? (
                   <TreeGraph />
-                ) : "This taxon doesn't exist in the time period, pleast try a new search :)" }
+                ) : data ? "Data is loading..." : "This taxon doesn't exist in the time period, pleast try a new search :)" }
                 <br></br>
                 
                 <TreeGraphCustomize 

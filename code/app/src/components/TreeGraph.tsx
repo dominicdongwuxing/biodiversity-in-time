@@ -4,19 +4,21 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 
 export default function TreeGraph() {
-  const { setSearchName, searchName, currentTree, setCurrentTree, nodesOnFocus, setNodesOnFocus } = useContext(GlobalStateContext)
+  const { setSearchName, searchName, currentTree, setCurrentTree, nodesOnFocus, setTreeFocusNode } = useContext(GlobalStateContext)
 
   const ref = useRef(null)
   useEffect(() => {
 
-    const {height, width, margins, radius, backgroundColor, fontSize, breadcrumbParams} = {
+    const {height, width, margins, radius, backgroundColor, paddingTop, fontSize, breadcrumbParams, opacities} = {
       height: 315,
       width: 350,
       margins: { top: 20, right: 30, bottom: 30, left: 40 },
+      paddingTop: 5,
       radius: 90,
       backgroundColor: "white",
       fontSize: "0.5em",
-      breadcrumbParams: {width: 90, tipWidth: 4, height: 18, gap: 1, fontSize: 12}
+      breadcrumbParams: {width: 90, tipWidth: 4, height: 18, gap: 1, fontSize: 12},
+      opacities:{normal: 0.7, unFocus: 0.2}
     };
 
     const partitionLayout = d3.partition().size([2*Math.PI, radius])
@@ -46,13 +48,13 @@ export default function TreeGraph() {
       .attr("height", height)
       //.attr("viewBox", [0, 0, width, width])
     
-    let focusedNodesFromMap = []
+    let focusedNodesRender = []
     root.each((d) => {
       if (nodesOnFocus.includes(d.data.pathFromRoot)){
         const ancestors = d.ancestors().map(i => i.data.pathFromRoot)
         ancestors.forEach(ancestor => {
-          if (!focusedNodesFromMap.includes(ancestor)){
-            focusedNodesFromMap.push(ancestor)
+          if (!focusedNodesRender.includes(ancestor)){
+            focusedNodesRender.push(ancestor)
           }
         })
       }
@@ -67,7 +69,7 @@ export default function TreeGraph() {
     // make a trail of breadcrumbs from Eukaryota to the current root
     const breadcrumbUpstream = svg
       .append("g")
-      .attr("transform", `translate(0,${breadcrumbParams.gap})`)
+      .attr("transform", `translate(0,${breadcrumbParams.gap + paddingTop})`)
     
     const pathFromRoot = currentTree.find(node => node.parent === null).pathFromRoot
     makeBreadcrumb (breadcrumbUpstream, pathFromRoot.split(","))
@@ -77,11 +79,18 @@ export default function TreeGraph() {
     // make a trail of breadcrumbs from current root to the item on hover
     const breadcrumbDownstream = svg
       .append("g")
-      .attr("transform", `translate(0,${breadcrumbParams.height + breadcrumbParams.gap * 2})`)
+      .attr("transform", `translate(0,${breadcrumbParams.height + breadcrumbParams.gap * 2 + paddingTop})`)
+
+    // if there is only one single focus then we can even show the breadcrumb
+    if (nodesOnFocus.length === 1) {
+      const node = root.descendants().find(i => i.data.pathFromRoot === nodesOnFocus[0])
+      makeBreadcrumb (breadcrumbDownstream, node.ancestors().reverse().slice(1))
+    }
+    
 
     const arc = svg
       .append("g")
-      .attr("transform", `translate(${width/2},${height/2 + breadcrumbParams.height})`)
+      .attr("transform", `translate(${width/2 + 70},${height/2 + breadcrumbParams.height})`)
 
     const path = arc
       .selectAll("path")
@@ -90,7 +99,7 @@ export default function TreeGraph() {
       .attr("d", arcGenerator)
       .attr("id", d => d.data.pathFromRoot)
       .attr("fill", d => d.data.color)
-      .attr("opacity", d => focusedNodesFromMap.includes(d.data.pathFromRoot) ? 1 : 0.6 )
+      .attr("opacity", d => focusedNodesRender.includes(d.data.pathFromRoot) ? 1 : nodesOnFocus.length ? opacities.unFocus : opacities.normal )
       .attr("stroke","black")
       .attr("cursor", "pointer")
       .attr("stroke-width", 0.5)
@@ -100,17 +109,22 @@ export default function TreeGraph() {
     path
       .on("mouseover", (e, focus) => {
         const ancestorsDescending = focus.ancestors().reverse()
-        setNodesOnFocus([focus.data.pathFromRoot])
+        setTreeFocusNode(focus.data.pathFromRoot)
         path
-          .attr("opacity", (d) => {
-            return ancestorsDescending.includes(d) ? 1 : 0.5
+          .attr("opacity", (d) => ancestorsDescending.includes(d) ? 1 : opacities.unFocus)
+        labelOuterCircle
+          .attr("fill-opacity", d => {
+            if (!labelVisible(d)) return 0
+            return ancestorsDescending.includes(d) ? 1 : opacities.unFocus
           })
         makeBreadcrumb (breadcrumbDownstream, ancestorsDescending.slice(1))
       })
       .on("mouseout", () => {
-        setNodesOnFocus([])
+        setTreeFocusNode("")
         path
-          .attr("opacity", 0.6)
+          .attr("opacity", opacities.normal)
+        labelOuterCircle
+          .attr("fill-opacity", labelVisible)
         makeBreadcrumb (breadcrumbDownstream, [])
       })
       
@@ -150,8 +164,20 @@ export default function TreeGraph() {
     function labelVisible(d) {
       const name = getName(d)
       const enoughLength = getTextWidth(name, fontSize) + d.y1 < width / 2
-      const enoughWidth = d.x1 - d.x0 > 0.05
-      return enoughWidth && enoughLength ? 1 : 0
+      const enoughWidth = d.x1 - d.x0 > 0.09
+      if (enoughWidth && enoughLength) {
+        if (nodesOnFocus.length) {
+          if (nodesOnFocus.includes(d.data.pathFromRoot)){
+            return 1
+          } else {
+            return opacities.unFocus
+          }
+        } else {
+          return 1
+        }
+      } else {
+        return 0
+      }
     }
 
     // Via https://stackoverflow.com/questions/1636842/svg-get-text-element-width
@@ -256,11 +282,10 @@ export default function TreeGraph() {
     function labelTransform(d) {
       const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
       const y = (d.y0 + d.y1) / 2 * radius;
-      console.log(x)
       return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
     }
 
-  },[searchName, currentTree])
+  },[searchName, currentTree, nodesOnFocus])
   return (
     <svg ref={ref} style={{
       width: "100%",

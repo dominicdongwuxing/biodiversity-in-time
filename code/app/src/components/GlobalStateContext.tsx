@@ -30,6 +30,8 @@ interface GlobalState {
     setSearchMaxElement: (value: number) => void;
     currentTree: currentTree;
     setCurrentTree: (value: currentTree) => void;
+    treeFocusNode: string;
+    setTreeFocusNode: (value: string) => void;
     nodesOnFocus: string[];
     setNodesOnFocus: (value: string[]) => void;
 }
@@ -49,6 +51,7 @@ function GlobalStateProvider (props) {
     const [searchMaxElement, setSearchMaxElement] = useState(2);
     const [currentTree, setCurrentTree] = useState([])
     const [nodesOnFocus, setNodesOnFocus] = useState([])
+    const [treeFocusNode, setTreeFocusNode] = useState("")
 
     return (
         <GlobalStateContext.Provider value={{
@@ -61,7 +64,8 @@ function GlobalStateProvider (props) {
             searchDepth, setSearchDepth,
             searchMaxElement, setSearchMaxElement,
             currentTree, setCurrentTree,
-            nodesOnFocus, setNodesOnFocus
+            nodesOnFocus, setNodesOnFocus,
+            treeFocusNode, setTreeFocusNode
             }}
         >
             {props.children}
