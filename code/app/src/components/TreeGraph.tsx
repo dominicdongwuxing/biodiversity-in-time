@@ -4,7 +4,7 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 
 export default function TreeGraph() {
-  const { setSearchName, searchName, currentTree, setCurrentTree, nodesOnFocus, setTreeFocusNode } = useContext(GlobalStateContext)
+  const { setName, currentTree, mapFocusNode, setTreeFocusNode } = useContext(GlobalStateContext)
 
   const ref = useRef(null)
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function TreeGraph() {
     
     let focusedNodesRender = []
     root.each((d) => {
-      if (nodesOnFocus.includes(d.data.pathFromRoot)){
+      if (mapFocusNode.includes(d.data.pathFromRoot)){
         const ancestors = d.ancestors().map(i => i.data.pathFromRoot)
         ancestors.forEach(ancestor => {
           if (!focusedNodesRender.includes(ancestor)){
@@ -59,9 +59,6 @@ export default function TreeGraph() {
         })
       }
     })
-
-    // renew the flatTree after adding the colors
-    setCurrentTree(currentTree)
 
     //
     svg.selectAll("g").remove()
@@ -82,8 +79,8 @@ export default function TreeGraph() {
       .attr("transform", `translate(0,${breadcrumbParams.height + breadcrumbParams.gap * 2 + paddingTop})`)
 
     // if there is only one single focus then we can even show the breadcrumb
-    if (nodesOnFocus.length === 1) {
-      const node = root.descendants().find(i => i.data.pathFromRoot === nodesOnFocus[0])
+    if (mapFocusNode.length === 1) {
+      const node = root.descendants().find(i => i.data.pathFromRoot === mapFocusNode[0])
       makeBreadcrumb (breadcrumbDownstream, node.ancestors().reverse().slice(1))
     }
     
@@ -99,12 +96,12 @@ export default function TreeGraph() {
       .attr("d", arcGenerator)
       .attr("id", d => d.data.pathFromRoot)
       .attr("fill", d => d.data.color)
-      .attr("opacity", d => focusedNodesRender.includes(d.data.pathFromRoot) ? 1 : nodesOnFocus.length ? opacities.unFocus : opacities.normal )
+      .attr("opacity", d => focusedNodesRender.includes(d.data.pathFromRoot) ? 1 : mapFocusNode.length ? opacities.unFocus : opacities.normal )
       .attr("stroke","black")
       .attr("cursor", "pointer")
       .attr("stroke-width", 0.5)
       .on("click", (e, d) => {
-        setSearchName(d.data.name)})
+        setName(d.data.name)})
 
     path
       .on("mouseover", (e, focus) => {
@@ -166,8 +163,8 @@ export default function TreeGraph() {
       const enoughLength = getTextWidth(name, fontSize) + d.y1 < width / 2
       const enoughWidth = d.x1 - d.x0 > 0.09
       if (enoughWidth && enoughLength) {
-        if (nodesOnFocus.length) {
-          if (nodesOnFocus.includes(d.data.pathFromRoot)){
+        if (mapFocusNode.length) {
+          if (mapFocusNode.includes(d.data.pathFromRoot)){
             return 1
           } else {
             return opacities.unFocus
@@ -223,7 +220,7 @@ export default function TreeGraph() {
         })
         .on("click", (e,d) => {
           const text = typeof(d) == "string" ? d : d.data.pathFromRoot
-          setSearchName(text)
+          setName(text)
         })
         .attr("cursor","pointer")
       
@@ -258,7 +255,7 @@ export default function TreeGraph() {
           return name 
         })
         .on("click", (e,d) => {
-          setSearchName(typeof(d) == "string" ? d : d.data.pathFromRoot)
+          setName(typeof(d) == "string" ? d : d.data.pathFromRoot)
         })
         .attr("cursor","pointer")
     }
@@ -285,7 +282,7 @@ export default function TreeGraph() {
       return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
     }
 
-  },[searchName, currentTree, nodesOnFocus])
+  },[name, currentTree, mapFocusNode])
   return (
     <svg ref={ref} style={{
       width: "100%",

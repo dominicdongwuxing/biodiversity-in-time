@@ -9,7 +9,7 @@ import {
 import { GlobalStateContext } from "./GlobalStateContext";
 
 export default function TreeGraphCustomize ({data }) {
-    const { setSearchName, setSearchDepth, setSearchMaxElement, searchDepth, searchMaxElement } = useContext(GlobalStateContext)
+    const { setName, setMaxElement, depth, setDepth, maxElement } = useContext(GlobalStateContext)
     const makeOptions = (valueArr) => {
         const optionArr = [];
         for (const value of valueArr) {
@@ -23,16 +23,16 @@ export default function TreeGraphCustomize ({data }) {
       };
     
       const handleBackToTop = () => {
-        setSearchName("Eukaryota");
+        setName("Eukaryota");
       };
     
       const handleBackToPrevious = () => {
         if (data && data.getTreeWithFossils) {
           const path = data.getTreeWithFossils.find(i => i.parent === null).pathFromRoot.split(",")
-          if (path.length < searchDepth) {
-            setSearchName("Eukaryota");
+          if (path.length < depth) {
+            setName("Eukaryota");
           } else {
-            setSearchName(path[path.length - searchDepth - 1]);
+            setName(path[path.length - depth - 1]);
           }
         }
       };
@@ -42,10 +42,10 @@ export default function TreeGraphCustomize ({data }) {
             <FormControl>
             <Select
                 style={{margin: "5px", maxHeight: "25px"}}
-                value={searchMaxElement}
+                value={maxElement}
                 size="small"
                 onChange={(event) => {
-                setSearchMaxElement(event.target.value as number);
+                setMaxElement(event.target.value as number);
                 }}
             >
                 {makeOptions(Array.from({ length: 10 }, (_, i) => i + 1))}
@@ -56,10 +56,10 @@ export default function TreeGraphCustomize ({data }) {
             <FormControl>
             <Select
                 style={{margin: "5px", maxHeight: "25px"}}
-                value={searchDepth}
+                value={depth}
                 size="small"
                 onChange={(event) => {
-                setSearchDepth(event.target.value as number);
+                setDepth(event.target.value as number);
                 }}
             >
                 {makeOptions(Array.from({ length: 5 }, (_, i) => i + 1))}
@@ -82,7 +82,7 @@ export default function TreeGraphCustomize ({data }) {
                 <BackToPrevious
                 data={data.getTreeWithFossils}
                 handleBackToPrevious={handleBackToPrevious}
-                searchDepth={searchDepth}
+                searchDepth={depth}
                 />
             ) : null}
         </div>

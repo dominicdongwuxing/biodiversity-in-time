@@ -10,10 +10,9 @@ import DataFetcher from "./DataFetcher";
 
 
 
-const Tectonics = ({ geojson, fossilData }) => {
+const MapView  = ({ geojson, fossilData }) => {
   const ref = useRef();
-  const {myaValueMap, myaRangeTree, currentTree, treeFocusNode, setNodesOnFocus } = useContext(GlobalStateContext)
-  const mapYear = myaValueMap
+  const {mya, currentTree, treeFocusNode, setMapFocusNode } = useContext(GlobalStateContext)
   useEffect(() => {
 
     const features = geojson.features
@@ -86,10 +85,10 @@ const Tectonics = ({ geojson, fossilData }) => {
         }
       })
       .on("mouseover", (e,d) => {
-        setNodesOnFocus([d.pathFromRoot])
+        setMapFocusNode([d.pathFromRoot])
         //console.log("fossil id: ",d.id, "name:", d.pathFromRoot.split(",")[d.pathFromRoot.split(",").length-1])
       })
-      .on("mouseout", (e,d) => setNodesOnFocus([])) 
+      .on("mouseout", (e,d) => setMapFocusNode([])) 
     
 
       //console.log(d3.lasso())
@@ -160,14 +159,14 @@ const Tectonics = ({ geojson, fossilData }) => {
 };
 
 export default function Map() {
-  const {myaValueMap, searchName, myaRangeTree, currentTree} = useContext(GlobalStateContext)
+  const {mya} = useContext(GlobalStateContext)
   const [mapData, setMapData] = useState(null)
   useEffect(() => {
-    const urlForMap = "./resources/newMap/Global_coastlines_2015_v1_low_res_reconstructed_" + myaValueMap + "Ma.geojson"
+    const urlForMap = "./resources/newMap/Global_coastlines_2015_v1_low_res_reconstructed_" + mya + "Ma.geojson"
     axios.get(urlForMap).then((res) => {
       setMapData(res.data)
      })
-  },[myaValueMap])
+  },[mya])
 
   return (
     <DataFetcher query={FOSSILLOCATION_QUERY}>
@@ -177,15 +176,15 @@ export default function Map() {
         // }
         return (
           <div className={styles.map}>
-            {myaValueMap > 410 ? 
+            {mya > 410 ? 
             "Earliest map data is 410 million years ago, please try a more recent time period :)" : 
             mapData && fossilData ? (
-              <Tectonics 
+              <MapView 
                 geojson={mapData} 
                 fossilData={fossilData.getFossilLocations} 
               />
             ) : mapData ? (
-              <Tectonics geojson={mapData} fossilData={[]} />
+              <MapView  geojson={mapData} fossilData={[]} />
             ) : "Loading map..."}
           </div>
         )

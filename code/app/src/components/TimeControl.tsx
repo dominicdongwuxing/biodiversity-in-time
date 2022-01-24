@@ -24,18 +24,11 @@ intervals.forEach(item => {
   }
 })
 
-export default function TimeControl() {
-  return (
-    <div id="timeControl" className={styles.timeControl}>
-      <TimeControlTable />
-    </div>
-  );
-}
-
-function TimeControlTable () {
-  const { setMyaValueMap, 
-          myaValueMap, 
-          setMyaRangeTree, 
+export default function TimeControl () {
+  const { setMya, 
+          mya, 
+          setMaxma, 
+          setMinma
          } = useContext(GlobalStateContext)
   const bluePalette = ["#00163d","#08306b","#0a4a90", "#1864aa","#2f7ebc","#4b97c9"]
   const ref = useRef()
@@ -58,7 +51,7 @@ function TimeControlTable () {
 
     let hideSmallTicks = true;
 
-    let myaValueMapCurrent = myaValueMap
+    let myaCurrent = mya
 
     const font = `${fontSize}px sans-serif`;
 
@@ -92,7 +85,7 @@ function TimeControlTable () {
       .tickFormat(d3.format('.1f'))
       .marks(smallestIntervals.map(i => i.mya))
       .tickValues(tickValues)
-      .default(myaValueMap)
+      .default(mya)
       .handle(
         d3
           .symbol()
@@ -100,8 +93,8 @@ function TimeControlTable () {
           .size(30)()
       )
       .on("onchange", (val) => {
-        if (parseInt(val) > myaValueMapCurrent) {
-          sliderGenerator.value(myaValueMapCurrent)
+        if (parseInt(val) > myaCurrent) {
+          sliderGenerator.value(myaCurrent)
         } else {
           const intervalName = smallestIntervals.find(i => i.mya == val).name
           const interval = root.descendants().find(i => i.data.name == intervalName && i.height == 0)
@@ -110,8 +103,8 @@ function TimeControlTable () {
         }
       })
       .on("end", (val) => {
-        if (parseInt(val) <= myaValueMapCurrent) {
-          setMyaValueMap(parseInt(val))
+        if (parseInt(val) <= myaCurrent) {
+          setMya(parseInt(val))
         }
       })
   
@@ -516,9 +509,10 @@ function TimeControlTable () {
       const middleMyaMap = mapInterval.mya
       const mapIntervalName = mapInterval.name
 
-      setMyaValueMap(middleMyaMap)
-      setMyaRangeTree([node.data.start , node.data.end])
-      myaValueMapCurrent = middleMyaMap
+      setMya(middleMyaMap)
+      setMaxma(node.data.start)
+      setMinma(node.data.end)
+      myaCurrent = middleMyaMap
       const geologicalTime = ["Geologic Time"].concat(root.descendants().find(i => i.data.name == mapIntervalName).ancestors().map(node => node.data.name).reverse().slice(1))
       const treeOfLifeTime = ["Tree of Life Time"].concat(ancestorPath.slice(1))
       makeBreadcrumb (geologicalBreadcrumb, geologicalTime)
@@ -610,22 +604,14 @@ function TimeControlTable () {
   
   },[])
   return (
-    <div className={styles.timeControl}>
+    <div id="timeControl" className={styles.timeControl}>
        <svg ref={ref}></svg>
     </div>
    
   )
 }
 
-function TimeControlGeologicalBar ({ setGeologicalTime, geologicalTime }) {
-  useEffect(() => {
 
-  })
-}
-
-function TimeControlTreeOfLifeBar ({ treeOfLifeTime, setTreeOfLifeTime }) {
-
-}
 
 // function MyaMainScrollBar({ handleChange, myaMain }) {
 //   const timeRange = [0, 1000];

@@ -7,12 +7,12 @@ import {
   import { useTreeStyles } from "./TreeStyles";
 
 export default function TreeSearchName () {
-    const {setSearchName} = useContext(GlobalStateContext)
+    const {setName} = useContext(GlobalStateContext)
     const [searchNameBuffer, setSearchNameBuffer] = useState("");
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        setSearchName(searchNameBuffer);
+        setName(searchNameBuffer);
       };
 
     return (

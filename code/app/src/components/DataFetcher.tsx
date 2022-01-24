@@ -5,30 +5,30 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 export default function DataFetcher (props) {
     // use passed query and variables to get data and show loading message or props.children
-    const {searchName, myaRangeTree, searchMaxElement, searchDepth, currentTree, myaValueMap} = useContext(GlobalStateContext)
+    const {name, maxma, minma, maxElement, depth, currentTree, mya} = useContext(GlobalStateContext)
     const queryName = props.query.definitions[0].name.value
-    let variables
+    let queryVariables
     if (queryName == "retrieveLocations") {
-        variables = {
+        queryVariables = {
             tree: currentTree.map(node => {
                 return {
                     pathFromRoot: node.pathFromRoot,
                     fossils: node.fossils
                 }
             }),
-            mya: myaValueMap,
+            mya: mya,
           }
     } else {
-        variables = {
-            name: searchName,
-            maxElement: searchMaxElement,
-            depth: searchDepth,
-            maxma: myaRangeTree[0],
-            minma: myaRangeTree[1],
+        queryVariables = {
+            name: name,
+            maxElement: maxElement,
+            depth: depth,
+            maxma: maxma,
+            minma: minma,
           }
     }
 
-    const { loading, error, data } = useQuery(props.query, { variables: variables })
+    const { loading, error, data } = useQuery(props.query, { variables: queryVariables })
     // if (queryName == "retrieveLocations") {
     //     console.log(variables, data)
     // }
