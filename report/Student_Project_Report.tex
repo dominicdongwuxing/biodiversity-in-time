@@ -569,9 +569,8 @@ When building the API between the data requesting front-end and the database, Gr
 \end{figure}
 
 \subsection{Front-end} \label{subsec: implementation_frontend}
-The front-end design from section \ref{sec:tec_frontend} is realized in a React framework. Conceptually, the front-end consists of the global states and the user interface, as seen in Figure \ref{fig:architecture} in chapter \ref{chp:technical_solution}. The implementation of global states are listed in Figure \ref{fig:global_state}. All global states can be classified into three categories. For time parameters, \emph{mya} records the time point at which to show the world map and fossil locations, while \emph{maxma} and \emph{minma} together define the time period to retrieve the fossils and to form the tree of life. For tree parameters, \emph{name} is the name of the root node of the tree of interest; \emph{depth} and \emph{maxElement} are the number of layers and the max number of siblings under each node when retrieving the tree of life. Finally, \emph{mapFocusNode} and \emph{treeFocusNode} are the tree node identified by \emph{pathFromRoot} on which a user is hovering in map (users can highlight a tree node by hovering on a fossil point that is attached to it) and tree component, respectively. They are implemented to communicate the highlighting effect in between map and tree components (Figure \ref{fig:tree_hover} and Figure \ref{fig:map}). \\
+The front-end design from section \ref{sec:tec_frontend} is realized in a React framework. Conceptually, the front-end consists of the global states and the user interface, as seen in Figure \ref{fig:architecture} in chapter \ref{chp:technical_solution}. The implementation of global states are listed in Figure \ref{fig:global_state}. All global states can be classified into three categories. For time parameters, \emph{mya} records the time point at which to show the world map and fossil locations, while \emph{maxma} and \emph{minma} together define the time period to retrieve the fossils and to form the tree of life. For tree parameters, \emph{name} is the name of the root node of the tree of interest; \emph{depth} and \emph{maxElement} are the number of layers and the max number of siblings under each node when retrieving the tree of life. Finally, \emph{mapFocusNode} and \emph{treeFocusNode} are the tree node identified by \emph{pathFromRoot} on which a user is hovering in map (users can highlight a tree node by hovering on a fossil point that is attached to it) and tree component, respectively. They are implemented to communicate the highlighting effect in between map and tree components (Figure \ref{fig:tree_hover} and Figure \ref{fig:map}). In React, variables can only be passed down from parents to children via props. Since our components are eventually assembled in a tree-like structure (Figure \ref{fig:components}), global states need to be passed down each layer to reach the component that actually needs them, leading to cumbersome code. Therefore, all global states are implemented as state variables in a React component \emph{GlobalStateContext}. A certain component gains access to the desired global states by directly importing them from \emph{GlobalStateContext} using the React hook \emph{useContext()}. \\
 
-\newpage
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.7\textwidth]{figures/implementation/global_state}
@@ -597,11 +596,62 @@ Lastly, \emph{map} renders the world map in GeoJSON, and the fossil locations re
 %=====================================================================
 \chapter{Results} \label{chp:results}
 %=====================================================================
-\section{Data analysis} \label{sec:result_data_analysis}
-\subsection{fossil data} \label{subsec:data_analysis_fossil}
-\subsection{tree data} \label{subsec:data_analysis_tree}
+In this chapter, the results are shown in two sections. Section \ref{sec:result_data_processing} shows some characteristics of the tree and fossil data revealed after data processing. Section \ref{sec:result_data_visualization} uses case studies to show how the web application may serve as a useful tool to explore biodiversity through time. Due to the visualization nature of the product, the results in the second section are shown by screenshots.
 
-\section{Data visualization case studies} \label{sec:result_data_visualization}
+\section{Data processing} \label{sec:result_data_processing}
+There are in total 1346120 fossil records, of which 1240202 (92.13\%) are animals and merely 105918 (7.87\%) are plants. Figure \ref{fig:phylum} shows a breakdown of top five animal and plant phylums with the most number of fossils identified under them. Over the entire evolutionary history, in regarding to animals (Figure \ref{fig:animal_phylum}), Mollusca (soft-bodied shell-covered invertebrates) has the highest number of fossils found, followed by Chordata (the phylum that mammals belong to), Brachiopoda (marine invertebrates with bivalve shells), Arthropoda (invertebrates with exoskeleton and segmented body, such as scorpions) and Cnidaria (animals possessing cnidocytes, such as jellyfish and corals). In plants (Figure \ref{fig:plant_phylum}), Spermatophyta (seed plants) has the most fossils under it, followed by Pteridophyta (spore dispersing vascular plants), Coniferophyta (cone-bearing plants such as pine trees), Rhodophyta (red algae) and Angiospermae (flowering plants).
+
+\begin{figure}[h]
+	\centering
+	\subfigure[The animal fossils identified under each phylum is ranked by amount in descending order and the top 5 phylums are shown. ]{\includegraphics[width=0.45\textwidth]{figures/result/animal_phylums}\label{fig:animal_phylum}} 
+	\hfill
+	\subfigure[Similar to animal fossils, the top 5 plant phylums with the most amount of fossils identified under. ]{\includegraphics[width=0.45\textwidth]{figures/result/plant_phylums}\label{fig:plant_phylum}} 
+	\caption{The top 5 animal and plant phylum with most fossils.}
+	\label{fig:phylum}
+\end{figure}
+
+The fossil distribution in time and space is shown in Figure \ref{fig:distribution}. Fossil records are not equally distributed over the planet (Figure \ref{fig:space_distribution}). All fossils form a clear shape of the continents, indicating that proportion-wise, very few fossils are found in oceans. Furthermore, several fossil rich areas exist, including the vast majority of North America, the entire Western Europe and most of East Asia, as well as the coastline regions of South America, Africa and Australia. This may be due to easier fossil accessibility in those regions. The result implies a strong bias of biodiversity information favoring such regions. \\
+
+\begin{figure}[h]
+	\centering
+	\subfigure[Space distribution of fossils. The longitude and latitude values of every fossil is shown on the x-axis and y-axies, forming shapes of the continents. ]{\includegraphics[width=0.45\textwidth]{figures/result/space_distribution}\label{fig:space_distribution}} 
+	\hfill
+	\subfigure[Time distribution of fossils during the past 600 million years. The middle value between \emph{max\_ma} and \emph{min\_ma} is comupted to represent a fossil's age, and only data in the past 600 million years is shown.  ]{\includegraphics[width=0.45\textwidth]{figures/result/time_distribution}\label{fig:time_distribution}} 
+	\caption{Fossil distribution in time and space.}
+	\label{fig:distribution}
+\end{figure}
+
+\newpage
+The oldest fossils date back to 1000 million years ago. However, half of the fossils discovered are estimated to be at most 160 million years. Each fossil is dated to an age range, with \emph{max\_ma} value indicating the maximal possible age and \emph{min\_ma} indicating the minimal. Their middle values are calculated and plotted in Figure \ref{fig:time_distribution}. An obvious bias favoring very recent (less than 10 million years ago) can be seen. In more ancient times, the fossil amount distribution tends to fluctuate. Although fossil amount is more of a measure in biomass rather than biodiversity, this fluctuation is also expected, due to the numerous mass extinction and explosion events throughout evolutionary history. The age range distribution is demonstrated in Figure \ref{fig:age_range}. There are only 444 fossil records with identical \emph{max\_ma} and \emph{min\_ma} (\emph{i.e.}, dated to a precise time point). The average age range of a fossil record is 6.80 $\pm$ 7.59 (mean $\pm$  sd) million years.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{figures/result/age_range}
+	\caption{The fossil amount distribution over different ranges of age. The range of age is the difference between a fossil record's \emph{max\_ma} and \emph{min\_ma} values. }
+	\label{fig:age_range}
+\end{figure}
+
+All fossils are organized into a tree of life with 176369 nodes, of which 147315 have at least one fossil attached to. The fossil-free nodes are branch nodes that serve as the ancestors of lower ranking nodes with attached fossils. The tree has one domain (the root "Eukaryota"), two kingdoms ("Animalia" and "Plantae"), 60 phylums, 159 classes, 1061 orders, 7305 families, 47828 genera and 119701 species. The top five nodes with most fossils directly identified to is shown in Figure \ref{fig:top_nodes}. The class "Gastropoda" is commonly known as snails and slugs, and the class "Saurischia" is a major category of dinosaurs. It can be seen that none of the nodes are on the species level, and most of the nodes are animals, as animal fossils in general outnumbers plant fossils. \\
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.45\textwidth]{figures/result/top_nodes}
+	\caption{The top five tree nodes with most amount of fossils attached to. Note that this is different than in Figure \ref{fig:phylum}, which includes the fossils that are under the subtree of a certain phylum node.}
+	\label{fig:top_nodes}
+\end{figure}
+
+As a reminder, when producing the tree of life using the algorithm discussed in section \ref{subsec:fossil_preparation}, each node is uniquely identified by a \emph{path\_from\_root} string with no missing names in between. However, missing names in taxonomic ranks are very common in the raw data. As a consequence, the identified ranks of many fossils are "relocated" to a higher one, namely, the one before the first missing name. For instance, if a plant fossil is missing its phylum name but do have names on lower ranks, then it is relocated to an upper level and is only identified and attached to the kingdom node of "Plantae". There are totally 209257 (16.87\%) cases in animals and 58874 cases (55.58\%) in plants. Therefore, missing taxonomic information is a severe issue in plant records. Figure \ref{fig:relocation} shows that among all relocated animal fossils, most of them are settled on the class (54.39\%) and order (27.89\%) level, whereas most of the plant relocated fossils settle on the phylum (41.77\%), class (22.61\%) and order (22.23\%) level. 
+\begin{figure}[h]
+	\centering
+	\subfigure[The distribution of taxonomic ranks on which relocated animal fossils are identified. When a fossil has taxonomic information on lower ranks but lacking names on least one of the higher ranks, it is relocated to the rank before the first missing name. ]{\includegraphics[width=0.45\textwidth]{figures/result/animal_relocate}\label{fig:animal_relocate}} 
+	\hfill
+	\subfigure[Similar to animal fossil, the distribution of ranks on relocated plant fossils. ]{\includegraphics[width=0.45\textwidth]{figures/result/plant_relocate}\label{fig:plant_relocate}} 
+	\caption{The rank distribution in fossil relocation.}
+	\label{fig:relocation}
+\end{figure}
+
+\newpage
+\section{Data visualization} \label{sec:result_data_visualization}
 %=====================================================================
 \chapter{Conclusion} \label{chp:conclusion}
 %=====================================================================

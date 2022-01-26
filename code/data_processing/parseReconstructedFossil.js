@@ -1,3 +1,4 @@
+// filter the reconstruction results from GPlates and save the final result as fossil location dataset in json
 taxonName = "rest"//"Mollusca"//"ArthropodaBrachiopodaChordata"
 const projectDir = "/home/dongwuxing/Documents/thesis/"
 const reconstructedDir = projectDir + "dataset/pbdb/geojsonReconstruction/" + taxonName + "/"
@@ -23,10 +24,6 @@ intervals.forEach(interval => {
 
 years.sort((a,b) => a-b)
 grossPeriodsEnds.sort((a,b) => b-a)
-//console.log(grossPeriodsEnds.find(i => i <= 23.03))
-// const years = [0,1,2,3,4,6,9,13,14,15,18,22,26,28,31,36,40,45,52,58,60,61,64,69,78,83,85,88,92,97,106,107,119,123,127,131,136,142,149,154,155,160,165,167,169,172,173,178,187,188,195,200,205,218,219,227,233,240,242,245,249,250,252,253,256,257,263,266,267,271,276,285,286,293,297,301,305,311,319,327,329,339,341,353,366,371,377,385,388,389,391,400,406,409]
-
-
 
 async function filterFossil () {
     for (let year of years) {

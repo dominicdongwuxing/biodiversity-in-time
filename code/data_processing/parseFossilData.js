@@ -1,3 +1,4 @@
+// parse the fossil data in json into GeoJSON for reconstructing to ancient time points via GPlates
 const taxonName = "rest"
 const projectDir = "/home/dongwuxing/Documents/thesis/"
 const pbdbDir = projectDir + "dataset/pbdb/"
