@@ -46,7 +46,7 @@ export default function TimeControl () {
       zoomDepth: 3,
       scrollbarHeight: 10,
       gap: 10,
-      breadcrumbParams: {width: 65, tipWidth: 4, height: 12, gap: 1, fontSize: 8}
+      breadcrumbParams: {width: 65, tipWidth: 4, height: 12, gap: 1, fontSize: 7}
     };
 
     let hideSmallTicks = true;

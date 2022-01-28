@@ -652,14 +652,63 @@ As a reminder, when producing the tree of life using the algorithm discussed in 
 
 \newpage
 \section{Data visualization} \label{sec:result_data_visualization}
+The use scenarios of the web application can be determined by a user's own need and curiosity. However, the combination of map and tree mainly enables users to observe the wax and wane of a selected taxonomy across time, as well as the change in dominance and spatial distribution of the organisms under this taxonomy. An example is seen in the development and sudden disappearance of Avetheropoda over a span of 150 million years. Avetheropoda ("bird theropods") is an order that covers dinosaurs that are relatively closely related to modern birds, as well as predatory dinosaurs, including the famous \emph{T.rex}. To begin with, we can type "Avetheropoda" in the search bar, and collect all fossils during Early Jurassic, as seen in the breadcrumb time indicator below the tree graph in Figure \ref{fig:EJu}. During this time period, there are only a few fossils covering two families. Forwarding to Middle Jurassic, Avetheropoda has diversified greatly, as seen in the tree graph of Figure \ref{fig:MJu}. Their fossils also tend to be more well spread around the world. Late Jurassic sees even greater amount of Avetheropoda fossils (Figure \ref{fig:LJu}). Its biodiversity in Late Jurassic is characterized by a dominant genus (Figure \ref{fig:LJu}), which is distinctive from Middle Jurassic, during which no particular families or genera greatly outnumber others. A visual inspection on the arc angles of the tree reveals that this dominant family alone accounts for around one third of all Avetheropoda fossils, and most of the fossils in this family belong to only one genus. When hovering on the node, we can see from the dynamic breadcrumb above the tree graph and the pop-up note that this is the genus Allosaurus from family Allosauridae, whose fossils are found mostly in modern day Western United States (Figure \ref{fig:LJu_dominant}). \\
+
+Moving on to Cretaceous, Avetheropoda is experiencing a prosperous period. In both Early (Figure \ref{fig:ECre}) and Late Cretaceous (Figure \ref{fig:LCre}), Avetheropoda is widely spread all over the world, with even more fossils found comparing to the epochs of Jurassic. This continues to Danian, the first age (a layer-five time period) after Cretaceous (Figure \ref{fig:before_disappear}). Tyrannosaurus, the genus of the iconic dinosaur \emph{T. rex}, is highlighted by the red arrows in Figure \ref{fig:LCre} and Figure \ref{fig:before_disappear}. The relatively wide arc angle implies the prevalence of Tyrannosaurus during these times. The scroll bar at the bottom of Figure \ref{fig:before_disappear} shows that the middle value of Danian is 64 million years ago. However, when entering the next age Selandian, whose middle value is 60 million years ago, all Avetheropoda has suddenly disappeared, except for one single fossil found on an island in nowadays south Pacific ocean (Figure \ref{fig:disappear}). This abrupt change brought an end to Avetheropoda and also other dinosaurs, and it reflects the well-known event of a mountain-sized asteroid with 12-kilometer in diameter hitting Earth at 66 million years ago. As a result, the age Selandian that is immediately after this incident sees few dinosaur fossils. \\
+
+A second case study inspects Dictoyopteridiales, an order of plant present in Permian and Triassic, that is characterized by its tongue-shaped leaves. In Figure \ref{fig:permian}, we access Dictoyopteridiales fossils during the entire Permian period. A genus Glossopteris that is marked by green points on the map, can be seen dominating the southern hemisphere, while other genera are far separated from it and are inhabiting in northern hemisphere (Figure \ref{fig:permian}). We then keep the tree of life time in Permian (as seen in the time tables in figures of \ref{fig:plant}). Meanwhile, we use the scroll bar above the time table to view how the same Permian fossils shift their positions through time, at an interval of around 100 million years(Figure \ref{fig:jurassic}, Figure \ref{fig:cretaceous} and Figure \ref{fig:modern}). It can be easily seen that as the super continent (termed "Gondwana") drifts apart since Permian, the Glossopteris fossils marked in green are gradually separated into different continents of the modern world. Although they are found in South America, southern part of Africa, Australia and India in the modern world (Figure \ref{fig:modern}), they were in fact joined together during the time they were alive (Figure \ref{fig:permian}). Indeed, the fossil distribution of Glossopteris is an example of how fossils could provide evidence supporting the continental drift theory \cite{schopf1970relation}. 
+\begin{figure}[h]
+	\centering
+	\subfigure[Avetheropoda during Early Jurassic. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/EJu}\label{fig:EJu}} 
+	\hfill
+	\subfigure[Avetheropoda during Middle Jurassic. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/MJu}\label{fig:MJu}} 
+	\hfill
+	\subfigure[Avetheropoda during Late Jurassic. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/LJu}\label{fig:LJu}} 
+	\hfill
+	\subfigure[Allosaurus dominates the Avetheropoda during Late Jurassic. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/LJu_dominant}\label{fig:LJu_dominant}} 
+
+	
+	\caption{The tree of life and fossil locations of Avetheropoda throughout Jurassic. The tree is directed to be under "Avetheropoda" while the time period moves forward, which can be seen in the time indicator in blue below the tree graph and the time value in the scroll bar at the bottom. The time table view is omitted for simplicity.}
+	\label{fig:dinosaur_ju}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\subfigure[Avetheropoda during Early Cretaceous. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/ECre}\label{fig:ECre}}
+	\hfill
+	\subfigure[Avetheropoda during Late Cretaceous. The arrow is highlighting the genus Tyrannosaurus. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/LCre}\label{fig:LCre}}
+	\hfill
+	\subfigure[Avetheropoda during Danian, the first age after Cretaceous. The arrow is highlighting the genus Tyrannosaurus. ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/before_disappear}\label{fig:before_disappear}}
+	\subfigure[Avetheropoda during Selandian, the age after Danian. The mouse is hovering on the only fossil found during this period.  ]{\includegraphics[width=0.7\textwidth]{figures/result/ave/disappear}\label{fig:disappear}}
+	
+	\caption{The tree of life and fossil locations of Avetheropoda throughout Cretaceous and shortly after. The time table view is omitted for simplicity.}
+	\label{fig:dinosaur_cre}
+\end{figure}
+\begin{figure}[h]
+	\centering
+	\subfigure[Spatial distribution of Permian Dictoyopteridiales fossils at 276 million years ago, \emph{i.e.}, during their life time. ]{\includegraphics[width=0.5\textwidth]{figures/result/plant/permian}\label{fig:permian}} 
+	\hfill
+	\subfigure[Spatial distribution of the same fossils at 178 million years ago, \emph{i.e.}, around 100 million years since their death. ]{\includegraphics[width=0.5\textwidth]{figures/result/plant/jurassic}\label{fig:jurassic}} 
+	\hfill
+	\subfigure[Spatial distribution of the same fossils at 78 million years ago, \emph{i.e.}, around 200 million years since their death.. ]{\includegraphics[width=0.5\textwidth]{figures/result/plant/cretaceous}\label{fig:cretaceous}} 
+	\hfill
+	\subfigure[Spatial distribution of the same fossils during modern days. ]{\includegraphics[width=0.5\textwidth]{figures/result/plant/modern}\label{fig:modern}} 
+	
+	\caption{The change in locations of Dictoyopteridiales fossils existed during Permian through time. The geological locations of the same fossils are tracked through time at an interval of 100 million years, in order to view how fossils move along with continental drifts. It is easy to notice that green marked fossils (under the genus of Glossopteris) inhabited together during their life time, however, their fossil locations separated in more recent times as a result of tectonic shift.}
+	\label{fig:plant}
+\end{figure}
 %=====================================================================
 \chapter{Conclusion} \label{chp:conclusion}
 %=====================================================================
-
-
+A complete data workflow is practiced and the new map and tree. It's good because it gives a more holistic view. It gives the freedom to check individual nodes and their locations.
 
 \section{Limitations and Future Work}
-
+relating to another dataset 
+the performance issue
+the styling 
+the missing nodes
+the special events
+the other information like weather and oxygen
+the map can be earlier 
 %=====================================================================
 \chapter*{Acknowledgements}
 %=====================================================================

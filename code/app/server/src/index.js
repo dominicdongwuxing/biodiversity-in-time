@@ -29,8 +29,8 @@ mongoose
       console.log("MongoDB connected successfully")
 
       //TreeNode.collection.drop()
-      //console.log("A random tree node is: " + await TreeNode.findOne())
-      //console.log(await TreeNode.countDocuments({}))
+      // console.log("A random tree node is: " + await TreeNode.findOne())
+      // console.log(await TreeNode.countDocuments({}))
       
       //FossilPoint.collection.drop()
       //console.log("A random fossil point is: " + await FossilPoint.findOne())
@@ -45,6 +45,7 @@ mongoose
       
       // console.log(await FossilLocation.countDocuments({mya: 1}))
 
+      //console.log(await TreeNode.find({name: "Rhyniopsida"}))
       server
           .listen()
           .then(({ url }) =>
