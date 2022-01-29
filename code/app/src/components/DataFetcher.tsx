@@ -5,7 +5,7 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 export default function DataFetcher (props) {
     // use passed query and variables to get data and show loading message or props.children
-    const {name, maxma, minma, maxElement, depth, currentTree, mya} = useContext(GlobalStateContext)
+    const {searchTerm, maxma, minma, maxElement, depth, currentTree, mya} = useContext(GlobalStateContext)
     const queryName = props.query.definitions[0].name.value
     let queryVariables
     if (queryName == "retrieveLocations") {
@@ -20,7 +20,7 @@ export default function DataFetcher (props) {
           }
     } else {
         queryVariables = {
-            name: name,
+            searchTerm: searchTerm,
             maxElement: maxElement,
             depth: depth,
             maxma: maxma,

@@ -14,14 +14,14 @@ const FOSSILLOCATION_QUERY = gql`
 
 const TREE_QUERY = gql`
   query retrieveTree(
-    $name: String
+    $searchTerm: String
     $maxElement: Int
     $depth: Int
     $minma: Float
     $maxma: Float
   ) {
     getTreeWithFossils(
-      name: $name
+      searchTerm: $searchTerm
       maxElement: $maxElement
       depth: $depth
       minma: $minma

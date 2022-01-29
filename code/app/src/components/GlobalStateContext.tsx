@@ -10,8 +10,8 @@ type currentTree = {
 } []
 
 interface GlobalState {
-    name: string;
-    setName: (value: string) => void;
+    searchTerm: string;
+    setSearchTerm: (value: string) => void;
     mya: number;
     setMya: (value: number) => void;
     maxma: number;
@@ -33,7 +33,7 @@ interface GlobalState {
 const GlobalStateContext = React.createContext<Partial<GlobalState>>({})
 
 function GlobalStateProvider (props) {
-    const [name, setName] = useState("Primates")
+    const [searchTerm, setSearchTerm] = useState("Primates")
     const [mya, setMya] = useState(Math.floor(0.0117/2))
     const [maxma, setMaxma] = useState(0.0117)
     const [minma, setMinma] = useState(0)
@@ -45,7 +45,7 @@ function GlobalStateProvider (props) {
 
     return (
         <GlobalStateContext.Provider value={{
-            name, setName,
+            searchTerm, setSearchTerm,
             mya, setMya,
             maxma, setMaxma,
             minma, setMinma,

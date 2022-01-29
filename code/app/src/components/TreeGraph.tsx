@@ -4,7 +4,7 @@ import { GlobalStateContext } from "./GlobalStateContext";
 
 
 export default function TreeGraph() {
-  const { setName, currentTree, mapFocusNode, setTreeFocusNode } = useContext(GlobalStateContext)
+  const { setSearchTerm, currentTree, mapFocusNode, setTreeFocusNode } = useContext(GlobalStateContext)
 
   const ref = useRef(null)
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function TreeGraph() {
       .attr("cursor", "pointer")
       .attr("stroke-width", 0.5)
       .on("click", (e, d) => {
-        setName(d.data.name)})
+        setSearchTerm(d.data.pathFromRoot)})
 
     path
       .on("mouseover", (e, focus) => {
@@ -220,7 +220,7 @@ export default function TreeGraph() {
         })
         .on("click", (e,d) => {
           const text = typeof(d) == "string" ? d : d.data.pathFromRoot
-          setName(text)
+          setSearchTerm(text)
         })
         .attr("cursor","pointer")
       
@@ -241,13 +241,12 @@ export default function TreeGraph() {
           const name = breadcrumbGetText(d)
           let currentFont = breadcrumbParams.fontSize
           while (getTextWidth(name, currentFont) + 1 > breadcrumbParams.width) currentFont--
-          console.log(name)
           return currentFont
         })
         .attr("font-weight", 800)
         .text(breadcrumbGetText)
         .on("click", (e,d) => {
-          setName(typeof(d) == "string" ? d : d.data.pathFromRoot)
+          setSearchTerm(typeof(d) == "string" ? d : d.data.pathFromRoot)
         })
         .attr("cursor","pointer")
     }

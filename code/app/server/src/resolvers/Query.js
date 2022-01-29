@@ -86,11 +86,29 @@ const getTreeWithFossils = async (parent, args, context, info) => {
     // init the flat tree to be returned
     const treeNodes = []
 
-    // capitalize the name 
-    const name = args.name.charAt(0).toUpperCase() + args.name.slice(1)
+    let root
 
-    // find the root by its name
-    const root = await TreeNode.find({name: name, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => res[0])
+    // if the search term includes , then is a pathFromRoot, otherwise it is name
+    if (args.searchTerm.includes(",")) {
+        root = await TreeNode.find({pathFromRoot: args.searchTerm, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => res[0])
+    } else {
+        // capitalize the name and trim white spaces at both ends
+        const name = args.searchTerm.trim().charAt(0).toUpperCase() + args.searchTerm.trim().slice(1)
+    
+        // find the root by its name, note that if the name contains "-", then it is one of the repetitive names, then we will get up to 
+        // two results, and we keep the one that contains the name after "-" in its pathFromRoot
+        if (name.includes("-")) {
+            root = await TreeNode.find({name: name.split("-")[0], minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => {
+                for (let i of res){
+                    if (i.pathFromRoot.pathFromRoot.includes(name.split("-")[1])) return i
+                }
+            })
+        } else {
+            root = await TreeNode.find({name: name, minma: {$lte: args.maxma}, maxma: {$gte: args.minma}}).then(res => res[0])
+        }
+    }
+    
+    
     
     // although the root may have parent in the tree of life, with respect to the result tree, it should have no parent
     root.parent = null
@@ -172,81 +190,3 @@ module.exports = {
 
 
 
-const a = [
-    {
-        leaf: false,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates",
-        uniqueName: "Primates"  
-    },
-    {
-        leaf: false,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates,Cercopithecidae",
-        uniqueName: "Cercopithecidae"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates,Cercopithecidae,Theropithecus",
-        uniqueName: "Theropithecus"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates,Cercopithecidae,Macaca",
-        uniqueName: "Macaca"  
-    },
-    {
-        leaf: false,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates,Hominidae",
-        uniqueName: "Hominidae"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates,Hominidae,Homo",
-        uniqueName: "Homo"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Primates,Hominidae,Paranthropus",
-        uniqueName: "Paranthropus"  
-    },
-
-]
-
-const b = [
-    {
-        leaf: false,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia",
-        uniqueName: "Mammalia"  
-    },
-    {
-        leaf: false,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Rodentia",
-        uniqueName: "Rodentia"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Rodentia,Cricetidae",
-        uniqueName: "Cricetidae"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Rodentia,Muridae",
-        uniqueName: "Muridae"  
-    },
-    {
-        leaf: false,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Artiodactyla",
-        uniqueName: "Artiodactyla"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Artiodactyla,Bovidae",
-        uniqueName: "Bovidae"  
-    },
-    {
-        leaf: true,
-        pathFromRoot: "Eukaryota,Animalia,Chordata,Mammalia,Artiodactyla,Cervidae",
-        uniqueName: "Cervidae"  
-    },
-    
-
-]

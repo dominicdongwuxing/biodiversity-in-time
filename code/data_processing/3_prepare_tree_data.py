@@ -209,3 +209,26 @@ tree = append_is_leaf(tree)
 
 with open(os.path.join(PBDBDIR, "tree.json"),"w") as f:
     json.dump(json.loads(tree.to_json(orient="records")),f)
+    
+# get names that appeared for more than once
+repetitive_names = set([item for item, count in collections.Counter(tree["name"].tolist()).items() if count > 1])
+# extract the tree nodes with repetitive names
+repeats = tree[tree["name"].isin(repetitive_names)].sort_values(["name"])
+repeats.reset_index(inplace=True)
+
+# go through each name and generate a list of unique names  a unique name bythe name and the first different ancestor from root
+unique_names = []
+for name in repetitive_names:
+    name_list1 = repeats[repeats["name"]==name]["path_from_root"].tolist()[0].split(",")
+    name_list2 = repeats[repeats["name"]==name]["path_from_root"].tolist()[1].split(",")
+    for i in range(min(len(name_list1),len(name_list2))):
+        if (name_list1[i]!=name_list2[i]):
+            unique_names.append(name + "-" + name_list1[i])
+            unique_names.append(name + "-" + name_list2[i])
+            break
+    
+    
+
+with open(os.path.join(PBDBDIR, "uniqueNames.json"),"w") as f:
+    json.dump(unique_names,f)
+

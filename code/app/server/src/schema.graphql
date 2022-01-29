@@ -1,6 +1,6 @@
 type Query {
     getTreeWithFossils (
-        name: String, minma: Float, maxma: Float, maxElement: Int, depth: Int
+        searchTerm: String, minma: Float, maxma: Float, maxElement: Int, depth: Int
     ): [TreeNode]
 
     getFossilLocations (

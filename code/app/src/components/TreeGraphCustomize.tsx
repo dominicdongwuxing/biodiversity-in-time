@@ -9,7 +9,7 @@ import {
 import { GlobalStateContext } from "./GlobalStateContext";
 
 export default function TreeGraphCustomize ({data }) {
-    const { setName, setMaxElement, depth, setDepth, maxElement } = useContext(GlobalStateContext)
+    const { setSearchTerm, setMaxElement, depth, setDepth, maxElement } = useContext(GlobalStateContext)
     const makeOptions = (valueArr) => {
         const optionArr = [];
         for (const value of valueArr) {
@@ -23,16 +23,17 @@ export default function TreeGraphCustomize ({data }) {
       };
     
       const handleBackToTop = () => {
-        setName("Eukaryota");
+        setSearchTerm("Eukaryota");
       };
     
       const handleBackToPrevious = () => {
         if (data && data.getTreeWithFossils) {
-          const path = data.getTreeWithFossils.find(i => i.parent === null).pathFromRoot.split(",")
-          if (path.length < depth) {
-            setName("Eukaryota");
+          const path = data.getTreeWithFossils.find(i => i.parent === null).pathFromRoot
+          if (path.split(",").length < depth) {
+            setSearchTerm("Eukaryota");
           } else {
-            setName(path[path.length - depth - 1]);
+            const index = path.split(",").length - depth - 1
+            setSearchTerm(path.slice(0,path.split(",", index).join(",").length));
           }
         }
       };

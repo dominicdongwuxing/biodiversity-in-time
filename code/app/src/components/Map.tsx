@@ -3,7 +3,6 @@ import styles from "./Map.module.css";
 import * as d3 from "d3";
 import * as lasso from "d3-lasso"
 import axios from "axios"
-import { useQuery } from "@apollo/client";
 import {FOSSILLOCATION_QUERY} from "./Queries"
 import { GlobalStateContext } from "./GlobalStateContext";
 import DataFetcher from "./DataFetcher";
