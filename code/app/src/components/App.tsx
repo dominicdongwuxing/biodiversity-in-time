@@ -1,13 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Header from "./Header";
 import Map from "./Map";
 import TimeControl from "./TimeControl";
 import Tree from "./Tree";
 import Footer from "./Footer";
-import styles from "./App.module.css";
-import { useAppStyles } from "./AppStyles";
-import { Grid, Card, CardContent, CardActions } from "@mui/material";
-import { useQuery, gql } from "@apollo/client";
+import { Grid, Card, CardContent } from "@mui/material";
+
 
 export default function App() {
   

@@ -82,7 +82,7 @@
 	\vfill
 	\sf \Large
 	Master Thesis \\
-	\today \\[0.5cm]
+	January 31, 2022 \\[0.5cm]
 	\large
 	by Wuxing Dong, 18-946-038
 
@@ -545,7 +545,7 @@ The code for data processing, back-end and front-end are structured as follows:
 \begin{itemize}
 	\item \textbf{app/}: includes the code for building the web application.
 	\begin{itemize}	
-		\item \textbf{server/src/}: includes the back-end code to run the server and to upload the processed datasets to the database.
+		\item \textbf{server/src/}: includes the back-end code to run the server (\emph{/index.js}), to defined the Mongoose schema (\emph{/models.js}), to define the GraphQL schema (\emph{/schema.graphql}) , and to upload the processed datasets to the database (\emph{/insertBiodiversityData.js}).
 		\begin{itemize}	
 			\item \textbf{resolvers/}: includes the code for resolving the queries from the front-end, \textit{i.e.}, retrieving and processed desired data from MongoDB before returning the result.
 		\end{itemize}
@@ -732,7 +732,8 @@ It is also beneficial to further enrich the current visualization with other typ
 %=====================================================================
 \chapter*{Acknowledgements}
 %=====================================================================
-Most importantly, I would like to thank my direct supervisor Gaudenz Halter for his consistent guidance throughout my whole progress. His feedback has always helped to keep my work on the right track. I would also like to thank Prof. Dr. RenatoPajarola for providing me the opportunity to write this thesis and begin my journey in data visualization. Lastly, I would like to appreciate the company of my girlfriend and my parents. Their mental support is essential to keep me motivated during my ups and downs.
+Most importantly, I would like to thank my direct supervisor Gaudenz Halter for his consistent guidance throughout my whole progress. His feedback has always helped to keep my work on the right track. I would also like to thank Prof. Dr. Renato
+Pajarola for providing me the opportunity to write this thesis and begin my journey in data visualization. Lastly, I would like to appreciate the company of my girlfriend and my parents. Their mental support is essential to keep me motivated during my ups and downs.
 
 \bibliographystyle{alpha}
 \bibliography{references}
