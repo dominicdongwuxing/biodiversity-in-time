@@ -1,37 +1,34 @@
 # Biodiversity visualization 
 
-This is my master thesis project on visualizing biodiversity through time. This web application allow users to select a time period of interest through the evolutionary history to view the tree of life and the fossils located on the ancient world map during the selected time period, and also track how the fossil locations shift as the continents drift along with time. The fossils are from the Paleobiology Database, which contains 1.3 million occurrences of animals and plants; the tectonic motion is modeled by this paper (https://www.sciencedirect.com/science/article/pii/S0921818116302417), which traces the coastline changes from 410 million years ago to today. The web application yet to be finished and deployed, but some screenshots showing the current progress are shown below. 
+This is my master thesis project on visualizing biodiversity through time. This web application allows users to select a time period in the past 540 million years of Earth's history to view the tree of life and the fossils located on the ancient world map during the selected time period, and also track how the fossil locations shift as the continents drift along with time. The fossils are from the Paleobiology Database, which contains 1.3 million occurrences of animals and plants; the tectonic motion is modeled by this paper (https://www.sciencedirect.com/science/article/pii/S0921818116302417), which traces the coastline changes from 410 million years ago to today. The web application is yet to be finished and deployed, but some screenshots and videos showing the current progress are shown below. 
 
 ## General overview
 
-![](figures/layout.jpg)
+![](resources/layout.jpg)
 
 The visualization consists of three main components.
 
-**The tree component.** On the right hand side, there is the tree of life as a sunburst graph. The tree of life is organized in the following taxonomic ranks: domain (Eukaryota), kingdom (Animalia or Plantae), phylum, class, order, family, genus, species, from the highest to the lowest. The angles of each node or leaf in the tree graph reflects the amount of fossils found during the selected time period that are attached to it. The selected time period for the tree is seen right beneath the tree section, in a line of breadcrumb colored in blue. The users can click on a node to travel to a downstream tree rooted by that node. Below the tree graph are control buttons to customize 1, the max number of element to display on each level of the tree (ranked by number of fossils found in the current time period that are attached to each node) and 2, the depth to show from the current root. Also, the user can go directly back to top (the highest rank, Eukaryota domain), or somewhere lower in the upstream, whose level is also set by the depth button. Above the tree graph is a string of breadcrumbs showing the location of the current root from the ultimate root in tree of life, Eukaryota. It is possible to click on a node in the breadcrumb and travel to a new tree rooted by the clicked node. 
+**The tree component.** The tree of life is shown on the right-hand side as a sunburst graph. The tree is organized in the descending order of domain (Eukaryota), kingdom (Animalia or Plantae), phylum, class, order, family, genus, and species. The angles of each node reflect the number of associated fossils found during the selected time period. To navigate in the tree, users can click on 1, a node on the graph or the breadcrumbs above it, or 2, the buttons in the control panel below the tree graph. The control panel also customizes the tree's depth and each node's max number of children. 
 
-**The map component.** On the left hand side, the map shows how the world looked like during the selected time period, which sits beneath the map. The fossils are colored in the same way as their related taxonomy in the tree graph, and their coordinates are also transformed to that of the ancient time.
+**The map component.** On the left-hand side, the map shows how the world looked like during the selected time period, which sits beneath the map. The fossils are colored in the same way as their associated taxonomy in the tree graph, and their coordinates are also transformed to that of ancient time.
 
-**The time control component.** At the bottom of the page we have the time control panel. A scroll bar allows users to drag to a more recent time period (but not older than the tree of life's time period, since the fossils would not have existed yet), and see how the fossil would move with the plate movment of the Earth. 
+**The time control component.** At the bottom of the page we have the time control panel. A scroll bar allows users to drag to a more recent time period (but not older than the tree of life's time period, since the fossils would not have existed yet), and see how the fossils would move due to continental drift.
 
-![](figures/timecontrol.jpg)
+**Demonstration 1** We can see the sudden disappearance of the dinosaurs using this tool. In the video below, we first select the order of Avetheropoda (a.k.a. the bird dinosaurs) and locate to the time period of Early Cretaceous (approx. 145 - 100 million years ago). We then forward to Late Cretaceous and Paleocene, while seeing how the tree of life under Avetheropoda gradually changes through time. Suddenly, during Selandian (a time period under Paleogene), all but one fossil is found, and the tree completely disappears after this period. This is due to the Cretaceous–Paleogene extinction event, marked by the famous incident of an asteroid hitting the planet around 66 million years ago, ending the age of the dinosaurs. 
 
-As shown in the figure above, a user can hover on a time period in the time table, and it automatically zoom in around the time period for a more detailed view, and also shows a small pop-up note indicating the name of the time period. The currently selected time period is marked black. 
+https://github.com/dominicdongwuxing/biodiversity-in-time/blob/main/resources/dino.webm 
 
-**An example.** We can see the suddent disappearance of the dinasours using this tool. Dinasours belong to a variaty of classes under Chordata, one of which is the class Saurischia. We search for Saurischia by typing the name in the search bar and select the time period Danian. The map will display the world map in the middle of the time period, which is around 64 million years ago. The tree of life will be computed according to the fossil records found under Saurischia during this time period. We will get the following view:
+**Demonstration 2** We can also look at how fossils are relocated from where they lived millions of years ago, to where they were discovered in modern days, as a result of plate motion. In the second video, we investigate the genus of Glossopteris, an iconic plant during the Permian periods. By dragging the scroll bar above the timetable, we can observe how the continents have been floating apart for the past 276 million years, and how the fossils have been moved. It is interesting to note that although the fossils are found everywhere in the modern world, they actually inhabited together when they were alive. 
 
-![](figures/dinasour.jpg)
+https://github.com/dominicdongwuxing/biodiversity-in-time/blob/main/resources/plateMotion.webm 
 
-We can see a rich tree of species existing under Saurischia during this period, and there are fossil records of Saurischia all over the world. Note that the black dots on the map corresponds to the black node on the tree, which is the root Saurischia. This means that those fossils are only identified as Saurischia, i.e., we do not know a more detailed taxonomy for them. 
+**Demonstration 3** The last example looks at Hominidae, the family that hosts our species (*Homo sapien*). In the next video, users can hover on a node in the tree graph to see 1, the breadcrumb above that indicates the path from the common root to the taxonomy they are currently focusing on, and 2, the associated fossils on the map. They can also easily navigate the tree by clicking on nodes and they can customize the max children and depth to show. 
 
-We can hover on a node or leaf on the tree and see the following: 
+https://github.com/dominicdongwuxing/biodiversity-in-time/blob/main/resources/treeInAction.webm 
 
-![](figures/Trex.jpg)
+In the last video, we can see more interaction between the tree and the map. When users hover on a fossil point in the map, they can see which taxonomy it belongs to from the tree side.
 
-We have hovered our mouse on T.rex. Note that the tree nodes on the ancestral path of T.rex have a slightly higher opacity, and a small pop-up also tells us the name of the node we are hovering on. In addition, above the tree graph, there is a newly generated breadcrumb showing the location of the hovered node in the whole tree of life (i.e., its path from the ultimate root, Eukaryota), this breadcrumb will change when we hover on another node, or disappear when we are not hovering on any node. On the map, we can see that all the other fossil points have disappeared, except for those that are identified to the hovered node. When we move the mouse away from the tree, all the fossil points will be back. 
+https://github.com/dominicdongwuxing/biodiversity-in-time/blob/main/resources/mapInAction.webm 
 
-Now, we move on to the next time period, Selandian, and see this:
 
-![](figures/dino_last.jpg)
-
-The tree of Saurischia has only one node left, and there is also only one fossil point found in this time period. The class of Saurischia has been suddenly wiped out! This is due to the Cretaceous–Paleogene extinction event, marked by the famous incident of an asteroid hitting the planet at around 66 million years ago, ending the age of the dinasours. 
+Finally, [a relative link](report.pdf) contains a detailed description of how the data is processed, the design of the database (MongoDB), data queries (graphQL), and front-end (React and D3) as well as the functionalities of the web application.  
